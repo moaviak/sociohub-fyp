@@ -9,7 +9,7 @@ function LandingPage() {
           <h1 className="h1-bold">
             Simplify Society Management, Enhance Campus Life.
           </h1>
-          <p className="b2-regular">
+          <p className="b2-regular text-neutral-700">
             SocioHub streamlines event management, communication, and
             collaboration for societies at CUI Attock.
           </p>
