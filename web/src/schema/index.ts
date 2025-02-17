@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { DEGREES } from "@/data";
+
 const phoneRegex = /^(?:\+92|0|92)?(3[0-9]{2})[0-9]{7}$/;
 export const contactFormSchema = z
   .object({
@@ -20,3 +22,32 @@ export const contactFormSchema = z
       });
     }
   });
+
+export const signInSchema = z.object({
+  email: z.string().email({ message: "Email is required" }),
+  password: z.string().min(8, { message: "Password is required" }),
+  rememberMe: z.boolean().default(false),
+});
+
+export const studentSignUpSchema = z.object({
+  firstName: z.string().min(1, { message: "First Name is required" }),
+  lastName: z.string().min(1, { message: "Last Name is required" }),
+  username: z
+    .string()
+    .min(3, { message: "Username must be at least 3 characters" }),
+  email: z.string().email({ message: "Email is required" }),
+  registrationNo: z.object({
+    session: z.enum(["SP", "FA"], { required_error: "Session is required" }),
+    year: z.string({ required_error: "Year is required" }),
+    degree: z.enum(DEGREES.map((d) => d.value) as [string, ...string[]], {
+      required_error: "Degree is required",
+    }),
+    rollNumber: z
+      .number()
+      .min(1)
+      .max(999, { message: "Roll number must be between 1-999" }),
+  }),
+  password: z
+    .string()
+    .min(8, { message: "Password must be at least 8 characters" }),
+});

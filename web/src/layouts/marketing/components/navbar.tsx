@@ -1,13 +1,14 @@
+import { Link } from "react-router";
+
 import { Logo } from "@/components/logo";
 import {
   NavigationMenu,
   NavigationMenuItem,
   NavigationMenuList,
 } from "@/components/ui/navigation-menu";
+import { Button } from "@/components/ui/button";
 
 import { NavItem } from "./nav-item";
-import { Button } from "@/components/ui/button";
-import { Link } from "react-router";
 
 export const Navbar = () => {
   return (

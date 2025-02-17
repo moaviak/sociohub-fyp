@@ -15,7 +15,7 @@ function ContactPage() {
         </p>
       </div>
 
-      <div className="w-full bg-white shadow-md flex p-3 rounded-md">
+      <div className="w-full bg-white drop-shadow-e1 flex p-3 rounded-md">
         <div
           className="bg-cover bg-center flex flex-col gap-12 p-8 rounded-md w-md min-h-full"
           style={{ backgroundImage: "url('/assets/images/contact-bg.png')" }}
