@@ -4,6 +4,7 @@ import jwt, { SignOptions } from "jsonwebtoken";
 import { withAccelerate } from "@prisma/extension-accelerate";
 import { PrismaClient, Student, Advisor, Prisma } from "@prisma/client";
 
+import { UserType } from "../types";
 import { USER_TEMPORARY_TOKEN_EXPIRY } from "../constants";
 
 const prisma = new PrismaClient().$extends(withAccelerate()).$extends({
@@ -14,7 +15,12 @@ const prisma = new PrismaClient().$extends(withAccelerate()).$extends({
           expiresIn: Number(process.env.ACCESS_TOKEN_EXPIRY) || "1d",
         };
         return jwt.sign(
-          { id: student.id, email: student.email, username: student.username },
+          {
+            id: student.id,
+            email: student.email,
+            username: student.username,
+            userType: UserType.STUDENT,
+          },
           process.env.ACCESS_TOKEN_SECRET!,
           options
         );
@@ -24,7 +30,12 @@ const prisma = new PrismaClient().$extends(withAccelerate()).$extends({
           expiresIn: Number(process.env.REFRESH_TOKEN_EXPIRY) || "7d",
         };
         return jwt.sign(
-          { id: student.id, email: student.email, username: student.username },
+          {
+            id: student.id,
+            email: student.email,
+            username: student.username,
+            userType: UserType.STUDENT,
+          },
           process.env.REFRESH_TOKEN_SECRET!,
           options
         );
@@ -50,24 +61,6 @@ const prisma = new PrismaClient().$extends(withAccelerate()).$extends({
 
         return { unHashedToken, hashedToken, tokenExpiry };
       },
-      async create(params: Prisma.StudentCreateArgs): Promise<Student> {
-        if (params.data.password) {
-          params.data.password = await bcrypt.hash(params.data.password, 10);
-        }
-        // @ts-ignore
-        return this.create(params);
-      },
-      async update(params: Prisma.StudentUpdateArgs): Promise<Student> {
-        if (params.data.password) {
-          const hashedPassword = await bcrypt.hash(
-            params.data.password as string,
-            10
-          );
-          params.data.password = hashedPassword;
-        }
-        // @ts-ignore
-        return this.update(params);
-      },
     },
     advisor: {
       generateAccessToken(advisor: Advisor) {
@@ -75,7 +68,12 @@ const prisma = new PrismaClient().$extends(withAccelerate()).$extends({
           expiresIn: Number(process.env.ACCESS_TOKEN_EXPIRY) || "1d",
         };
         return jwt.sign(
-          { id: advisor.id, email: advisor.email, username: advisor.username },
+          {
+            id: advisor.id,
+            email: advisor.email,
+            username: advisor.username,
+            userType: UserType.ADVISOR,
+          },
           process.env.ACCESS_TOKEN_SECRET!,
           options
         );
@@ -85,7 +83,12 @@ const prisma = new PrismaClient().$extends(withAccelerate()).$extends({
           expiresIn: Number(process.env.REFRESH_TOKEN_EXPIRY) || "7d",
         };
         return jwt.sign(
-          { id: advisor.id, email: advisor.email, username: advisor.username },
+          {
+            id: advisor.id,
+            email: advisor.email,
+            username: advisor.username,
+            userType: UserType.ADVISOR,
+          },
           process.env.REFRESH_TOKEN_SECRET!,
           options
         );
@@ -110,24 +113,6 @@ const prisma = new PrismaClient().$extends(withAccelerate()).$extends({
         const tokenExpiry = Date.now() + USER_TEMPORARY_TOKEN_EXPIRY;
 
         return { unHashedToken, hashedToken, tokenExpiry };
-      },
-      async create(params: Prisma.AdvisorCreateArgs): Promise<Advisor> {
-        if (params.data.password) {
-          params.data.password = await bcrypt.hash(params.data.password, 10);
-        }
-        // @ts-ignore
-        return this.create(params);
-      },
-      async update(params: Prisma.AdvisorUpdateArgs): Promise<Advisor> {
-        if (params.data.password) {
-          const hashedPassword = await bcrypt.hash(
-            params.data.password as string,
-            10
-          );
-          params.data.password = hashedPassword;
-        }
-        // @ts-ignore
-        return this.update(params);
       },
     },
   },
