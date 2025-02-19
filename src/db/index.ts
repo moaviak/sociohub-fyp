@@ -1,0 +1,136 @@
+import crypto from "crypto";
+import bcrypt from "bcryptjs";
+import jwt, { SignOptions } from "jsonwebtoken";
+import { withAccelerate } from "@prisma/extension-accelerate";
+import { PrismaClient, Student, Advisor, Prisma } from "@prisma/client";
+
+import { USER_TEMPORARY_TOKEN_EXPIRY } from "../constants";
+
+const prisma = new PrismaClient().$extends(withAccelerate()).$extends({
+  model: {
+    student: {
+      generateAccessToken(student: Student) {
+        const options: SignOptions = {
+          expiresIn: Number(process.env.ACCESS_TOKEN_EXPIRY) || "1d",
+        };
+        return jwt.sign(
+          { id: student.id, email: student.email, username: student.username },
+          process.env.ACCESS_TOKEN_SECRET!,
+          options
+        );
+      },
+      generateRefreshToken(student: Student) {
+        const options: SignOptions = {
+          expiresIn: Number(process.env.REFRESH_TOKEN_EXPIRY) || "7d",
+        };
+        return jwt.sign(
+          { id: student.id, email: student.email, username: student.username },
+          process.env.REFRESH_TOKEN_SECRET!,
+          options
+        );
+      },
+      async verifyPassword(student: Student, candidatePassword: string) {
+        return await bcrypt.compare(candidatePassword, student.password);
+      },
+      /**
+       * @description Method responsible for generating tokens for email verification, password reset etc.
+       */
+      generateTemporaryToken(student: Student) {
+        // This token should be client facing
+        // for example: for email verification unHashedToken should go into the user's mail
+        const unHashedToken = crypto.randomBytes(20).toString("hex");
+
+        // This should stay in the DB to compare at the time of verification
+        const hashedToken = crypto
+          .createHash("sha256")
+          .update(unHashedToken)
+          .digest("hex");
+        // This is the expiry time for the token (20 minutes)
+        const tokenExpiry = Date.now() + USER_TEMPORARY_TOKEN_EXPIRY;
+
+        return { unHashedToken, hashedToken, tokenExpiry };
+      },
+      async create(params: Prisma.StudentCreateArgs): Promise<Student> {
+        if (params.data.password) {
+          params.data.password = await bcrypt.hash(params.data.password, 10);
+        }
+        // @ts-ignore
+        return this.create(params);
+      },
+      async update(params: Prisma.StudentUpdateArgs): Promise<Student> {
+        if (params.data.password) {
+          const hashedPassword = await bcrypt.hash(
+            params.data.password as string,
+            10
+          );
+          params.data.password = hashedPassword;
+        }
+        // @ts-ignore
+        return this.update(params);
+      },
+    },
+    advisor: {
+      generateAccessToken(advisor: Advisor) {
+        const options: SignOptions = {
+          expiresIn: Number(process.env.ACCESS_TOKEN_EXPIRY) || "1d",
+        };
+        return jwt.sign(
+          { id: advisor.id, email: advisor.email, username: advisor.username },
+          process.env.ACCESS_TOKEN_SECRET!,
+          options
+        );
+      },
+      generateRefreshToken(advisor: Advisor) {
+        const options: SignOptions = {
+          expiresIn: Number(process.env.REFRESH_TOKEN_EXPIRY) || "7d",
+        };
+        return jwt.sign(
+          { id: advisor.id, email: advisor.email, username: advisor.username },
+          process.env.REFRESH_TOKEN_SECRET!,
+          options
+        );
+      },
+      async verifyPassword(advisor: Advisor, candidatePassword: string) {
+        return await bcrypt.compare(candidatePassword, advisor.password);
+      },
+      /**
+       * @description Method responsible for generating tokens for email verification, password reset etc.
+       */
+      generateTemporaryToken(advisor: Advisor) {
+        // This token should be client facing
+        // for example: for email verification unHashedToken should go into the user's mail
+        const unHashedToken = crypto.randomBytes(20).toString("hex");
+
+        // This should stay in the DB to compare at the time of verification
+        const hashedToken = crypto
+          .createHash("sha256")
+          .update(unHashedToken)
+          .digest("hex");
+        // This is the expiry time for the token (20 minutes)
+        const tokenExpiry = Date.now() + USER_TEMPORARY_TOKEN_EXPIRY;
+
+        return { unHashedToken, hashedToken, tokenExpiry };
+      },
+      async create(params: Prisma.AdvisorCreateArgs): Promise<Advisor> {
+        if (params.data.password) {
+          params.data.password = await bcrypt.hash(params.data.password, 10);
+        }
+        // @ts-ignore
+        return this.create(params);
+      },
+      async update(params: Prisma.AdvisorUpdateArgs): Promise<Advisor> {
+        if (params.data.password) {
+          const hashedPassword = await bcrypt.hash(
+            params.data.password as string,
+            10
+          );
+          params.data.password = hashedPassword;
+        }
+        // @ts-ignore
+        return this.update(params);
+      },
+    },
+  },
+});
+
+export default prisma;
