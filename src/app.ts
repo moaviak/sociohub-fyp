@@ -68,6 +68,7 @@ import { errorHandler } from "./middlewares/error.middlewares.js";
 
 import authRoutes from "./routes/auth.routes.js";
 import studentRoutes from "./routes/student.routes.js";
+
 app.use("/api/auth", authRoutes);
 app.use("/api/student", studentRoutes);
 

@@ -1,8 +1,9 @@
+import ms, { StringValue } from "ms";
 import crypto from "crypto";
 import bcrypt from "bcryptjs";
 import jwt, { SignOptions } from "jsonwebtoken";
 import { withAccelerate } from "@prisma/extension-accelerate";
-import { PrismaClient, Student, Advisor, Prisma } from "@prisma/client";
+import { PrismaClient, Student, Advisor } from "@prisma/client";
 
 import { UserType } from "../types";
 import { USER_TEMPORARY_TOKEN_EXPIRY } from "../constants";
@@ -12,7 +13,8 @@ const prisma = new PrismaClient().$extends(withAccelerate()).$extends({
     student: {
       generateAccessToken(student: Student) {
         const options: SignOptions = {
-          expiresIn: Number(process.env.ACCESS_TOKEN_EXPIRY) || "1d",
+          expiresIn:
+            ms(process.env.ACCESS_TOKEN_EXPIRY! as StringValue) || "1d",
         };
         return jwt.sign(
           {

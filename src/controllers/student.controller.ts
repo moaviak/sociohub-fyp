@@ -5,6 +5,7 @@ import prisma from "../db";
 import { ApiError } from "../utils/ApiError";
 import { ApiResponse } from "../utils/ApiResponse";
 import { asyncHandler } from "../utils/asyncHandler";
+import { emailVerificationMailgenContent, sendEmail } from "../utils/mail";
 
 export const registerStudent = asyncHandler(
   async (req: Request, res: Response) => {
@@ -61,7 +62,16 @@ export const registerStudent = asyncHandler(
       },
     });
 
-    // TODO: Send verification email
+    await sendEmail({
+      email: createdStudent.email,
+      subject: "Verify your email",
+      mailgenContent: emailVerificationMailgenContent(
+        student.username,
+        `${req.protocol}://${req.get(
+          "host"
+        )}/api/auth/verify-email/${unHashedToken}`
+      ),
+    });
 
     return res
       .status(201)
