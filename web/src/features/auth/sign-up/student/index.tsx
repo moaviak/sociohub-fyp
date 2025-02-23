@@ -48,6 +48,7 @@ const StudentSignUp = () => {
   });
 
   const onSubmit = (values: z.infer<typeof studentSignUpSchema>) => {
+    // TODO: Implement sign up and redirect to dashboard
     console.log(values);
   };
 
