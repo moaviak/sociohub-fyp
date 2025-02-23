@@ -29,23 +29,46 @@ const errorHandler: express.ErrorRequestHandler = (
 ): void => {
   let error = err;
 
-  // Check if the error is an instance of an ApiError class which extends native Error class
   if (!(error instanceof ApiError)) {
-    // if not
-    // create a new ApiError instance to keep the consistency
-
-    // assign an appropriate status code based on Prisma error types
     let statusCode = 500;
+    let message = error.message || "Something went wrong";
 
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
-      // Common Prisma errors like unique constraint violations (P2002)
-      statusCode = 400;
+      // Handle specific Prisma error codes
+      switch (error.code) {
+        case "P2002": // Unique constraint violation
+          statusCode = 400;
+          message = "Duplicate entry found";
+          break;
+        case "P2025": // Record not found
+          statusCode = 404;
+          message = "Record not found";
+          break;
+        case "P2003": // Foreign key constraint failed
+          statusCode = 400;
+          message = "Related record not found";
+          break;
+        default:
+          statusCode = 400;
+      }
     } else if (error instanceof Prisma.PrismaClientValidationError) {
       // Invalid data provided to Prisma
       statusCode = 400;
+      message = "Invalid data provided";
+    } else if (error instanceof Prisma.PrismaClientInitializationError) {
+      // Database connection issues
+      statusCode = 500;
+      message = "Database connection error";
+    } else if (error instanceof Prisma.PrismaClientRustPanicError) {
+      // Unexpected Prisma Client error
+      statusCode = 500;
+      message = "Internal database error";
+    } else if (error instanceof Prisma.PrismaClientUnknownRequestError) {
+      // Unknown Prisma Client error
+      statusCode = 500;
+      message = "Unexpected database error";
     }
 
-    const message = error.message || "Something went wrong";
     error = new ApiError(
       statusCode,
       message,
