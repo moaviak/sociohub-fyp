@@ -63,6 +63,18 @@ const prisma = new PrismaClient().$extends(withAccelerate()).$extends({
 
         return { unHashedToken, hashedToken, tokenExpiry };
       },
+      /**
+       * @description Method responsible for generating verification code for email verification
+       */
+      generateVerificationCode() {
+        // Generate a random 6 digit number
+        const code = Math.floor(100000 + Math.random() * 900000).toString();
+
+        // This is the expiry time for the code (20 minutes)
+        const codeExpiry = Date.now() + USER_TEMPORARY_TOKEN_EXPIRY;
+
+        return { code, codeExpiry };
+      },
     },
     advisor: {
       generateAccessToken(advisor: Advisor) {
@@ -115,6 +127,18 @@ const prisma = new PrismaClient().$extends(withAccelerate()).$extends({
         const tokenExpiry = Date.now() + USER_TEMPORARY_TOKEN_EXPIRY;
 
         return { unHashedToken, hashedToken, tokenExpiry };
+      },
+      /**
+       * @description Method responsible for generating verification code for email verification
+       */
+      generateVerificationCode() {
+        // Generate a random 6 digit number
+        const code = Math.floor(100000 + Math.random() * 900000).toString();
+
+        // This is the expiry time for the code (20 minutes)
+        const codeExpiry = Date.now() + USER_TEMPORARY_TOKEN_EXPIRY;
+
+        return { code, codeExpiry };
       },
     },
   },

@@ -1,8 +1,12 @@
 import { z } from "zod";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { Eye, EyeOff } from "lucide-react";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { toast } from "sonner";
+import { useNavigate } from "react-router";
+import ApiError from "@/features/api-error";
+import { useStudentSignUpMutation } from "../../api";
 
 import {
   Form,
@@ -27,8 +31,11 @@ import { Button } from "@/components/ui/button";
 import { Google } from "@/features/auth/components/google";
 
 const StudentSignUp = () => {
+  const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const yearOptions = getYearOptions();
+
+  const [signUp, { isLoading, error, isError }] = useStudentSignUpMutation();
 
   const form = useForm<z.infer<typeof studentSignUpSchema>>({
     resolver: zodResolver(studentSignUpSchema),
@@ -47,10 +54,36 @@ const StudentSignUp = () => {
     },
   });
 
-  const onSubmit = (values: z.infer<typeof studentSignUpSchema>) => {
-    // TODO: Implement sign up and redirect to dashboard
-    console.log(values);
+  const onSubmit = async (values: z.infer<typeof studentSignUpSchema>) => {
+    const formattedRegistrationNumber = `${values.registrationNo.session}${values.registrationNo.year}-${values.registrationNo.degree}-${values.registrationNo.rollNumber}`;
+
+    const response = await signUp({
+      email: values.email,
+      username: values.username,
+      password: values.password,
+      firstName: values.firstName,
+      lastName: values.lastName,
+      registrationNumber: formattedRegistrationNumber,
+    });
+
+    // Check if response is not an ApiError
+    if (response.data && "email" in response.data) {
+      toast.success("Account created successfully! Please verify your email.");
+      navigate(`/sign-up/verify-email`);
+      sessionStorage.setItem("verificationEmail", response.data.email);
+    }
   };
+
+  useEffect(() => {
+    if (isError) {
+      toast.error(
+        (error as ApiError)?.errorMessage || "An unexpected error occurred",
+        {
+          duration: 10000,
+        }
+      );
+    }
+  }, [isError, error]);
 
   return (
     <Form {...form}>
@@ -274,11 +307,16 @@ const StudentSignUp = () => {
           </div>
         </div>
         <div className="space-y-4">
-          <Button type="submit" className="w-full" size="lg">
-            Sign Up
+          <Button
+            type="submit"
+            className="w-full"
+            size="lg"
+            disabled={isLoading}
+          >
+            {isLoading ? "Creating Account..." : "Sign Up"}
           </Button>
 
-          <Google text="Sign Up with Google" />
+          <Google text="Sign Up with Google" disabled={isLoading} />
         </div>
       </form>
     </Form>

@@ -62,13 +62,13 @@ export const sendEmail = async (options: EmailOptions) => {
 /**
  *
  * @param {string} username
- * @param {string} verificationUrl
+ * @param {string} verificationCode
  * @returns {Mailgen.Content}
  * @description It designs the email verification mail
  */
 export const emailVerificationMailgenContent = (
   username: string,
-  verificationUrl: string
+  verificationCode: string
 ): Mailgen.Content => {
   return {
     body: {
@@ -76,15 +76,15 @@ export const emailVerificationMailgenContent = (
       intro: "Welcome to our app! We're very excited to have you on board.",
       action: {
         instructions:
-          "To verify your email please click on the following button:",
+          "To verify your email please use the following verification code:",
         button: {
-          color: "#1a6fcc", // Optional action button color
-          text: "Verify your email",
-          link: verificationUrl,
+          color: "#1a6fcc",
+          text: verificationCode,
+          link: "#", // No link needed as we're using a code
         },
       },
       outro:
-        "Need help, or have questions? Just reply to this email, we'd love to help.",
+        "This code will expire in 30 minutes. Need help, or have questions? Just reply to this email, we'd love to help.",
     },
   };
 };

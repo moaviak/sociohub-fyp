@@ -56,7 +56,10 @@ const SignIn = () => {
   useEffect(() => {
     if (isError) {
       toast.error(
-        (error as ApiError)?.errorMessage || "An unexpected error occurred"
+        (error as ApiError)?.errorMessage || "An unexpected error occurred",
+        {
+          duration: 10000,
+        }
       );
     }
   }, [isError, error]);

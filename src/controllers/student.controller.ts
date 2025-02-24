@@ -30,6 +30,9 @@ export const registerStudent = asyncHandler(
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    // Generate verification code
+    const { code, codeExpiry } = prisma.student.generateVerificationCode();
+
     const student = await prisma.student.create({
       data: {
         firstName,
@@ -38,17 +41,8 @@ export const registerStudent = asyncHandler(
         email,
         registrationNumber,
         password: hashedPassword,
-      },
-    });
-
-    const { unHashedToken, hashedToken, tokenExpiry } =
-      prisma.student.generateTemporaryToken(student);
-
-    const createdStudent = await prisma.student.update({
-      where: { id: student.id },
-      data: {
-        emailVerificationToken: hashedToken,
-        emailVerificationExpiry: new Date(tokenExpiry),
+        emailVerificationCode: code,
+        emailVerificationExpiry: new Date(codeExpiry),
       },
       select: {
         id: true,
@@ -63,14 +57,9 @@ export const registerStudent = asyncHandler(
     });
 
     await sendEmail({
-      email: createdStudent.email,
+      email: student.email,
       subject: "Verify your email",
-      mailgenContent: emailVerificationMailgenContent(
-        student.username,
-        `${req.protocol}://${req.get(
-          "host"
-        )}/api/auth/verify-email/${unHashedToken}`
-      ),
+      mailgenContent: emailVerificationMailgenContent(student.username, code),
     });
 
     return res
@@ -78,8 +67,8 @@ export const registerStudent = asyncHandler(
       .json(
         new ApiResponse(
           200,
-          { user: createdStudent },
-          "Student registered successfully and verification email has been sent on your email."
+          { user: student },
+          "Student registered successfully and verification code has been sent to your email."
         )
       );
   }
