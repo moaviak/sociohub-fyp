@@ -8,12 +8,12 @@ export const authApi = api.injectEndpoints({
   endpoints: (builder) => ({
     login: builder.mutation<
       LoginResponse | ApiError,
-      { email: string; password: string }
+      { email?: string; username?: string; password: string }
     >({
-      query: ({ email, password }) => ({
+      query: ({ email, username, password }) => ({
         url: "/auth/login",
         method: "POST",
-        body: { email, password },
+        body: { email, username, password },
       }),
       transformResponse: (response: ApiResponse<LoginResponse>) => {
         if (response.success) {

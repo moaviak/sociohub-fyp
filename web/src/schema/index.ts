@@ -24,7 +24,9 @@ export const contactFormSchema = z
   });
 
 export const signInSchema = z.object({
-  email: z.string().email({ message: "Email is required" }),
+  emailOrUsername: z
+    .string()
+    .min(1, { message: "Email or username is required" }),
   password: z.string().min(8, { message: "Password is required" }),
   rememberMe: z.boolean().default(false),
 });

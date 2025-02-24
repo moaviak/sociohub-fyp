@@ -1,6 +1,7 @@
 import { z } from "zod";
-import { useState } from "react";
-import { Link } from "react-router";
+import { toast } from "sonner";
+import { Link, useNavigate } from "react-router";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { Eye, EyeOff } from "lucide-react";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -14,41 +15,65 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { signInSchema } from "@/schema";
+import ApiError from "@/features/api-error";
 import { Input } from "@/components/ui/input";
+import { parseCredentials } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 
+import { useLoginMutation } from "../api";
 import { Google } from "../components/google";
 
 const SignIn = () => {
+  const navigate = useNavigate();
+
   const [showPassword, setShowPassword] = useState(false);
+
+  const [login, { isLoading, error, isError }] = useLoginMutation();
 
   const form = useForm<z.infer<typeof signInSchema>>({
     resolver: zodResolver(signInSchema),
     defaultValues: {
-      email: "",
+      emailOrUsername: "",
       password: "",
       rememberMe: false,
     },
   });
 
-  const onSubmit = (values: z.infer<typeof signInSchema>) => {
-    console.log(values);
+  const onSubmit = async (values: z.infer<typeof signInSchema>) => {
+    const { email, username } = parseCredentials(values.emailOrUsername);
+    const response = await login({
+      email,
+      username,
+      password: values.password,
+    });
+
+    if (!response.error) {
+      navigate("/dashboard");
+    }
   };
+
+  useEffect(() => {
+    if (isError) {
+      toast.error(
+        (error as ApiError)?.errorMessage || "An unexpected error occurred"
+      );
+    }
+  }, [isError, error]);
 
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         <FormField
           control={form.control}
-          name="email"
+          name="emailOrUsername"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="b4-medium">Email</FormLabel>
+              <FormLabel className="b4-medium">Email or Username</FormLabel>
               <FormControl>
                 <Input
                   className="outline-1 outline-neutral-300"
-                  placeholder="john@example.com"
+                  placeholder="john@example.com / johndoe"
                   {...field}
                 />
               </FormControl>
@@ -117,11 +142,16 @@ const SignIn = () => {
         />
 
         <div className="space-y-4 pt-4">
-          <Button type="submit" className="w-full" size="lg">
-            Sign In
+          <Button
+            type="submit"
+            className="w-full"
+            size="lg"
+            disabled={isLoading}
+          >
+            {isLoading ? "Signing in..." : "Sign In"}
           </Button>
 
-          <Google text="Sign In with Google" />
+          <Google text="Sign In with Google" disabled={isLoading} />
         </div>
       </form>
     </Form>

@@ -16,3 +16,17 @@ export const getYearOptions = () => {
 
   return years;
 };
+
+export const isEmail = (input: string): boolean => {
+  // Basic email validation regex
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(input);
+};
+
+export const parseCredentials = (emailOrUsername: string) => {
+  const isEmailInput = isEmail(emailOrUsername);
+  return {
+    email: isEmailInput ? emailOrUsername : undefined,
+    username: !isEmailInput ? emailOrUsername : undefined,
+  };
+};
