@@ -68,7 +68,29 @@ export const authApi = api.injectEndpoints({
         );
       },
     }),
+    verifyEmail: builder.mutation<
+      { isEmailVerified: boolean } | ApiError,
+      { email: string; otp: string }
+    >({
+      query: ({ email, otp }) => ({
+        url: "/auth/verify-email",
+        method: "POST",
+        body: { email, code: otp },
+      }),
+      transformResponse: (
+        response: ApiResponse<{ isEmailVerified: boolean }>
+      ) => {
+        if (response.success) {
+          return response.data;
+        }
+        return createApiError(response.message);
+      },
+    }),
   }),
 });
 
-export const { useLoginMutation, useStudentSignUpMutation } = authApi;
+export const {
+  useLoginMutation,
+  useStudentSignUpMutation,
+  useVerifyEmailMutation,
+} = authApi;

@@ -118,7 +118,7 @@ export const loginUser = asyncHandler(async (req, res) => {
       // Add other fields you want to return
       password: false,
       refreshToken: false,
-      emailVerificationToken: false,
+      emailVerificationCode: false,
       emailVerificationExpiry: false,
     },
   });
@@ -207,31 +207,28 @@ export const verifyEmail = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Verification code and email are required");
   }
 
-  // Search in both student and advisor tables for matching verification code
+  // First find user by email in both tables
   const [student, advisor] = await Promise.all([
-    prisma.student.findFirst({
-      where: {
-        email,
-        emailVerificationCode: code,
-        emailVerificationExpiry: {
-          gt: new Date(),
-        },
-      },
+    prisma.student.findUnique({
+      where: { email },
     }),
-    prisma.advisor.findFirst({
-      where: {
-        email,
-        emailVerificationCode: code,
-        emailVerificationExpiry: {
-          gt: new Date(),
-        },
-      },
+    prisma.advisor.findUnique({
+      where: { email },
     }),
   ]);
 
   const user = student || advisor;
 
   if (!user) {
+    throw new ApiError(404, "No user found with this email");
+  }
+
+  // Verify the code matches and hasn't expired
+  if (
+    user.emailVerificationCode !== code ||
+    !user.emailVerificationExpiry ||
+    user.emailVerificationExpiry < new Date()
+  ) {
     throw new ApiError(400, "Invalid or expired verification code");
   }
 

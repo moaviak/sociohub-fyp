@@ -44,7 +44,7 @@ model Advisor {
   password           String
   refreshToken       String?
   isEmailVerified  Boolean @default(false)
-  emailVerificationToken String?
+  emailVerificationCode String?
   emailVerificationExpiry DateTime?
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt

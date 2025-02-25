@@ -7,3 +7,10 @@ export const userLoginValidator = () => {
     body("password").notEmpty().withMessage("Password is required"),
   ];
 };
+
+export const verifyEmailValidator = () => {
+  return [
+    body("email").notEmpty().withMessage("Email is required"),
+    body("code").notEmpty().withMessage("Verification code is required"),
+  ];
+};
