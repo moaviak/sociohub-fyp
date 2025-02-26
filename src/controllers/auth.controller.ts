@@ -299,3 +299,41 @@ export const resendEmailVerification = asyncHandler(
       .json(new ApiResponse(200, {}, "Mail has been sent to your mail ID"));
   }
 );
+
+export const getCurrentUser = asyncHandler(
+  async (req: Request, res: Response) => {
+    return res
+      .status(200)
+      .json(
+        new ApiResponse(
+          200,
+          { user: req.user, accessToken: req.cookies?.accessToken || "" },
+          "Current user fetched successfully"
+        )
+      );
+  }
+);
+
+export const logoutUser = asyncHandler(async (req: Request, res: Response) => {
+  if (!isAuthUser(req.user)) {
+    throw new ApiError(401, "Unauthorized request");
+  }
+
+  await (prisma[req.user?.userType] as any).update({
+    where: { id: req.user?.id },
+    data: {
+      refreshToken: "",
+    },
+  });
+
+  const options = {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+  };
+
+  return res
+    .status(200)
+    .clearCookie("accessToken", options)
+    .clearCookie("refreshToken", options)
+    .json(new ApiResponse(200, {}, "User logged out"));
+});

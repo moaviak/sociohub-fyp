@@ -9,6 +9,8 @@ import {
   refreshAccessToken,
   verifyEmail,
   resendEmailVerification,
+  getCurrentUser,
+  logoutUser,
 } from "../controllers/auth.controller";
 import { validate } from "../validators/validate";
 import { verifyJWT } from "../middlewares/auth.middlewares";
@@ -23,5 +25,9 @@ router
 router
   .route("/resend-email-verification")
   .post(verifyJWT, resendEmailVerification);
+
+router.route("/me").get(verifyJWT, getCurrentUser);
+
+router.route("/logout").post(verifyJWT, logoutUser);
 
 export default router;

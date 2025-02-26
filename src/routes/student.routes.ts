@@ -6,8 +6,6 @@ import { studentRegisterValidator } from "../validators/student.validators";
 
 const router = Router();
 
-router
-  .route("/register")
-  .post(studentRegisterValidator(), validate, registerStudent);
+router.route("/").post(studentRegisterValidator(), validate, registerStudent);
 
 export default router;
