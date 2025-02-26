@@ -1,13 +1,13 @@
 import { api } from "@/features/api";
 
-import { LoginResponse, Student } from "./types";
+import { AuthResponse } from "./types";
 import { ApiResponse } from "../api-response";
 import ApiError, { ApiErrorResponse, createApiError } from "../api-error";
 
 export const authApi = api.injectEndpoints({
   endpoints: (builder) => ({
     login: builder.mutation<
-      LoginResponse | ApiError,
+      AuthResponse | ApiError,
       { email?: string; username?: string; password: string }
     >({
       query: ({ email, username, password }) => ({
@@ -15,7 +15,7 @@ export const authApi = api.injectEndpoints({
         method: "POST",
         body: { email, username, password },
       }),
-      transformResponse: (response: ApiResponse<LoginResponse>) => {
+      transformResponse: (response: ApiResponse<AuthResponse>) => {
         if (response.success) {
           return response.data;
         } else {
@@ -35,7 +35,7 @@ export const authApi = api.injectEndpoints({
       },
     }),
     studentSignUp: builder.mutation<
-      Student | ApiError,
+      AuthResponse | ApiError,
       {
         email: string;
         username: string;
@@ -50,9 +50,9 @@ export const authApi = api.injectEndpoints({
         method: "POST",
         body: credentials,
       }),
-      transformResponse: (response: ApiResponse<{ user: Student }>) => {
-        if (response.success && response.data.user) {
-          return response.data.user;
+      transformResponse: (response: ApiResponse<AuthResponse>) => {
+        if (response.success) {
+          return response.data;
         }
         return createApiError(response.message);
       },
@@ -69,7 +69,7 @@ export const authApi = api.injectEndpoints({
       },
     }),
     verifyEmail: builder.mutation<
-      { isEmailVerified: boolean } | ApiError,
+      AuthResponse | ApiError,
       { email: string; otp: string }
     >({
       query: ({ email, otp }) => ({
@@ -77,13 +77,46 @@ export const authApi = api.injectEndpoints({
         method: "POST",
         body: { email, code: otp },
       }),
-      transformResponse: (
-        response: ApiResponse<{ isEmailVerified: boolean }>
-      ) => {
+      transformResponse: (response: ApiResponse<AuthResponse>) => {
         if (response.success) {
           return response.data;
         }
         return createApiError(response.message);
+      },
+      transformErrorResponse: (response) => {
+        const errorResponse = response.data as ApiErrorResponse;
+        return createApiError(
+          errorResponse.message,
+          {
+            status: errorResponse.statusCode,
+            data: errorResponse.errors,
+          },
+          errorResponse
+        );
+      },
+    }),
+
+    resendEmail: builder.mutation<null | ApiError, null>({
+      query: () => ({
+        url: "/auth/resend-email-verification",
+        method: "POST",
+      }),
+      transformResponse: (response: ApiResponse<null>) => {
+        if (response.success) {
+          return response.data;
+        }
+        return createApiError(response.message);
+      },
+      transformErrorResponse: (response) => {
+        const errorResponse = response.data as ApiErrorResponse;
+        return createApiError(
+          errorResponse.message,
+          {
+            status: errorResponse.statusCode,
+            data: errorResponse.errors,
+          },
+          errorResponse
+        );
       },
     }),
   }),
@@ -93,4 +126,5 @@ export const {
   useLoginMutation,
   useStudentSignUpMutation,
   useVerifyEmailMutation,
+  useResendEmailMutation,
 } = authApi;

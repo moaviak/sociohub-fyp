@@ -27,6 +27,8 @@ function App() {
           <Route path="verify-email" element={<VerifyEmailPage />} />
         </Route>
       </Route>
+
+      {/* Private Routes */}
     </Routes>
   );
 }

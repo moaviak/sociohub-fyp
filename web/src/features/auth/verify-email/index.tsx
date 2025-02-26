@@ -11,7 +11,7 @@ import {
 import ApiError from "@/features/api-error";
 import { Button } from "@/components/ui/button";
 
-import { useVerifyEmailMutation } from "../api";
+import { useVerifyEmailMutation, useResendEmailMutation } from "../api";
 
 export const VerifyEmail = () => {
   const email = sessionStorage.getItem("verificationEmail");
@@ -19,17 +19,22 @@ export const VerifyEmail = () => {
   const navigate = useNavigate();
 
   const [verifyEmail, { isLoading, isError, error }] = useVerifyEmailMutation();
+  const [
+    resendEmail,
+    { isLoading: isResending, isError: isResendError, error: resendError },
+  ] = useResendEmailMutation();
 
   useEffect(() => {
-    if (isError) {
-      toast.error(
-        (error as ApiError)?.errorMessage || "An unexpected error occurred",
-        {
-          duration: 10000,
-        }
-      );
+    if (isError || isResendError) {
+      const errorMessage =
+        (error as ApiError)?.errorMessage ||
+        (resendError as ApiError)?.errorMessage ||
+        "An unexpected error occurred";
+      toast.error(errorMessage, {
+        duration: 10000,
+      });
     }
-  }, [isError, error]);
+  }, [isError, error, isResendError, resendError]);
 
   if (!email) {
     return <Navigate to="/sign-in" />;
@@ -41,15 +46,33 @@ export const VerifyEmail = () => {
       return;
     }
 
-    const response = await verifyEmail({ email, otp });
+    try {
+      const response = await verifyEmail({ email, otp });
 
-    if (response.data && "isEmailVerified" in response.data) {
-      if (response.data.isEmailVerified) {
-        toast.success("Email verified successfully");
-        navigate("/dashboard");
-      } else {
-        toast.error("Invalid OTP");
+      if (response.data && "user" in response.data) {
+        if (response.data.user.isEmailVerified) {
+          toast.success("Email verified successfully");
+          navigate("/dashboard", { replace: true });
+          setTimeout(() => {
+            sessionStorage.removeItem("verificationEmail");
+          }, 1000);
+        } else {
+          toast.error("Invalid OTP");
+        }
       }
+    } catch (error) {
+      console.error("Verification error:", error);
+    }
+  };
+
+  const onResend = async () => {
+    try {
+      const response = await resendEmail(null);
+      if (response.data) {
+        toast.success("Mail has been sent to your email.");
+      }
+    } catch (error) {
+      console.error("Resend error:", error);
     }
   };
 
@@ -86,14 +109,18 @@ export const VerifyEmail = () => {
           size="lg"
           className="w-full rounded-md bg-primary-600 py-3 text-white"
           onClick={onVerify}
-          disabled={isLoading}
+          disabled={isLoading || isResending}
         >
           {isLoading ? "Verifying..." : "Verify"}
         </Button>
 
         <div className="text-sm text-neutral-800">
           Didn't receive the code?{" "}
-          <Button variant="ghost" className="text-blue-600 p-0">
+          <Button
+            variant="ghost"
+            className="text-blue-600 p-0"
+            onClick={onResend}
+          >
             Resend Code
           </Button>
         </div>

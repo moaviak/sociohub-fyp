@@ -5,8 +5,6 @@ import { Eye, EyeOff } from "lucide-react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { useNavigate } from "react-router";
-import ApiError from "@/features/api-error";
-import { useStudentSignUpMutation } from "../../api";
 
 import {
   Form,
@@ -24,11 +22,15 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { DEGREES } from "@/data";
+import ApiError from "@/features/api-error";
 import { getYearOptions } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { studentSignUpSchema } from "@/schema";
 import { Button } from "@/components/ui/button";
 import { Google } from "@/features/auth/components/google";
+
+import { useStudentSignUpMutation } from "../../api";
+import { AuthResponse } from "../../types";
 
 const StudentSignUp = () => {
   const navigate = useNavigate();
@@ -66,11 +68,11 @@ const StudentSignUp = () => {
       registrationNumber: formattedRegistrationNumber,
     });
 
-    // Check if response is not an ApiError
-    if (response.data && "email" in response.data) {
+    if (!("error" in response) && response.data) {
+      const user = (response.data as AuthResponse).user;
       toast.success("Account created successfully! Please verify your email.");
       navigate(`/sign-up/verify-email`);
-      sessionStorage.setItem("verificationEmail", response.data.email);
+      sessionStorage.setItem("verificationEmail", user.email);
     }
   };
 

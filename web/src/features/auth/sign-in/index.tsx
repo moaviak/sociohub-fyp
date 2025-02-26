@@ -23,6 +23,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 
 import { useLoginMutation } from "../api";
 import { Google } from "../components/google";
+import { AuthResponse } from "../types";
 
 const SignIn = () => {
   const navigate = useNavigate();
@@ -48,8 +49,16 @@ const SignIn = () => {
       password: values.password,
     });
 
+    console.log({ response });
+
     if (!response.error) {
-      navigate("/dashboard");
+      const data = response.data as AuthResponse;
+      if (!data.user.isEmailVerified) {
+        navigate("/sign-up/verify-email");
+        sessionStorage.setItem("verificationEmail", data.user.email);
+      } else {
+        navigate("/dashboard");
+      }
     }
   };
 

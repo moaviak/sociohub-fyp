@@ -30,8 +30,7 @@ export enum LOGIN_TYPES {
   GOOGLE = "GOOGLE",
 }
 
-export type LoginResponse = {
+export type AuthResponse = {
   user: User;
   accessToken: string;
-  refreshToken: string;
 };
