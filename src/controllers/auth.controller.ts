@@ -1,4 +1,3 @@
-import crypto from "crypto";
 import jwt, { UserJwtPayload } from "jsonwebtoken";
 
 import prisma from "../db";
@@ -8,37 +7,10 @@ import { ApiError } from "../utils/ApiError";
 import { ApiResponse } from "../utils/ApiResponse";
 import { asyncHandler } from "../utils/asyncHandler";
 import { Advisor, Student } from "@prisma/client";
-
-const generateAccessAndRefreshTokens = async (
-  userId: string,
-  userType: UserType
-) => {
-  try {
-    const user = await prisma[userType].findUnique({ where: { id: userId } });
-
-    if (!user) throw new ApiError(404, "User not found");
-
-    const accessToken =
-      userType === UserType.STUDENT
-        ? prisma.student.generateAccessToken(user as Student)
-        : prisma.advisor.generateAccessToken(user as Advisor);
-
-    const refreshToken =
-      userType === UserType.STUDENT
-        ? prisma.student.generateRefreshToken(user as Student)
-        : prisma.advisor.generateRefreshToken(user as Advisor);
-
-    // Update the user with new refresh token
-    await (prisma[userType] as any).update({
-      where: { id: userId },
-      data: { refreshToken },
-    });
-
-    return { accessToken, refreshToken };
-  } catch (error) {
-    throw new ApiError(500, "Something went wrong while generating tokens");
-  }
-};
+import { sendVerificationEmail } from "../utils/mail";
+import { generateAccessAndRefreshTokens } from "../utils/helpers";
+import { Request, Response } from "express";
+import { isAuthUser } from "../types/index";
 
 export const loginUser = asyncHandler(async (req, res) => {
   const { email, username, password } = req.body;
@@ -73,14 +45,6 @@ export const loginUser = asyncHandler(async (req, res) => {
     throw new ApiError(404, "User does not exist");
   }
 
-  // Add email verification check
-  if (!user.isEmailVerified) {
-    throw new ApiError(
-      403,
-      "Please verify your email before logging in. Check your email for verification instructions."
-    );
-  }
-
   if (userType === UserType.STUDENT) {
     const studentUser = user as typeof student;
     if (studentUser?.loginType !== UserLoginType.EMAIL_PASSWORD) {
@@ -106,27 +70,41 @@ export const loginUser = asyncHandler(async (req, res) => {
     userType as UserType
   );
 
-  // Get user data without sensitive information
-  const loggedInUser = await prisma[userType].findUnique({
-    where: { id: user.id },
-    select: {
-      id: true,
-      username: true,
-      email: true,
-      firstName: true,
-      lastName: true,
-      // Add other fields you want to return
-      password: false,
-      refreshToken: false,
-      emailVerificationCode: false,
-      emailVerificationExpiry: false,
-    },
-  });
-
   const options = {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
   };
+
+  // Check email verification status
+  if (!user.isEmailVerified) {
+    // Check if verification code is expired
+    const isVerificationExpired =
+      !user.emailVerificationExpiry ||
+      user.emailVerificationExpiry < new Date();
+
+    if (isVerificationExpired) {
+      // Generate verification code
+      const { code, codeExpiry } =
+        userType === UserType.STUDENT
+          ? prisma.student.generateVerificationCode()
+          : prisma.advisor.generateVerificationCode();
+
+      // Update user with new verification details
+      await (prisma[userType] as any).update({
+        where: { id: user.id },
+        data: {
+          emailVerificationCode: code,
+          emailVerificationExpiry: new Date(codeExpiry),
+        },
+      });
+
+      await sendVerificationEmail(user.email, {
+        username: user.username,
+        verificationCode: code,
+        userType: userType,
+      });
+    }
+  }
 
   return res
     .status(200)
@@ -135,70 +113,78 @@ export const loginUser = asyncHandler(async (req, res) => {
     .json(
       new ApiResponse(
         200,
-        { user: loggedInUser, accessToken, refreshToken },
+        {
+          user: {
+            id: user.id,
+            email: user.email,
+            username: user.username,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            isEmailVerified: user.isEmailVerified,
+            createdAt: user.createdAt,
+            updatedAt: user.updatedAt,
+          },
+          accessToken,
+        },
         "User logged in successfully"
       )
     );
 });
 
-export const refreshAccessToken = asyncHandler(async (req, res) => {
-  const incomingRefreshToken =
-    req.cookies.refreshToken || req.body.refreshToken;
+export const refreshAccessToken = asyncHandler(
+  async (req: Request, res: Response) => {
+    const incomingRefreshToken =
+      req.cookies.refreshToken || req.body.refreshToken;
 
-  if (!incomingRefreshToken) {
-    throw new ApiError(401, "Unauthorized request");
-  }
-
-  try {
-    const decodedToken = jwt.verify(
-      incomingRefreshToken,
-      process.env.REFRESH_TOKEN_SECRET!
-    ) as UserJwtPayload;
-
-    const user = await prisma[decodedToken.userType].findUnique({
-      where: { id: decodedToken.id },
-    });
-
-    if (!user) {
-      throw new ApiError(401, "Invalid refresh token");
+    if (!incomingRefreshToken) {
+      throw new ApiError(401, "Unauthorized request");
     }
 
-    // check if incoming refresh token is same as the refresh token attached in the user document
-    // This shows that the refresh token is used or not
-    // Once it is used, we are replacing it with new refresh token below
-    if (incomingRefreshToken !== user?.refreshToken) {
-      // If token is valid but is used already
-      throw new ApiError(401, "Refresh token is expired or used");
+    try {
+      const decodedToken = jwt.verify(
+        incomingRefreshToken,
+        process.env.REFRESH_TOKEN_SECRET!
+      ) as UserJwtPayload;
+
+      const user = await prisma[decodedToken.userType].findUnique({
+        where: { id: decodedToken.id },
+      });
+
+      if (!user) {
+        throw new ApiError(401, "Invalid refresh token");
+      }
+
+      // check if incoming refresh token is same as the refresh token attached in the user document
+      // This shows that the refresh token is used or not
+      // Once it is used, we are replacing it with new refresh token below
+      if (incomingRefreshToken !== user?.refreshToken) {
+        // If token is valid but is used already
+        throw new ApiError(401, "Refresh token is expired or used");
+      }
+      const options = {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+      };
+
+      const { accessToken, refreshToken: newRefreshToken } =
+        await generateAccessAndRefreshTokens(user.id, decodedToken.userType);
+
+      // Update the user's refresh token in the database
+      await (prisma[decodedToken.userType] as any).update({
+        where: { id: user.id },
+        data: { refreshToken: newRefreshToken },
+      });
+
+      return res
+        .status(200)
+        .cookie("accessToken", accessToken, options)
+        .cookie("refreshToken", newRefreshToken, options)
+        .json(new ApiResponse(200, { accessToken }, "Access token refreshed"));
+    } catch (error: any) {
+      throw new ApiError(401, error?.message || "Invalid refresh token");
     }
-    const options = {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-    };
-
-    const { accessToken, refreshToken: newRefreshToken } =
-      await generateAccessAndRefreshTokens(user.id, decodedToken.userType);
-
-    // Update the user's refresh token in the database
-    await (prisma[decodedToken.userType] as any).update({
-      where: { id: user.id },
-      data: { refreshToken: newRefreshToken },
-    });
-
-    return res
-      .status(200)
-      .cookie("accessToken", accessToken, options)
-      .cookie("refreshToken", newRefreshToken, options)
-      .json(
-        new ApiResponse(
-          200,
-          { accessToken, refreshToken: newRefreshToken },
-          "Access token refreshed"
-        )
-      );
-  } catch (error: any) {
-    throw new ApiError(401, error?.message || "Invalid refresh token");
   }
-});
+);
 
 export const verifyEmail = asyncHandler(async (req, res) => {
   const { code, email } = req.body;
@@ -234,7 +220,7 @@ export const verifyEmail = asyncHandler(async (req, res) => {
 
   // Clear verification code and mark email as verified
   const userType = student ? UserType.STUDENT : UserType.ADVISOR;
-  await (prisma[userType] as any).update({
+  const verifiedUser = await (prisma[userType] as any).update({
     where: {
       id: user.id,
     },
@@ -243,15 +229,73 @@ export const verifyEmail = asyncHandler(async (req, res) => {
       emailVerificationExpiry: null,
       isEmailVerified: true,
     },
+    select: {
+      id: true,
+      username: true,
+      email: true,
+      firstName: true,
+      lastName: true,
+      isEmailVerified: true,
+      // Exclude sensitive fields
+      password: false,
+      refreshToken: false,
+      emailVerificationCode: false,
+      emailVerificationExpiry: false,
+    },
   });
 
-  return res
-    .status(200)
-    .json(
-      new ApiResponse(
-        200,
-        { isEmailVerified: true },
-        "Email verified successfully"
-      )
-    );
+  return res.status(200).json(
+    new ApiResponse(
+      200,
+      {
+        user: verifiedUser,
+      },
+      "Email verified successfully"
+    )
+  );
 });
+
+export const resendEmailVerification = asyncHandler(
+  async (req: Request, res: Response) => {
+    if (!isAuthUser(req.user)) {
+      throw new ApiError(401, "Unauthorized request");
+    }
+
+    const user = await prisma[req.user.userType].findUnique({
+      where: { id: req.user.id },
+    });
+
+    if (!user) {
+      throw new ApiError(404, "User does not exists", []);
+    }
+
+    // if email is already verified throw an error
+    if (user.isEmailVerified) {
+      throw new ApiError(409, "Email is already verified!");
+    }
+
+    const { code, codeExpiry } =
+      req.user.userType === UserType.STUDENT
+        ? prisma.student.generateVerificationCode()
+        : prisma.advisor.generateVerificationCode();
+
+    console.log({ code, codeExpiry });
+
+    await (prisma[req.user.userType] as any).update({
+      where: { id: user.id },
+      data: {
+        emailVerificationCode: code,
+        emailVerificationExpiry: new Date(codeExpiry),
+      },
+    });
+
+    await sendVerificationEmail(user.email, {
+      username: user.username,
+      verificationCode: code,
+      userType: req.user.userType,
+    });
+    return res
+      .status(200)
+      .json(new ApiResponse(200, {}, "Mail has been sent to your mail ID"));
+  }
+);

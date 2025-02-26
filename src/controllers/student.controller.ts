@@ -1,11 +1,13 @@
-import { Request, Response } from "express";
 import bcrypt from "bcryptjs";
+import { Request, Response } from "express";
 
 import prisma from "../db";
+import { UserType } from "../types";
 import { ApiError } from "../utils/ApiError";
 import { ApiResponse } from "../utils/ApiResponse";
 import { asyncHandler } from "../utils/asyncHandler";
-import { emailVerificationMailgenContent, sendEmail } from "../utils/mail";
+import { sendVerificationEmail } from "../utils/mail";
+import { generateAccessAndRefreshTokens } from "../utils/helpers";
 
 export const registerStudent = asyncHandler(
   async (req: Request, res: Response) => {
@@ -25,7 +27,7 @@ export const registerStudent = asyncHandler(
     });
 
     if (existingStudent) {
-      throw new ApiError(409, "Student already exists", []);
+      throw new ApiError(409, "Student already exists");
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -56,18 +58,30 @@ export const registerStudent = asyncHandler(
       },
     });
 
-    await sendEmail({
-      email: student.email,
-      subject: "Verify your email",
-      mailgenContent: emailVerificationMailgenContent(student.username, code),
+    await sendVerificationEmail(student.email, {
+      username: student.username,
+      verificationCode: code,
+      userType: "student",
     });
+
+    const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(
+      student.id,
+      UserType.STUDENT
+    );
+
+    const options = {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+    };
 
     return res
       .status(201)
+      .cookie("accessToken", accessToken, options)
+      .cookie("refreshToken", refreshToken, options)
       .json(
         new ApiResponse(
           200,
-          { user: student },
+          { user: student, accessToken },
           "Student registered successfully and verification code has been sent to your email."
         )
       );

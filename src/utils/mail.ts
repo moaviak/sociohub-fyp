@@ -1,36 +1,27 @@
-import Mailgen from "mailgen";
 import nodemailer from "nodemailer";
 import { MailtrapTransport } from "mailtrap";
+import ejs from "ejs";
+import path from "path";
 
 import logger from "../logger/winston.logger";
 
 interface EmailOptions {
   email: string;
   subject: string;
-  mailgenContent: Mailgen.Content;
+  template: string;
+  data: Record<string, any>;
+}
+
+interface VerificationEmailData {
+  username: string;
+  verificationCode: string;
+  userType: "student" | "advisor";
 }
 
 /**
  * @param options Email configuration options
  */
 export const sendEmail = async (options: EmailOptions) => {
-  // Initialize mailgen instance with default theme and brand configuration
-  const mailGenerator = new Mailgen({
-    theme: "default",
-    product: {
-      name: "SocioHub",
-      link: "https://sociohub.app",
-    },
-  });
-
-  // For more info on how mailgen content work visit https://github.com/eladnava/mailgen#readme
-  // Generate the plaintext version of the e-mail (for clients that do not support HTML)
-  const emailTextual = mailGenerator.generatePlaintext(options.mailgenContent);
-
-  // Generate an HTML email with the provided contents
-  const emailHtml = mailGenerator.generate(options.mailgenContent);
-
-  // Create a nodemailer transporter instance which is responsible to send a mail
   const transporter = nodemailer.createTransport(
     MailtrapTransport({
       token: process.env.MAILTRAP_API_TOKEN!,
@@ -38,12 +29,19 @@ export const sendEmail = async (options: EmailOptions) => {
     })
   );
 
+  // Render email template
+  const templatePath = path.join(
+    __dirname,
+    "../views/emails",
+    options.template
+  );
+  const html = await ejs.renderFile(templatePath, options.data);
+
   const mail = {
-    from: '"SocioHub" <info@sociohub.app>', // Use a more professional from address
+    from: '"SocioHub" <info@sociohub.app>',
     to: options.email,
     subject: options.subject,
-    text: emailTextual,
-    html: emailHtml,
+    html,
     sandbox: true,
   };
 
@@ -59,32 +57,14 @@ export const sendEmail = async (options: EmailOptions) => {
   }
 };
 
-/**
- *
- * @param {string} username
- * @param {string} verificationCode
- * @returns {Mailgen.Content}
- * @description It designs the email verification mail
- */
-export const emailVerificationMailgenContent = (
-  username: string,
-  verificationCode: string
-): Mailgen.Content => {
-  return {
-    body: {
-      name: username,
-      intro: "Welcome to our app! We're very excited to have you on board.",
-      action: {
-        instructions:
-          "To verify your email please use the following verification code:",
-        button: {
-          color: "#1a6fcc",
-          text: verificationCode,
-          link: "#", // No link needed as we're using a code
-        },
-      },
-      outro:
-        "This code will expire in 30 minutes. Need help, or have questions? Just reply to this email, we'd love to help.",
-    },
-  };
+export const sendVerificationEmail = async (
+  email: string,
+  data: VerificationEmailData
+) => {
+  await sendEmail({
+    email,
+    subject: "Verify your email",
+    template: "verification.ejs",
+    data,
+  });
 };

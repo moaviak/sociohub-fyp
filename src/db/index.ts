@@ -70,7 +70,7 @@ const prisma = new PrismaClient().$extends(withAccelerate()).$extends({
         // Generate a random 6 digit number
         const code = Math.floor(100000 + Math.random() * 900000).toString();
 
-        // This is the expiry time for the code (20 minutes)
+        // This is the expiry time for the code (30 minutes)
         const codeExpiry = Date.now() + USER_TEMPORARY_TOKEN_EXPIRY;
 
         return { code, codeExpiry };

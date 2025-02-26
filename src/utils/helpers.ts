@@ -1,5 +1,10 @@
-import { Request } from "express";
 import fs from "fs";
+import { Request } from "express";
+import { Advisor, Student } from "@prisma/client";
+
+import prisma from "../db";
+import { UserType } from "../types";
+import { ApiError } from "./ApiError";
 import logger from "../logger/winston.logger";
 
 /**
@@ -53,4 +58,35 @@ export const removeLocalFile = (localPath: string) => {
       logger.info("Removed local: ", localPath);
     }
   });
+};
+
+export const generateAccessAndRefreshTokens = async (
+  userId: string,
+  userType: UserType
+) => {
+  try {
+    const user = await prisma[userType].findUnique({ where: { id: userId } });
+
+    if (!user) throw new ApiError(404, "User not found");
+
+    const accessToken =
+      userType === UserType.STUDENT
+        ? prisma.student.generateAccessToken(user as Student)
+        : prisma.advisor.generateAccessToken(user as Advisor);
+
+    const refreshToken =
+      userType === UserType.STUDENT
+        ? prisma.student.generateRefreshToken(user as Student)
+        : prisma.advisor.generateRefreshToken(user as Advisor);
+
+    // Update the user with new refresh token
+    await (prisma[userType] as any).update({
+      where: { id: userId },
+      data: { refreshToken },
+    });
+
+    return { accessToken, refreshToken };
+  } catch (error) {
+    throw new ApiError(500, "Something went wrong while generating tokens");
+  }
 };

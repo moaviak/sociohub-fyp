@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      .container {
+        font-family: Arial, sans-serif;
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+      .logo {
+        text-align: center;
+        margin-bottom: 30px;
+      }
+      .otp-container {
+        text-align: center;
+        margin: 30px 0;
+      }
+      .otp-box {
+        display: inline-block;
+        background-color: #f8f9fa;
+        padding: 16px;
+        border-radius: 8px;
+        border: 1px solid #1a1a1a;
+        margin: 0 4px;
+        font-size: 24px;
+        font-weight: bold;
+        color: #1a1a1a;
+      }
+      .footer {
+        color: #666;
+        font-size: 14px;
+        margin-top: 30px;
+        text-align: center;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="logo">
+        <img
+          src="http://localhost:3000/assets/images/logo-sociohub.svg"
+          alt="SocioHub"
+          width="120"
+        />
+      </div>
+
+      <h2>Hi <%= username %>,</h2>
+
+      <p>
+        Here is your One Time Password (OTP). Please enter this code to verify
+        your <%= userType %> account for SocioHub:
+      </p>
+
+      <div class="otp-container">
+        <% const digits = verificationCode.split('');
+        digits.forEach(function(digit, index) { %>
+        <span class="otp-box"><%= digit %></span>
+        <% if (index === 2 && index < digits.length - 1) { %>
+        <span style="margin: 0 8px">-</span>
+        <% } %> <% }); %>
+      </div>
+
+      <p>This OTP will expire in 30 minutes.</p>
+
+      <div class="footer">
+        <p>Best Regards,<br />SocioHub team</p>
+      </div>
+    </div>
+  </body>
+</html>
