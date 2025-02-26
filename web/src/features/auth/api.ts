@@ -3,8 +3,9 @@ import { api } from "@/features/api";
 import { AuthResponse } from "./types";
 import { ApiResponse } from "../api-response";
 import ApiError, { ApiErrorResponse, createApiError } from "../api-error";
+import { login, logout, updateCheckAuth } from "./slice";
 
-export const authApi = api.injectEndpoints({
+export const AuthApi = api.injectEndpoints({
   endpoints: (builder) => ({
     login: builder.mutation<
       AuthResponse | ApiError,
@@ -33,6 +34,13 @@ export const authApi = api.injectEndpoints({
           errorResponse
         );
       },
+      onQueryStarted: (_, { dispatch, queryFulfilled }) => {
+        queryFulfilled.then(({ data }) => {
+          if (!("error" in data)) {
+            dispatch(login(data));
+          }
+        });
+      },
     }),
     studentSignUp: builder.mutation<
       AuthResponse | ApiError,
@@ -46,7 +54,7 @@ export const authApi = api.injectEndpoints({
       }
     >({
       query: (credentials) => ({
-        url: "/student/register",
+        url: "/student",
         method: "POST",
         body: credentials,
       }),
@@ -66,6 +74,13 @@ export const authApi = api.injectEndpoints({
           },
           errorResponse
         );
+      },
+      onQueryStarted: (_, { dispatch, queryFulfilled }) => {
+        queryFulfilled.then(({ data }) => {
+          if (!("error" in data)) {
+            dispatch(login(data));
+          }
+        });
       },
     }),
     verifyEmail: builder.mutation<
@@ -119,6 +134,56 @@ export const authApi = api.injectEndpoints({
         );
       },
     }),
+    getUser: builder.query<AuthResponse | ApiError, null>({
+      query: () => ({
+        url: "/auth/me",
+        method: "GET",
+      }),
+      transformResponse: (response: ApiResponse<AuthResponse>) => {
+        if (response.success) {
+          return response.data;
+        }
+        return createApiError(response.message);
+      },
+      transformErrorResponse: (response) => {
+        const errorResponse = response.data as ApiErrorResponse;
+        return createApiError(errorResponse.message);
+      },
+      onQueryStarted: (_, { dispatch, queryFulfilled }) => {
+        queryFulfilled.then(({ data }) => {
+          if (!("error" in data)) {
+            dispatch(login(data));
+          } else {
+            dispatch(logout());
+          }
+
+          dispatch(updateCheckAuth(true));
+        });
+        queryFulfilled.catch(() => {
+          dispatch(logout());
+          dispatch(updateCheckAuth(true));
+        });
+      },
+    }),
+    logout: builder.mutation<null | ApiError, null>({
+      query: () => ({
+        url: "/auth/logout",
+        method: "POST",
+      }),
+      transformResponse: (response: ApiResponse<null>) => {
+        if (response.success) {
+          return response.data;
+        }
+        return createApiError(response.message);
+      },
+      transformErrorResponse: (response) => {
+        const errorResponse = response.data as ApiErrorResponse;
+        return createApiError(errorResponse.message);
+      },
+      onQueryStarted: (_, { dispatch }) => {
+        dispatch(logout());
+      },
+    }),
   }),
 });
 
@@ -127,4 +192,6 @@ export const {
   useStudentSignUpMutation,
   useVerifyEmailMutation,
   useResendEmailMutation,
-} = authApi;
+  useGetUserQuery,
+  useLogoutMutation,
+} = AuthApi;

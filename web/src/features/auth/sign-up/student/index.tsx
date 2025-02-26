@@ -69,10 +69,10 @@ const StudentSignUp = () => {
     });
 
     if (!("error" in response) && response.data) {
-      const user = (response.data as AuthResponse).user;
+      const user = response.data as AuthResponse;
       toast.success("Account created successfully! Please verify your email.");
       navigate(`/sign-up/verify-email`);
-      sessionStorage.setItem("verificationEmail", user.email);
+      sessionStorage.setItem("verificationEmail", user.user.email);
     }
   };
 

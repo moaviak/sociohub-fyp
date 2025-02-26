@@ -2,6 +2,7 @@ import { FetchArgs } from "@reduxjs/toolkit/query";
 import { BaseQueryFn } from "@reduxjs/toolkit/query";
 import { FetchBaseQueryError } from "@reduxjs/toolkit/query";
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import { logout } from "./auth/slice";
 
 const baseQuery = fetchBaseQuery({
   baseUrl: import.meta.env.VITE_REACT_APP_API_URL,
@@ -30,6 +31,8 @@ const baseQueryWithReauth: BaseQueryFn<
         // Retry the original request
         result = await baseQuery(args, api, extraOptions);
       }
+    } else {
+      api.dispatch(logout());
     }
   }
 
@@ -39,6 +42,6 @@ const baseQueryWithReauth: BaseQueryFn<
 export const api = createApi({
   reducerPath: "api",
   baseQuery: baseQueryWithReauth,
-  tagTypes: ["User"],
+  tagTypes: ["Auth"],
   endpoints: () => ({}),
 });
