@@ -2,7 +2,7 @@ import jwt, { UserJwtPayload } from "jsonwebtoken";
 
 import prisma from "../db";
 import { UserLoginType } from "../constants";
-import { UserType } from "../types";
+import { IUser, UserType } from "../types";
 import { ApiError } from "../utils/ApiError";
 import { ApiResponse } from "../utils/ApiResponse";
 import { asyncHandler } from "../utils/asyncHandler";
@@ -337,3 +337,41 @@ export const logoutUser = asyncHandler(async (req: Request, res: Response) => {
     .clearCookie("refreshToken", options)
     .json(new ApiResponse(200, {}, "User logged out"));
 });
+
+export const handleGoogleLogin = asyncHandler(
+  async (req: Request, res: Response) => {
+    const user = await prisma.student.findUnique({
+      where: { id: (req.user as IUser).id },
+    });
+
+    if (!user) {
+      throw new ApiError(404, "User does not exist");
+    }
+
+    const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(
+      user.id,
+      UserType.STUDENT
+    );
+
+    const options = {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+    };
+
+    if (user.registrationNumber) {
+      return res
+        .status(301)
+        .cookie("accessToken", accessToken, options)
+        .cookie("refreshToken", refreshToken, options)
+        .redirect(process.env.CLIENT_SSO_REDIRECT_URL! + "/dashboard");
+    } else {
+      return res
+        .status(301)
+        .cookie("accessToken", accessToken, options)
+        .cookie("refreshToken", refreshToken, options)
+        .redirect(
+          process.env.CLIENT_SSO_REDIRECT_URL! + "/sign-up/student/reg-no"
+        );
+    }
+  }
+);

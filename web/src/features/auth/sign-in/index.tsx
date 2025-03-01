@@ -1,9 +1,9 @@
 import { z } from "zod";
 import { toast } from "sonner";
-import { Link, useNavigate } from "react-router";
-import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { Eye, EyeOff } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import {
@@ -21,9 +21,9 @@ import { parseCredentials } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 
+import { AuthResponse } from "../types";
 import { useLoginMutation } from "../api";
 import { Google } from "../components/google";
-import { AuthResponse } from "../types";
 
 const SignIn = () => {
   const navigate = useNavigate();

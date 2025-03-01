@@ -11,9 +11,11 @@ import {
   resendEmailVerification,
   getCurrentUser,
   logoutUser,
+  handleGoogleLogin,
 } from "../controllers/auth.controller";
 import { validate } from "../validators/validate";
 import { verifyJWT } from "../middlewares/auth.middlewares";
+import passport from "passport";
 
 const router = Router();
 
@@ -29,5 +31,18 @@ router
 router.route("/me").get(verifyJWT, getCurrentUser);
 
 router.route("/logout").post(verifyJWT, logoutUser);
+
+router.route("/google").get(
+  passport.authenticate("google", {
+    scope: ["profile", "email"],
+  }),
+  (req, res) => {
+    res.send("redirecting to google...");
+  }
+);
+
+router
+  .route("/google/callback")
+  .get(passport.authenticate("google"), handleGoogleLogin);
 
 export default router;

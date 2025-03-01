@@ -1,5 +1,6 @@
 import cors from "cors";
 import express from "express";
+import passport from "passport";
 import requestIp from "request-ip";
 import { createServer } from "http";
 import session from "express-session";
@@ -8,7 +9,6 @@ import rateLimit from "express-rate-limit";
 
 import { ApiError } from "./utils/ApiError";
 import morganMiddleware from "./logger/morgan.logger";
-import passport from "passport";
 
 const app = express();
 const httpServer = createServer(app);
@@ -60,6 +60,8 @@ app.use(
 ); // session secret
 app.use(passport.initialize());
 app.use(passport.session()); // persistent login sessions
+
+import "./passport/index.js";
 
 app.use(morganMiddleware);
 
