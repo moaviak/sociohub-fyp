@@ -23,84 +23,89 @@ try {
         callbackURL: "http://localhost:3000/api/auth/google/callback",
       },
       async (_, __, profile, next) => {
-        // check if user with email already exists
-        const user = await Promise.all([
-          prisma.student.findUnique({
-            where: {
-              email: profile._json.email,
-            },
-            select: {
-              id: true,
-              firstName: true,
-              lastName: true,
-              email: true,
-              username: true,
-              loginType: true,
-              isEmailVerified: true,
-            },
-          }),
-          prisma.advisor.findUnique({
-            where: {
-              email: profile._json.email,
-            },
-            select: {
-              id: true,
-              firstName: true,
-              lastName: true,
-              email: true,
-              username: true,
-              isEmailVerified: true,
-            },
-          }),
-        ]);
+        try {
+          // check if user with email already exists
+          const user = await Promise.all([
+            prisma.student.findUnique({
+              where: {
+                email: profile._json.email,
+              },
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                email: true,
+                username: true,
+                loginType: true,
+                isEmailVerified: true,
+              },
+            }),
+            prisma.advisor.findUnique({
+              where: {
+                email: profile._json.email,
+              },
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                email: true,
+                username: true,
+                isEmailVerified: true,
+              },
+            }),
+          ]);
 
-        if (user[1]) {
-          return next(
-            new ApiError(400, "Advisors cannot register with Google.")
-          );
-        }
-        // Check if user is found in either table
-        const foundUser = user[0];
-
-        if (foundUser) {
-          if (foundUser.loginType !== UserLoginType.GOOGLE) {
-            // If user is registered with some other method, we will ask him/her to use the same method as registered.
-            // TODO: We can redirect user to appropriate frontend urls which will show users what went wrong instead of sending response from the backend
-            next(
-              new ApiError(
-                400,
-                "You have previously registered using email and password. Please use email and password to login."
-              )
+          if (user[1]) {
+            return next(
+              new ApiError(400, "Advisors cannot register with Google.")
             );
-          } else {
-            next(null, foundUser);
           }
+          // Check if user is found in either table
+          const foundUser = user[0];
 
-          // TODO: If same google account is used by advisor as pre-defined list of advisors, we will accept it and redirect it to more society information page.
-        } else {
-          const createdUser = await prisma.student.create({
-            data: {
-              email: profile._json.email as string,
-              firstName: profile._json.given_name || "",
-              lastName: profile._json.family_name || "",
-              username: profile._json.email?.split("@")[0] as string,
-              isEmailVerified: true,
-              loginType: UserLoginType.GOOGLE,
-              registrationNumber: "",
-              password: "",
-              // TODO: Add more fields as needed avatar etc.
-            },
-          });
-
-          if (createdUser) {
-            next(null, createdUser);
+          if (foundUser) {
+            if (foundUser.loginType !== UserLoginType.GOOGLE) {
+              // If user is registered with some other method, we will ask him/her to use the same method as registered.
+              return next(
+                new ApiError(
+                  400,
+                  "You have previously registered using email and password. Please use email and password to login."
+                )
+              );
+            } else {
+              return next(null, foundUser);
+            }
           } else {
-            next(new ApiError(500, "Error while registering the user"));
-          }
+            // TODO: If same google account is used by advisor as pre-defined list of advisors, we will accept it and redirect it to more society information page.
+            const createdUser = await prisma.student.create({
+              data: {
+                email: profile._json.email as string,
+                firstName: profile._json.given_name || "",
+                lastName: profile._json.family_name || "",
+                username: profile._json.email?.split("@")[0] as string,
+                isEmailVerified: true,
+                loginType: UserLoginType.GOOGLE,
+                registrationNumber: null,
+                password: "",
+                // TODO: Add more fields as needed avatar etc.
+              },
+            });
 
-          next(null, createdUser);
+            if (createdUser) {
+              return next(null, createdUser);
+            } else {
+              return next(
+                new ApiError(500, "Error while registering the user")
+              );
+            }
+          }
+        } catch (error) {
+          console.error("Error during authentication process: ", error);
+          return next(new ApiError(500, "Error during authentication process"));
         }
       }
     )
   );
-} catch (error) {}
+} catch (error) {
+  console.error("Error initializing passport:", error);
+}

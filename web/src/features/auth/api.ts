@@ -184,6 +184,23 @@ export const AuthApi = api.injectEndpoints({
         dispatch(logout());
       },
     }),
+    googleLogin: builder.mutation<null | ApiError, null>({
+      query: () => ({
+        url: "/auth/google",
+        method: "GET",
+      }),
+      transformErrorResponse: (response) => {
+        const errorResponse = response.data as ApiErrorResponse;
+        return createApiError(errorResponse.message);
+      },
+      onQueryStarted: (_, { dispatch, queryFulfilled }) => {
+        queryFulfilled.then(({ data }) => {
+          if (data && !("error" in data)) {
+            dispatch(login(data));
+          }
+        });
+      },
+    }),
   }),
 });
 

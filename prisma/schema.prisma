@@ -24,7 +24,7 @@ model Student {
   lastName           String
   email              String   @unique
   username           String   @unique
-  registrationNumber String   @unique
+  registrationNumber String?   @unique
   password           String
   loginType          UserLoginType @default(EMAIL_PASSWORD)
   refreshToken       String?
