@@ -27,3 +27,14 @@ export const studentRegisterValidator = () => {
       .withMessage("Registration number is invalid."),
   ];
 };
+
+export const registrationNumberValidator = () => {
+  return [
+    body("registrationNumber")
+      .trim()
+      .notEmpty()
+      .withMessage("Registration number is required")
+      .matches(/^(SP|FA)\d{2}-[A-Z]{3}-\d{1,3}$/)
+      .withMessage("Registration number is invalid."),
+  ];
+};
