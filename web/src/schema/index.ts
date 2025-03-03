@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { DEGREES } from "@/data";
+import { DEGREES, SOCIETIES_ADVISORS } from "@/data";
 
 const phoneRegex = /^(?:\+92|0|92)?(3[0-9]{2})[0-9]{7}$/;
 export const contactFormSchema = z
@@ -52,4 +52,22 @@ export const studentSignUpSchema = z.object({
   password: z
     .string()
     .min(8, { message: "Password must be at least 8 characters" }),
+});
+
+export const advisorSignUpSchema = z.object({
+  firstName: z.string().min(1, { message: "First Name is required" }),
+  lastName: z.string().min(1, { message: "Last Name is required" }),
+  displayName: z.string().min(1, { message: "Display Name is required" }),
+  username: z
+    .string()
+    .min(3, { message: "Username must be at least 3 characters" }),
+  email: z.enum(
+    SOCIETIES_ADVISORS.map((s) => s.email) as [string, ...string[]],
+    {
+      required_error: "Email is required",
+    }
+  ),
+  password: z
+    .string()
+    .min(8, { message: "Password must be at least 8 characters." }),
 });
