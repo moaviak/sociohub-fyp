@@ -39,6 +39,7 @@ model Advisor {
   id                 String   @id @default(uuid())
   firstName          String
   lastName           String
+  displayName        String
   email              String   @unique
   username           String   @unique
   password           String
@@ -48,4 +49,15 @@ model Advisor {
   emailVerificationExpiry DateTime?
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
+}
+
+model SocietyAdvisor {
+  id String @id @default(uuid())
+  firstName String
+  lastName String
+  displayName String
+  email String @unique
+  society String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

@@ -7,6 +7,9 @@
     "dev": "tsx watch src/index.ts",
     "build": "tsc && node dist/index.js"
   },
+  "prisma": {
+    "seed": "ts-node prisma/seed.ts"
+  },
   "author": "Moavia",
   "license": "ISC",
   "devDependencies": {
