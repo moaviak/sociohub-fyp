@@ -1,9 +1,9 @@
 import { api } from "@/features/api";
 
-import { AuthResponse } from "./types";
 import { ApiResponse } from "../api-response";
-import ApiError, { ApiErrorResponse, createApiError } from "../api-error";
+import { AuthResponse, SocietyAdvisor } from "./types";
 import { login, logout, updateCheckAuth } from "./slice";
+import ApiError, { ApiErrorResponse, createApiError } from "../api-error";
 
 export const AuthApi = api.injectEndpoints({
   endpoints: (builder) => ({
@@ -211,6 +211,22 @@ export const AuthApi = api.injectEndpoints({
         });
       },
     }),
+    getAdvisorsList: builder.query<SocietyAdvisor[] | ApiError, null>({
+      query: () => ({
+        url: "/advisor/list",
+        method: "GET",
+      }),
+      transformResponse: (response: ApiResponse<SocietyAdvisor[]>) => {
+        if (response.success) {
+          return response.data;
+        }
+        return createApiError(response.message);
+      },
+      transformErrorResponse: (response) => {
+        const errorResponse = response.data as ApiErrorResponse;
+        return createApiError(errorResponse.message);
+      },
+    }),
   }),
 });
 
@@ -222,4 +238,5 @@ export const {
   useGetUserQuery,
   useLogoutMutation,
   useSetRegistrationNumberMutation,
+  useGetAdvisorsListQuery,
 } = AuthApi;

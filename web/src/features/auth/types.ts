@@ -27,3 +27,11 @@ export type AuthResponse = {
   user: User;
   accessToken?: string;
 };
+
+export type SocietyAdvisor = {
+  displayName: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  society: string;
+};

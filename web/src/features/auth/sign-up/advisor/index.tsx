@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Eye, EyeOff } from "lucide-react";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -19,13 +19,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { SOCIETIES_ADVISORS as advisors } from "@/data";
 import { Input } from "@/components/ui/input";
 import { advisorSignUpSchema } from "@/schema";
 import { Button } from "@/components/ui/button";
+import { SOCIETIES_ADVISORS } from "@/data";
+
+import { useGetAdvisorsListQuery } from "../../api";
+import { SocietyAdvisor } from "../../types";
 
 const AdvisorSignUp = () => {
   const [showPassword, setShowPassword] = useState(false);
+  const [advisors, setAdvisors] =
+    useState<SocietyAdvisor[]>(SOCIETIES_ADVISORS);
+
+  const { data: advisorList, isSuccess } = useGetAdvisorsListQuery(null);
 
   const form = useForm<z.infer<typeof advisorSignUpSchema>>({
     resolver: zodResolver(advisorSignUpSchema),
@@ -42,6 +49,10 @@ const AdvisorSignUp = () => {
   const onSubmit = async (values: z.infer<typeof advisorSignUpSchema>) => {
     console.log(values);
   };
+
+  useEffect(() => {
+    if (isSuccess) setAdvisors(advisorList as SocietyAdvisor[]);
+  }, [advisorList, isSuccess]);
 
   return (
     <Form {...form}>
@@ -156,7 +167,11 @@ const AdvisorSignUp = () => {
                       </SelectTrigger>
                       <SelectContent>
                         {advisors.map((advisor) => (
-                          <SelectItem key={advisor.email} value={advisor.email}>
+                          <SelectItem
+                            key={advisor.email}
+                            value={advisor.email}
+                            className="b2-regular"
+                          >
                             {advisor.email}
                           </SelectItem>
                         ))}
