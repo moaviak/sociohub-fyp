@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { Outlet, useNavigate } from "react-router";
+import { Outlet, useLocation, useNavigate } from "react-router";
 
 import { RootState } from "@/app/store";
 import { useAppSelector } from "@/app/hooks";
@@ -8,17 +8,21 @@ import { Header } from "./components/header";
 
 function AuthLayout() {
   const navigate = useNavigate();
+  const location = useLocation();
 
   const { isAuthenticated } = useAppSelector((state: RootState) => state.auth);
 
+  const isVerifyEmail = location.pathname === "/sign-up/verify-email";
+  const isStudentRegNo = location.pathname === "/sign-up/student/reg-no";
+
   useEffect(() => {
-    if (isAuthenticated) {
+    if (isAuthenticated && !isVerifyEmail && !isStudentRegNo) {
       navigate("/dashboard", { replace: true });
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, isVerifyEmail, isStudentRegNo, navigate]);
 
   return (
-    <div className="flex flex-col relative overflow-hidden">
+    <div className="flex flex-col relative overflow-hidden min-h-screen">
       <Header />
       <img
         src="/assets/images/Background.png"

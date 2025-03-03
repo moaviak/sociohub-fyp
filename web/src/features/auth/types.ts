@@ -25,5 +25,5 @@ export enum LOGIN_TYPES {
 
 export type AuthResponse = {
   user: User;
-  accessToken: string;
+  accessToken?: string;
 };

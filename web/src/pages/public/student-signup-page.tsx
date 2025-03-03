@@ -1,8 +1,14 @@
-import { Link } from "react-router";
+import { Link, Outlet, useLocation } from "react-router";
 
 import StudentSignUp from "@/features/auth/sign-up/student";
 
 function StudentSignUpPage() {
+  const location = useLocation();
+
+  if (location.pathname !== "/sign-up/student") {
+    return <Outlet />;
+  }
+
   return (
     <div className="w-[85%] mx-auto flex flex-col items-center gap-y-10 bg-white rounded-md drop-shadow-e1 py-10 px-20">
       <div className="space-y-2 text-center">

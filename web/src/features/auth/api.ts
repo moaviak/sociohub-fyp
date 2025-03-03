@@ -184,18 +184,28 @@ export const AuthApi = api.injectEndpoints({
         dispatch(logout());
       },
     }),
-    googleLogin: builder.mutation<null | ApiError, null>({
-      query: () => ({
-        url: "/auth/google",
-        method: "GET",
+    setRegistrationNumber: builder.mutation<
+      AuthResponse | ApiError,
+      { registrationNumber: string }
+    >({
+      query: ({ registrationNumber }) => ({
+        url: "/student/reg-no",
+        method: "POST",
+        body: { registrationNumber },
       }),
+      transformResponse: (response: ApiResponse<AuthResponse>) => {
+        if (response.success) {
+          return response.data;
+        }
+        return createApiError(response.message);
+      },
       transformErrorResponse: (response) => {
         const errorResponse = response.data as ApiErrorResponse;
         return createApiError(errorResponse.message);
       },
       onQueryStarted: (_, { dispatch, queryFulfilled }) => {
         queryFulfilled.then(({ data }) => {
-          if (data && !("error" in data)) {
+          if (!("error" in data)) {
             dispatch(login(data));
           }
         });
@@ -211,4 +221,5 @@ export const {
   useResendEmailMutation,
   useGetUserQuery,
   useLogoutMutation,
+  useSetRegistrationNumberMutation,
 } = AuthApi;
