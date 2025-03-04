@@ -1,8 +1,15 @@
 import { Router } from "express";
-import { listSocietyAdvisors } from "../controllers/advisor.controller";
+
+import { validate } from "../validators/validate";
+import { advisorRegisterValidator } from "../validators/advisor.validators";
+import {
+  listSocietyAdvisors,
+  registerAdvisor,
+} from "../controllers/advisor.controller";
 
 const router = Router();
 
+router.route("/").post(advisorRegisterValidator(), validate, registerAdvisor);
 router.route("/list").get(listSocietyAdvisors);
 
 export default router;

@@ -8,11 +8,30 @@ import { UserLoginType } from "@prisma/client";
 
 try {
   passport.serializeUser((user, next) => {
-    next(null, user);
+    next(null, (user as IUser).id);
   });
 
-  passport.deserializeUser((user, next) => {
-    next(null, user as IUser);
+  passport.deserializeUser(async (id, next) => {
+    try {
+      const user = await Promise.all([
+        prisma.student.findUnique({ where: { id: id as string } }),
+        prisma.advisor.findUnique({ where: { id: id as string } }),
+      ]);
+
+      if (user[0] || user[1]) {
+        next(null, user[0] || user[1]);
+      } else {
+        next(new ApiError(404, "User does not exist"), null);
+      }
+    } catch (error) {
+      next(
+        new ApiError(
+          500,
+          "Something went wrong while deserializing the user. Error: " + error
+        ),
+        null
+      );
+    }
   });
 
   passport.use(
@@ -76,7 +95,6 @@ try {
               return next(null, foundUser);
             }
           } else {
-            // TODO: If same google account is used by advisor as pre-defined list of advisors, we will accept it and redirect it to more society information page.
             const createdUser = await prisma.student.create({
               data: {
                 email: profile._json.email as string,

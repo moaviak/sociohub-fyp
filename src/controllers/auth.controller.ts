@@ -124,6 +124,7 @@ export const loginUser = asyncHandler(async (req, res) => {
             createdAt: user.createdAt,
             updatedAt: user.updatedAt,
           },
+          userType,
           accessToken,
         },
         "User logged in successfully"
@@ -249,6 +250,7 @@ export const verifyEmail = asyncHandler(async (req, res) => {
       200,
       {
         user: verifiedUser,
+        userType,
       },
       "Email verified successfully"
     )
@@ -302,15 +304,17 @@ export const resendEmailVerification = asyncHandler(
 
 export const getCurrentUser = asyncHandler(
   async (req: Request, res: Response) => {
-    return res
-      .status(200)
-      .json(
-        new ApiResponse(
-          200,
-          { user: req.user, accessToken: req.cookies?.accessToken || "" },
-          "Current user fetched successfully"
-        )
-      );
+    return res.status(200).json(
+      new ApiResponse(
+        200,
+        {
+          user: req.user,
+          accessToken: req.cookies?.accessToken || "",
+          userType: (req.user as IUser).userType,
+        },
+        "Current user fetched successfully"
+      )
+    );
   }
 );
 

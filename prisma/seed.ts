@@ -1,6 +1,7 @@
 import prisma from "../src/db";
 
 async function main() {
+  await prisma.societyAdvisor.deleteMany();
   await prisma.societyAdvisor.createMany({
     data: [
       {
@@ -81,10 +82,10 @@ async function main() {
         society: "COMSATS Dramatic Society (CDS)",
       },
       {
-        displayName: "Muhammad Fahad Khan",
-        firstName: "Muhammad Fahad",
-        lastName: "Khan",
-        email: "m.fahad@cuiatk.edu.pk",
+        displayName: "Armughan Ali",
+        firstName: "Armughan",
+        lastName: "Ali",
+        email: "armughan_ali@cuiatk.edu.pk",
         society: "COMSATS Softech Society (CSS)",
       },
     ],

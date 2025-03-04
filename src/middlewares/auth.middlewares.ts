@@ -30,7 +30,6 @@ export const verifyJWT = asyncHandler(
           username: true,
           firstName: true,
           lastName: true,
-          loginType: true,
           createdAt: true,
           updatedAt: true,
         },
