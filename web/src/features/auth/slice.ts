@@ -1,8 +1,8 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { User } from "./types";
+import { Advisor, Student } from "./types";
 
 interface AuthState {
-  user: User | null;
+  user: Student | Advisor | null;
   isAuthenticated: boolean;
   isAuthChecked: boolean;
   accessToken: string | null;

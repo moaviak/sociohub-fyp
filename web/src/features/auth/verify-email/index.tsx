@@ -12,6 +12,7 @@ import ApiError from "@/features/api-error";
 import { Button } from "@/components/ui/button";
 
 import { useVerifyEmailMutation, useResendEmailMutation } from "../api";
+import { UserType } from "../types";
 
 export const VerifyEmail = () => {
   const email = sessionStorage.getItem("verificationEmail");
@@ -52,7 +53,11 @@ export const VerifyEmail = () => {
       if (response.data && "user" in response.data) {
         if (response.data.user.isEmailVerified) {
           toast.success("Email verified successfully");
-          navigate("/dashboard", { replace: true });
+          if (response.data.userType === UserType.STUDENT) {
+            navigate("/dashboard", { replace: true });
+          } else {
+            navigate("/sign-up/society-form", { replace: true });
+          }
           setTimeout(() => {
             sessionStorage.removeItem("verificationEmail");
           }, 1000);
@@ -70,6 +75,7 @@ export const VerifyEmail = () => {
       const response = await resendEmail(null);
       if (response.data) {
         toast.success("Mail has been sent to your email.");
+        setOtp("");
       }
     } catch (error) {
       console.error("Resend error:", error);

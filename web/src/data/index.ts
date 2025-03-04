@@ -99,10 +99,10 @@ export const SOCIETIES_ADVISORS = [
     society: "COMSATS Dramatic Society (CDS)",
   },
   {
-    displayName: "Muhammad Fahad Khan",
-    firstName: "Muhammad Fahad",
-    lastName: "Khan",
-    email: "m.fahad@cuiatk.edu.pk",
+    displayName: "Armughan Ali",
+    firstName: "Armughan",
+    lastName: "Ali",
+    email: "armughan_ali@cuiatk.edu.pk",
     society: "COMSATS Softech Society (CSS)",
   },
 ];

@@ -227,6 +227,47 @@ export const AuthApi = api.injectEndpoints({
         return createApiError(errorResponse.message);
       },
     }),
+    advisorSignUp: builder.mutation<
+      AuthResponse | ApiError,
+      {
+        email: string;
+        username: string;
+        password: string;
+        firstName: string;
+        lastName: string;
+        displayName: string;
+      }
+    >({
+      query: (credentials) => ({
+        url: "/advisor",
+        method: "POST",
+        body: credentials,
+      }),
+      transformResponse: (response: ApiResponse<AuthResponse>) => {
+        if (response.success) {
+          return response.data;
+        }
+        return createApiError(response.message);
+      },
+      transformErrorResponse: (response) => {
+        const errorResponse = response.data as ApiErrorResponse;
+        return createApiError(
+          errorResponse.message,
+          {
+            status: errorResponse.statusCode,
+            data: errorResponse.errors,
+          },
+          errorResponse
+        );
+      },
+      onQueryStarted: (_, { dispatch, queryFulfilled }) => {
+        queryFulfilled.then(({ data }) => {
+          if (!("error" in data)) {
+            dispatch(login(data));
+          }
+        });
+      },
+    }),
   }),
 });
 
@@ -239,4 +280,5 @@ export const {
   useLogoutMutation,
   useSetRegistrationNumberMutation,
   useGetAdvisorsListQuery,
+  useAdvisorSignUpMutation,
 } = AuthApi;

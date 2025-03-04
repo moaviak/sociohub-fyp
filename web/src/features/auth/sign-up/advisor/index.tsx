@@ -1,7 +1,9 @@
 import { z } from "zod";
-import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import { useForm } from "react-hook-form";
+import { useNavigate } from "react-router";
 import { Eye, EyeOff } from "lucide-react";
+import { useEffect, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import {
@@ -19,13 +21,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { SOCIETIES_ADVISORS } from "@/data";
+import ApiError from "@/features/api-error";
 import { Input } from "@/components/ui/input";
 import { advisorSignUpSchema } from "@/schema";
 import { Button } from "@/components/ui/button";
-import { SOCIETIES_ADVISORS } from "@/data";
 
-import { useGetAdvisorsListQuery } from "../../api";
-import { SocietyAdvisor } from "../../types";
+import { AuthResponse, SocietyAdvisor } from "../../types";
+import { useAdvisorSignUpMutation, useGetAdvisorsListQuery } from "../../api";
 
 const AdvisorSignUp = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -33,6 +36,8 @@ const AdvisorSignUp = () => {
     useState<SocietyAdvisor[]>(SOCIETIES_ADVISORS);
 
   const { data: advisorList, isSuccess } = useGetAdvisorsListQuery(null);
+
+  const [signUp, { isLoading, isError, error }] = useAdvisorSignUpMutation();
 
   const form = useForm<z.infer<typeof advisorSignUpSchema>>({
     resolver: zodResolver(advisorSignUpSchema),
@@ -46,13 +51,40 @@ const AdvisorSignUp = () => {
     },
   });
 
+  const navigate = useNavigate();
+
   const onSubmit = async (values: z.infer<typeof advisorSignUpSchema>) => {
-    console.log(values);
+    const response = await signUp({
+      email: values.email,
+      username: values.username,
+      password: values.password,
+      firstName: values.firstName,
+      lastName: values.lastName,
+      displayName: values.displayName,
+    });
+
+    if (!("error" in response) && response.data) {
+      const user = response.data as AuthResponse;
+      toast.success("Account created successfully! Please verify your email.");
+      navigate(`/sign-up/verify-email`);
+      sessionStorage.setItem("verificationEmail", user.user.email);
+    }
   };
 
   useEffect(() => {
     if (isSuccess) setAdvisors(advisorList as SocietyAdvisor[]);
   }, [advisorList, isSuccess]);
+
+  useEffect(() => {
+    if (isError) {
+      toast.error(
+        (error as ApiError)?.errorMessage || "An unexpected error occurred",
+        {
+          duration: 10000,
+        }
+      );
+    }
+  }, [isError, error]);
 
   return (
     <Form {...form}>
@@ -217,8 +249,13 @@ const AdvisorSignUp = () => {
           </div>
         </div>
         <div className="space-y-4">
-          <Button type="submit" className="w-full" size="lg">
-            Sign Up
+          <Button
+            type="submit"
+            className="w-full"
+            size="lg"
+            disabled={isLoading}
+          >
+            {isLoading ? "Creating Account..." : "Sign Up"}
           </Button>
         </div>
       </form>

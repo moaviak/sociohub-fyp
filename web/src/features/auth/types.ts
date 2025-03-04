@@ -15,6 +15,7 @@ export interface Student extends User {
 }
 
 export interface Advisor extends User {
+  displayName?: string;
   societyName?: string;
 }
 
@@ -24,7 +25,8 @@ export enum LOGIN_TYPES {
 }
 
 export type AuthResponse = {
-  user: User;
+  user: Student | Advisor;
+  userType: UserType;
   accessToken?: string;
 };
 
@@ -35,3 +37,8 @@ export type SocietyAdvisor = {
   email: string;
   society: string;
 };
+
+export enum UserType {
+  STUDENT = "student",
+  ADVISOR = "advisor",
+}
