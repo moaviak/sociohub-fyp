@@ -36,19 +36,33 @@ model Student {
 }
 
 model Advisor {
-  id                 String   @id @default(uuid())
-  firstName          String
-  lastName           String
-  displayName        String
-  email              String   @unique
-  username           String   @unique
-  password           String
-  refreshToken       String?
-  isEmailVerified  Boolean @default(false)
-  emailVerificationCode String?
+  id                      String   @id @default(uuid())
+  firstName               String
+  lastName                String
+  displayName             String
+  email                   String   @unique
+  username                String   @unique
+  password                String
+  refreshToken            String?
+  isEmailVerified         Boolean @default(false)
+  emailVerificationCode   String?
   emailVerificationExpiry DateTime?
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+  societyId               String? @unique
+  society                 Society? @relation(fields: [societyId], references: [id], onDelete: Cascade)
+
+  @@index([societyId])
+}
+
+model Society {
+  id          String @id @default(uuid())
+  name        String
+  description String
+  logo        String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  advisor     Advisor? @relation
 }
 
 model SocietyAdvisor {

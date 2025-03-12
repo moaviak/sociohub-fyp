@@ -106,30 +106,64 @@ export const loginUser = asyncHandler(async (req, res) => {
     }
   }
 
-  return res
-    .status(200)
-    .cookie("accessToken", accessToken, options)
-    .cookie("refreshToken", refreshToken, options)
-    .json(
-      new ApiResponse(
-        200,
-        {
-          user: {
-            id: user.id,
-            email: user.email,
-            username: user.username,
-            firstName: user.firstName,
-            lastName: user.lastName,
-            isEmailVerified: user.isEmailVerified,
-            createdAt: user.createdAt,
-            updatedAt: user.updatedAt,
+  if (userType === UserType.ADVISOR && !(user as Advisor).societyId) {
+    const society = await prisma.societyAdvisor.findFirst({
+      where: { email },
+    });
+
+    return res
+      .status(200)
+      .cookie("accessToken", accessToken, options)
+      .cookie("refreshToken", refreshToken, options)
+      .json(
+        new ApiResponse(
+          200,
+          {
+            user: {
+              id: user.id,
+              email: user.email,
+              username: user.username,
+              firstName: user.firstName,
+              lastName: user.lastName,
+              isEmailVerified: user.isEmailVerified,
+              createdAt: user.createdAt,
+              updatedAt: user.updatedAt,
+              societyId: (user as Advisor).societyId,
+              societyName: society?.society,
+            },
+            userType,
+            accessToken,
           },
-          userType,
-          accessToken,
-        },
-        "User logged in successfully"
-      )
-    );
+          "User logged in successfully"
+        )
+      );
+  } else {
+    return res
+      .status(200)
+      .cookie("accessToken", accessToken, options)
+      .cookie("refreshToken", refreshToken, options)
+      .json(
+        new ApiResponse(
+          200,
+          {
+            user: {
+              id: user.id,
+              email: user.email,
+              username: user.username,
+              firstName: user.firstName,
+              lastName: user.lastName,
+              isEmailVerified: user.isEmailVerified,
+              createdAt: user.createdAt,
+              updatedAt: user.updatedAt,
+              registrationNumber: (user as Student).registrationNumber,
+            },
+            userType,
+            accessToken,
+          },
+          "User logged in successfully"
+        )
+      );
+  }
 });
 
 export const refreshAccessToken = asyncHandler(
@@ -237,11 +271,8 @@ export const verifyEmail = asyncHandler(async (req, res) => {
       firstName: true,
       lastName: true,
       isEmailVerified: true,
-      // Exclude sensitive fields
-      password: false,
-      refreshToken: false,
-      emailVerificationCode: false,
-      emailVerificationExpiry: false,
+      registrationNumber: true,
+      societyId: true,
     },
   });
 
@@ -249,7 +280,15 @@ export const verifyEmail = asyncHandler(async (req, res) => {
     new ApiResponse(
       200,
       {
-        user: verifiedUser,
+        user: {
+          ...verifiedUser,
+          ...(userType === UserType.STUDENT && {
+            registrationNumber: (user as Student).registrationNumber,
+          }),
+          ...(userType === UserType.ADVISOR && {
+            societyId: (user as Advisor).societyId,
+          }),
+        },
         userType,
       },
       "Email verified successfully"

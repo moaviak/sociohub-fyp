@@ -4,7 +4,8 @@ import type { NextFunction, Request, Response } from "express";
 import prisma from "../db";
 import { ApiError } from "../utils/ApiError";
 import { asyncHandler } from "../utils/asyncHandler";
-import { IUser } from "../types";
+import { IUser, UserType } from "../types";
+import { Advisor, Student } from "@prisma/client";
 
 export const verifyJWT = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -30,6 +31,12 @@ export const verifyJWT = asyncHandler(
           username: true,
           firstName: true,
           lastName: true,
+          ...(decodedToken.userType === UserType.STUDENT && {
+            registrationNumber: true,
+          }),
+          ...(decodedToken.userType === UserType.ADVISOR && {
+            societyId: true,
+          }),
           createdAt: true,
           updatedAt: true,
         },

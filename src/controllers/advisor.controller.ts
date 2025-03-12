@@ -70,6 +70,7 @@ export const registerAdvisor = asyncHandler(
         lastName: true,
         username: true,
         email: true,
+        societyId: true,
         displayName: true,
         createdAt: true,
         updatedAt: true,
