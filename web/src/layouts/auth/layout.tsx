@@ -14,12 +14,23 @@ function AuthLayout() {
 
   const isVerifyEmail = location.pathname === "/sign-up/verify-email";
   const isStudentRegNo = location.pathname === "/sign-up/student/reg-no";
+  const isSocietyForm = location.pathname === "/sign-up/society-form";
 
   useEffect(() => {
-    if (isAuthenticated && !isVerifyEmail && !isStudentRegNo) {
+    if (
+      isAuthenticated &&
+      !isVerifyEmail &&
+      !isStudentRegNo &&
+      !isSocietyForm
+    ) {
       navigate("/dashboard", { replace: true });
+    } else if (
+      !isAuthenticated &&
+      (isVerifyEmail || isStudentRegNo || isSocietyForm)
+    ) {
+      navigate("/sign-in", { replace: true });
     }
-  }, [isAuthenticated, isVerifyEmail, isStudentRegNo, navigate]);
+  }, [isAuthenticated, isVerifyEmail, isStudentRegNo, isSocietyForm, navigate]);
 
   return (
     <div className="flex flex-col relative overflow-hidden min-h-screen">

@@ -71,3 +71,13 @@ export const advisorSignUpSchema = z.object({
     .string()
     .min(8, { message: "Password must be at least 8 characters." }),
 });
+
+export const societyFormSchema = z.object({
+  name: z.string().min(1, { message: "Society name is required" }),
+  description: z
+    .string()
+    .min(1, { message: "Statement of purpose is required" }),
+  logo: z.instanceof(File).optional(),
+});
+
+export type SocietyFormValues = z.infer<typeof societyFormSchema>;

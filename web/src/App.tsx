@@ -14,6 +14,7 @@ import AdvisorSignUpPage from "@/pages/public/advisor-signup-page";
 
 import DashboardPage from "@/pages/app/dashboard-page";
 import VerifyEmailPage from "@/pages/verify-email-page";
+import SocietyFormPage from "@/pages/society-form-page";
 import StudentRegNoPage from "@/pages/student-regno-page";
 
 function App() {
@@ -34,6 +35,7 @@ function App() {
             </Route>
             <Route path="advisor" element={<AdvisorSignUpPage />} />
             <Route path="verify-email" element={<VerifyEmailPage />} />
+            <Route path="society-form" element={<SocietyFormPage />} />
           </Route>
         </Route>
 

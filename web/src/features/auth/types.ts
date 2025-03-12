@@ -16,6 +16,7 @@ export interface Student extends User {
 
 export interface Advisor extends User {
   displayName?: string;
+  societyId?: string;
   societyName?: string;
 }
 
