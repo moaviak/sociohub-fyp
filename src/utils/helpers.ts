@@ -90,3 +90,22 @@ export const generateAccessAndRefreshTokens = async (
     throw new ApiError(500, "Something went wrong while generating tokens");
   }
 };
+
+/**
+ *
+ * @param {string} fileName
+ * @description returns the file's local path in the file system to assist future removal
+ */
+export const getLocalPath = (fileName: string) => {
+  return `public/temp/${fileName}`;
+};
+
+/**
+ * Extracts the public_id from a Cloudinary resource URL
+ * @param url - The full Cloudinary resource URL
+ * @returns public_id or null if extraction fails
+ */
+export const extractPublicId = (url: string): string | null => {
+  const matches = url.match(/\/upload\/(?:v\d+\/)?(.+?)(\.[a-z]+)?$/);
+  return matches ? matches[1] : null;
+};

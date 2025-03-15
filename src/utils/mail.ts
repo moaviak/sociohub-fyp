@@ -13,7 +13,7 @@ interface EmailOptions {
 }
 
 interface VerificationEmailData {
-  username: string;
+  displayName: string;
   verificationCode: string;
   userType: "student" | "advisor";
 }

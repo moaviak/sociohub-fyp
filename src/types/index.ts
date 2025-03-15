@@ -1,10 +1,9 @@
 import * as jwt from "jsonwebtoken";
-import { Student, Advisor, UserLoginType } from "@prisma/client";
+import { Student, Advisor } from "@prisma/client";
 declare module "jsonwebtoken" {
   export interface UserJwtPayload extends jwt.JwtPayload {
     id: string;
     email: string;
-    username: string;
     userType: UserType;
   }
 }
@@ -16,9 +15,11 @@ export enum UserType {
 export type IUser = {
   id: string;
   email: string;
-  username: string;
   firstName: string;
   lastName: string;
+  displayName?: string;
+  registrationNumber?: string;
+  societyId?: string;
   userType: UserType;
   createdAt: Date;
   updatedAt: Date;
@@ -29,7 +30,6 @@ export function isAuthUser(user: any): user is IUser {
     user &&
     typeof user.id === "string" &&
     typeof user.email === "string" &&
-    typeof user.username === "string" &&
     typeof user.firstName === "string" &&
     typeof user.lastName === "string" &&
     typeof user.userType === "string" &&

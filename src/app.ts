@@ -71,10 +71,13 @@ import { errorHandler } from "./middlewares/error.middlewares.js";
 import authRoutes from "./routes/auth.routes.js";
 import studentRoutes from "./routes/student.routes.js";
 import advisorRoutes from "./routes/advisor.routes.js";
+import societyRoutes from "./routes/society.routes.js";
 
 app.use("/api/auth", authRoutes);
 app.use("/api/student", studentRoutes);
 app.use("/api/advisor", advisorRoutes);
+app.use("/api/society", societyRoutes);
+
 // common error handling middleware
 app.use(errorHandler);
 

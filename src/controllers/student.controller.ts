@@ -11,25 +11,17 @@ import { generateAccessAndRefreshTokens } from "../utils/helpers";
 
 export const registerStudent = asyncHandler(
   async (req: Request, res: Response) => {
-    const {
-      firstName,
-      lastName,
-      username,
-      email,
-      registrationNumber,
-      password,
-    } = req.body;
+    const { firstName, lastName, email, registrationNumber, password } =
+      req.body;
 
     const existingStudent = await prisma.student.findFirst({
       where: {
-        OR: [{ email }, { username }, { registrationNumber }],
+        OR: [{ email }, { registrationNumber }],
       },
     });
 
     if (existingStudent?.email === email) {
       throw new ApiError(409, "Student already exists with this email.");
-    } else if (existingStudent?.username === username) {
-      throw new ApiError(409, "Username is already taken.");
     } else if (existingStudent?.registrationNumber === registrationNumber) {
       throw new ApiError(
         409,
@@ -46,7 +38,6 @@ export const registerStudent = asyncHandler(
       data: {
         firstName,
         lastName,
-        username,
         email,
         registrationNumber,
         password: hashedPassword,
@@ -57,7 +48,6 @@ export const registerStudent = asyncHandler(
         id: true,
         firstName: true,
         lastName: true,
-        username: true,
         email: true,
         registrationNumber: true,
         createdAt: true,
@@ -66,7 +56,7 @@ export const registerStudent = asyncHandler(
     });
 
     await sendVerificationEmail(student.email, {
-      username: student.username,
+      displayName: student.lastName,
       verificationCode: code,
       userType: "student",
     });

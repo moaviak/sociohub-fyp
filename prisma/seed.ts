@@ -19,7 +19,7 @@ async function main() {
         society: "Environmental Protection Society (EPS)",
       },
       {
-        displayName: "Yasir Muhammad",
+        displayName: "Mr. Yasir Muhammad",
         firstName: "Yasir",
         lastName: "Muhammad",
         email: "Yasir.ee@ciit-attock.edu.pk",
@@ -33,7 +33,7 @@ async function main() {
         society: "COMSATS Arts Society (CAS)",
       },
       {
-        displayName: "Muhammad Qasim Khan",
+        displayName: "Mr. Muhammad Qasim Khan",
         firstName: "Muhammad Qasim",
         lastName: "Khan",
         email: "qasimkhan@cuiatk.edu.pk",
@@ -82,7 +82,7 @@ async function main() {
         society: "COMSATS Dramatic Society (CDS)",
       },
       {
-        displayName: "Armughan Ali",
+        displayName: "Mr. Armughan Ali",
         firstName: "Armughan",
         lastName: "Ali",
         email: "armughan_ali@cuiatk.edu.pk",

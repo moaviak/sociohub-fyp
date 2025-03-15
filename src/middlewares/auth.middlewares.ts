@@ -28,7 +28,6 @@ export const verifyJWT = asyncHandler(
         select: {
           id: true,
           email: true,
-          username: true,
           firstName: true,
           lastName: true,
           ...(decodedToken.userType === UserType.STUDENT && {
@@ -36,7 +35,9 @@ export const verifyJWT = asyncHandler(
           }),
           ...(decodedToken.userType === UserType.ADVISOR && {
             societyId: true,
+            displayName: true,
           }),
+          isEmailVerified: true,
           createdAt: true,
           updatedAt: true,
         },

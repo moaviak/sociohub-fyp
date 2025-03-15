@@ -23,20 +23,17 @@ export const listSocietyAdvisors = asyncHandler(
 
 export const registerAdvisor = asyncHandler(
   async (req: Request, res: Response) => {
-    const { firstName, lastName, displayName, email, password, username } =
-      req.body;
+    const { firstName, lastName, displayName, email, password } = req.body;
 
     const existingAdvisor = await prisma.advisor.findFirst({
       where: {
-        OR: [{ email }, { username }],
+        email,
       },
     });
 
     // check for existing advisor
     if (existingAdvisor?.email === email) {
       throw new ApiError(409, "Advisor already exists with this email.");
-    } else if (existingAdvisor?.username === username) {
-      throw new ApiError(409, "Username is already taken.");
     }
 
     // validate email from list
@@ -57,7 +54,6 @@ export const registerAdvisor = asyncHandler(
       data: {
         firstName,
         lastName,
-        username,
         email,
         displayName,
         password: hashedPassword,
@@ -68,7 +64,6 @@ export const registerAdvisor = asyncHandler(
         id: true,
         firstName: true,
         lastName: true,
-        username: true,
         email: true,
         societyId: true,
         displayName: true,
@@ -78,7 +73,7 @@ export const registerAdvisor = asyncHandler(
     });
 
     await sendVerificationEmail(advisor.email, {
-      username: advisor.displayName,
+      displayName: advisor.displayName,
       verificationCode: code,
       userType: "advisor",
     });

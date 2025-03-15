@@ -13,20 +13,13 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum UserLoginType {
-  EMAIL_PASSWORD
-  GOOGLE
-}
-
 model Student {
   id                 String   @id @default(uuid())
   firstName          String
   lastName           String
   email              String   @unique
-  username           String   @unique
   registrationNumber String?   @unique
   password           String
-  loginType          UserLoginType @default(EMAIL_PASSWORD)
   refreshToken       String?
   isEmailVerified  Boolean @default(false)
   emailVerificationCode String?
@@ -41,7 +34,6 @@ model Advisor {
   lastName                String
   displayName             String
   email                   String   @unique
-  username                String   @unique
   password                String
   refreshToken            String?
   isEmailVerified         Boolean @default(false)
@@ -50,7 +42,7 @@ model Advisor {
   createdAt               DateTime @default(now())
   updatedAt               DateTime @updatedAt
   societyId               String? @unique
-  society                 Society? @relation(fields: [societyId], references: [id], onDelete: Cascade)
+  society                 Society? @relation(fields: [societyId], references: [id], onDelete: SetNull)
 
   @@index([societyId])
 }

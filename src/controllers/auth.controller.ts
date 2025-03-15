@@ -1,7 +1,6 @@
 import jwt, { UserJwtPayload } from "jsonwebtoken";
 
 import prisma from "../db";
-import { UserLoginType } from "../constants";
 import { IUser, UserType } from "../types";
 import { ApiError } from "../utils/ApiError";
 import { ApiResponse } from "../utils/ApiResponse";
@@ -13,22 +12,22 @@ import { Request, Response } from "express";
 import { isAuthUser } from "../types/index";
 
 export const loginUser = asyncHandler(async (req, res) => {
-  const { email, username, password } = req.body;
+  const { email, registrationNumber, password } = req.body;
 
-  if (!username && !email) {
-    throw new ApiError(400, "Username or email is required");
+  if (!registrationNumber && !email) {
+    throw new ApiError(400, "Registration number or email is required");
   }
 
   // Search in both tables simultaneously using Promise.all
   const [student, advisor] = await Promise.all([
     prisma.student.findFirst({
       where: {
-        OR: [{ username: username || "" }, { email: email || "" }],
+        registrationNumber,
       },
     }),
     prisma.advisor.findFirst({
       where: {
-        OR: [{ username: username || "" }, { email: email || "" }],
+        email,
       },
     }),
   ]);
@@ -43,16 +42,6 @@ export const loginUser = asyncHandler(async (req, res) => {
 
   if (!user || !userType) {
     throw new ApiError(404, "User does not exist");
-  }
-
-  if (userType === UserType.STUDENT) {
-    const studentUser = user as typeof student;
-    if (studentUser?.loginType !== UserLoginType.EMAIL_PASSWORD) {
-      throw new ApiError(
-        400,
-        `You have previously registered using ${studentUser?.loginType.toLowerCase()}. Please use the ${studentUser?.loginType.toLowerCase()} login option to access your account.`
-      );
-    }
   }
 
   // Verify password
@@ -99,7 +88,7 @@ export const loginUser = asyncHandler(async (req, res) => {
       });
 
       await sendVerificationEmail(user.email, {
-        username: user.username,
+        displayName: advisor?.displayName || student?.lastName || "",
         verificationCode: code,
         userType: userType,
       });
@@ -122,7 +111,6 @@ export const loginUser = asyncHandler(async (req, res) => {
             user: {
               id: user.id,
               email: user.email,
-              username: user.username,
               firstName: user.firstName,
               lastName: user.lastName,
               isEmailVerified: user.isEmailVerified,
@@ -149,7 +137,6 @@ export const loginUser = asyncHandler(async (req, res) => {
             user: {
               id: user.id,
               email: user.email,
-              username: user.username,
               firstName: user.firstName,
               lastName: user.lastName,
               isEmailVerified: user.isEmailVerified,
@@ -266,13 +253,15 @@ export const verifyEmail = asyncHandler(async (req, res) => {
     },
     select: {
       id: true,
-      username: true,
       email: true,
       firstName: true,
       lastName: true,
       isEmailVerified: true,
-      registrationNumber: true,
-      societyId: true,
+      ...(userType === UserType.STUDENT && { registrationNumber: true }), // Only include for Student
+      ...(userType === UserType.ADVISOR && {
+        societyId: true,
+        displayName: true,
+      }), // Only include for Advisor
     },
   });
 
@@ -331,7 +320,7 @@ export const resendEmailVerification = asyncHandler(
     });
 
     await sendVerificationEmail(user.email, {
-      username: user.username,
+      displayName: req.user.displayName || req.user.lastName,
       verificationCode: code,
       userType: req.user.userType,
     });

@@ -8,138 +8,96 @@ import { PrismaClient, Student, Advisor } from "@prisma/client";
 import { UserType } from "../types";
 import { USER_TEMPORARY_TOKEN_EXPIRY } from "../constants";
 
+/**
+ * Generates an access token for a user
+ */
+const generateAccessToken = (user: Student | Advisor, userType: UserType) => {
+  const options: SignOptions = {
+    expiresIn: ms(process.env.ACCESS_TOKEN_EXPIRY! as StringValue) || "1d",
+  };
+  return jwt.sign(
+    { id: user.id, email: user.email, userType },
+    process.env.ACCESS_TOKEN_SECRET!,
+    options
+  );
+};
+
+/**
+ * Generates a refresh token for a user
+ */
+const generateRefreshToken = (user: Student | Advisor, userType: UserType) => {
+  const options: SignOptions = {
+    expiresIn: Number(process.env.REFRESH_TOKEN_EXPIRY) || "7d",
+  };
+  return jwt.sign(
+    { id: user.id, email: user.email, userType },
+    process.env.REFRESH_TOKEN_SECRET!,
+    options
+  );
+};
+
+/**
+ * Verifies a given password against a user's hashed password
+ */
+const verifyPassword = async (
+  user: Student | Advisor,
+  candidatePassword: string
+) => {
+  return await bcrypt.compare(candidatePassword, user.password);
+};
+
+/**
+ * Generates a temporary token for email verification, password reset, etc.
+ */
+const generateTemporaryToken = () => {
+  const unHashedToken = crypto.randomBytes(20).toString("hex");
+  const hashedToken = crypto
+    .createHash("sha256")
+    .update(unHashedToken)
+    .digest("hex");
+  const tokenExpiry = Date.now() + USER_TEMPORARY_TOKEN_EXPIRY;
+
+  return { unHashedToken, hashedToken, tokenExpiry };
+};
+
+/**
+ * Generates a 6-digit verification code for email verification
+ */
+const generateVerificationCode = () => {
+  const code = Math.floor(100000 + Math.random() * 900000).toString();
+  const codeExpiry = Date.now() + USER_TEMPORARY_TOKEN_EXPIRY;
+
+  return { code, codeExpiry };
+};
+
 const prisma = new PrismaClient().$extends(withAccelerate()).$extends({
+  name: "customMethods", // Give your extension a name
   model: {
     student: {
       generateAccessToken(student: Student) {
-        const options: SignOptions = {
-          expiresIn:
-            ms(process.env.ACCESS_TOKEN_EXPIRY! as StringValue) || "1d",
-        };
-        return jwt.sign(
-          {
-            id: student.id,
-            email: student.email,
-            username: student.username,
-            userType: UserType.STUDENT,
-          },
-          process.env.ACCESS_TOKEN_SECRET!,
-          options
-        );
+        return generateAccessToken(student, UserType.STUDENT);
       },
       generateRefreshToken(student: Student) {
-        const options: SignOptions = {
-          expiresIn: Number(process.env.REFRESH_TOKEN_EXPIRY) || "7d",
-        };
-        return jwt.sign(
-          {
-            id: student.id,
-            email: student.email,
-            username: student.username,
-            userType: UserType.STUDENT,
-          },
-          process.env.REFRESH_TOKEN_SECRET!,
-          options
-        );
+        return generateRefreshToken(student, UserType.STUDENT);
       },
-      async verifyPassword(student: Student, candidatePassword: string) {
-        return await bcrypt.compare(candidatePassword, student.password);
+      verifyPassword(student: Student, candidatePassword: string) {
+        return verifyPassword(student, candidatePassword);
       },
-      /**
-       * @description Method responsible for generating tokens for email verification, password reset etc.
-       */
-      generateTemporaryToken(student: Student) {
-        // This token should be client facing
-        // for example: for email verification unHashedToken should go into the user's mail
-        const unHashedToken = crypto.randomBytes(20).toString("hex");
-
-        // This should stay in the DB to compare at the time of verification
-        const hashedToken = crypto
-          .createHash("sha256")
-          .update(unHashedToken)
-          .digest("hex");
-        // This is the expiry time for the token (20 minutes)
-        const tokenExpiry = Date.now() + USER_TEMPORARY_TOKEN_EXPIRY;
-
-        return { unHashedToken, hashedToken, tokenExpiry };
-      },
-      /**
-       * @description Method responsible for generating verification code for email verification
-       */
-      generateVerificationCode() {
-        // Generate a random 6 digit number
-        const code = Math.floor(100000 + Math.random() * 900000).toString();
-
-        // This is the expiry time for the code (30 minutes)
-        const codeExpiry = Date.now() + USER_TEMPORARY_TOKEN_EXPIRY;
-
-        return { code, codeExpiry };
-      },
+      generateTemporaryToken,
+      generateVerificationCode,
     },
     advisor: {
       generateAccessToken(advisor: Advisor) {
-        const options: SignOptions = {
-          expiresIn: Number(process.env.ACCESS_TOKEN_EXPIRY) || "1d",
-        };
-        return jwt.sign(
-          {
-            id: advisor.id,
-            email: advisor.email,
-            username: advisor.username,
-            userType: UserType.ADVISOR,
-          },
-          process.env.ACCESS_TOKEN_SECRET!,
-          options
-        );
+        return generateAccessToken(advisor, UserType.ADVISOR);
       },
       generateRefreshToken(advisor: Advisor) {
-        const options: SignOptions = {
-          expiresIn: Number(process.env.REFRESH_TOKEN_EXPIRY) || "7d",
-        };
-        return jwt.sign(
-          {
-            id: advisor.id,
-            email: advisor.email,
-            username: advisor.username,
-            userType: UserType.ADVISOR,
-          },
-          process.env.REFRESH_TOKEN_SECRET!,
-          options
-        );
+        return generateRefreshToken(advisor, UserType.ADVISOR);
       },
-      async verifyPassword(advisor: Advisor, candidatePassword: string) {
-        return await bcrypt.compare(candidatePassword, advisor.password);
+      verifyPassword(advisor: Advisor, candidatePassword: string) {
+        return verifyPassword(advisor, candidatePassword);
       },
-      /**
-       * @description Method responsible for generating tokens for email verification, password reset etc.
-       */
-      generateTemporaryToken(advisor: Advisor) {
-        // This token should be client facing
-        // for example: for email verification unHashedToken should go into the user's mail
-        const unHashedToken = crypto.randomBytes(20).toString("hex");
-
-        // This should stay in the DB to compare at the time of verification
-        const hashedToken = crypto
-          .createHash("sha256")
-          .update(unHashedToken)
-          .digest("hex");
-        // This is the expiry time for the token (20 minutes)
-        const tokenExpiry = Date.now() + USER_TEMPORARY_TOKEN_EXPIRY;
-
-        return { unHashedToken, hashedToken, tokenExpiry };
-      },
-      /**
-       * @description Method responsible for generating verification code for email verification
-       */
-      generateVerificationCode() {
-        // Generate a random 6 digit number
-        const code = Math.floor(100000 + Math.random() * 900000).toString();
-
-        // This is the expiry time for the code (20 minutes)
-        const codeExpiry = Date.now() + USER_TEMPORARY_TOKEN_EXPIRY;
-
-        return { code, codeExpiry };
-      },
+      generateTemporaryToken,
+      generateVerificationCode,
     },
   },
 });
