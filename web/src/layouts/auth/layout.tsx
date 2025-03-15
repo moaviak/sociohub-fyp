@@ -56,6 +56,18 @@ function AuthLayout() {
         navigate("/sign-up/verify-email", { replace: true });
       }
     }
+
+    // Additional check for the society form route
+    if (
+      isSocietyForm &&
+      isAuthenticated &&
+      user &&
+      user.isEmailVerified &&
+      userType === UserType.ADVISOR &&
+      (user as Advisor).societyId
+    ) {
+      navigate("/dashboard", { replace: true });
+    }
   }, [
     isAuthenticated,
     isAuthChecked,

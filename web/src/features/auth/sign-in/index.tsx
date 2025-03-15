@@ -14,19 +14,28 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { DEGREES } from "@/data";
 import { signInSchema } from "@/schema";
 import ApiError from "@/features/api-error";
 import { Input } from "@/components/ui/input";
-import { parseCredentials } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { getYearOptions } from "@/lib/utils";
 
 import { AuthResponse } from "../types";
 import { useLoginMutation } from "../api";
-import { Google } from "../components/google";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const SignIn = () => {
   const navigate = useNavigate();
+  const yearOptions = getYearOptions();
 
   const [showPassword, setShowPassword] = useState(false);
 
@@ -35,17 +44,27 @@ const SignIn = () => {
   const form = useForm<z.infer<typeof signInSchema>>({
     resolver: zodResolver(signInSchema),
     defaultValues: {
-      emailOrUsername: "",
+      userType: "Advisor",
+      email: "",
+      registrationNo: {
+        session: "SP",
+        year: yearOptions[yearOptions.length - 1],
+        degree: DEGREES[0].value,
+        rollNumber: undefined,
+      },
       password: "",
       rememberMe: false,
     },
   });
 
   const onSubmit = async (values: z.infer<typeof signInSchema>) => {
-    const { email, username } = parseCredentials(values.emailOrUsername);
+    const formattedRegistrationNumber = values.registrationNo?.rollNumber
+      ? `${values.registrationNo?.session}${values.registrationNo?.year}-${values.registrationNo?.degree}-${values.registrationNo?.rollNumber}`
+      : undefined;
+
     const response = await login({
-      email,
-      username,
+      email: values.email || undefined,
+      registrationNumber: formattedRegistrationNumber,
       password: values.password,
     });
 
@@ -74,23 +93,144 @@ const SignIn = () => {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <FormField
-          control={form.control}
-          name="emailOrUsername"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel className="b4-medium">Email or Username</FormLabel>
-              <FormControl>
-                <Input
-                  className="outline-1 outline-neutral-300"
-                  placeholder="john@example.com / johndoe"
-                  {...field}
+        <Tabs
+          defaultValue="Advisor"
+          className="space-y-4"
+          onValueChange={(value) => {
+            form.setValue("userType", value as "Advisor" | "Student");
+          }}
+        >
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="Advisor">Advisor</TabsTrigger>
+            <TabsTrigger value="Student">Student</TabsTrigger>
+          </TabsList>
+          <TabsContent value="Advisor">
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Email</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="john@example.com"
+                      {...field}
+                      value={field.value ?? ""}
+                      onChange={(e) => field.onChange(e.target.value || "")}
+                      className="outline-1 outline-neutral-300"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </TabsContent>
+          <TabsContent value="Student">
+            <div className="space-y-2">
+              <FormLabel>Registration No.</FormLabel>
+              <div className="grid grid-cols-4 gap-2">
+                <FormField
+                  control={form.control}
+                  name="registrationNo.session"
+                  render={({ field }) => (
+                    <FormItem>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger className="outline-1 outline-neutral-300">
+                            <SelectValue defaultValue={field.value} />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="SP">SP</SelectItem>
+                          <SelectItem value="FA">FA</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+
+                <FormField
+                  control={form.control}
+                  name="registrationNo.year"
+                  render={({ field }) => (
+                    <FormItem>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger className="outline-1 outline-neutral-300">
+                            <SelectValue defaultValue={field.value} />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {yearOptions.map((year) => (
+                            <SelectItem key={year} value={year}>
+                              {year}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="registrationNo.degree"
+                  render={({ field }) => (
+                    <FormItem>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger className="outline-1 outline-neutral-300">
+                            <SelectValue defaultValue={field.value} />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {DEGREES.map((degree) => (
+                            <SelectItem key={degree.value} value={degree.value}>
+                              {degree.value}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="registrationNo.rollNumber"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          {...field}
+                          value={field.value ?? ""}
+                          onChange={(e) =>
+                            field.onChange(Number(e.target.value))
+                          }
+                          className="outline-1 outline-neutral-300"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </div>
+          </TabsContent>
+        </Tabs>
 
         <FormField
           control={form.control}
@@ -160,8 +300,6 @@ const SignIn = () => {
           >
             {isLoading ? "Signing in..." : "Sign In"}
           </Button>
-
-          <Google text="Sign In with Google" disabled={isLoading} />
         </div>
       </form>
     </Form>

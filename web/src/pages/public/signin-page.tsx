@@ -5,7 +5,7 @@ import SignIn from "@/features/auth/sign-in";
 function SignInPage() {
   return (
     <div className="flex items-center justify-center w-full py-10 px-16 gap-x-16">
-      <div className="flex-1 flex flex-col gap-y-10 bg-white drop-shadow-e1 p-8 rounded-md">
+      <div className="flex-1 flex flex-col gap-y-8 bg-white drop-shadow-e1 p-8 rounded-md">
         <div className="space-y-2.5">
           <p className="b1-regular text-neutral-800">Welcome Back</p>
           <h3 className="h3-bold">

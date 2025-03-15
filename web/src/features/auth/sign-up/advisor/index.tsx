@@ -45,7 +45,6 @@ const AdvisorSignUp = () => {
       firstName: advisors[0].firstName,
       lastName: advisors[0].lastName,
       displayName: advisors[0].displayName,
-      username: "",
       email: advisors[0].email,
       password: "",
     },
@@ -56,7 +55,6 @@ const AdvisorSignUp = () => {
   const onSubmit = async (values: z.infer<typeof advisorSignUpSchema>) => {
     const response = await signUp({
       email: values.email,
-      username: values.username,
       password: values.password,
       firstName: values.firstName,
       lastName: values.lastName,
@@ -149,27 +147,6 @@ const AdvisorSignUp = () => {
                 </FormItem>
               )}
             />
-
-            <FormField
-              control={form.control}
-              name="username"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Username</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="johndoe"
-                      {...field}
-                      className="outline-1 outline-neutral-300"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-8">
             <FormField
               control={form.control}
               name="email"
@@ -214,7 +191,9 @@ const AdvisorSignUp = () => {
                 </FormItem>
               )}
             />
+          </div>
 
+          <div>
             <FormField
               control={form.control}
               name="password"

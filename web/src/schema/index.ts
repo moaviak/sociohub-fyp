@@ -23,20 +23,51 @@ export const contactFormSchema = z
     }
   });
 
-export const signInSchema = z.object({
-  emailOrUsername: z
-    .string()
-    .min(1, { message: "Email or username is required" }),
-  password: z.string().min(8, { message: "Password is required" }),
-  rememberMe: z.boolean().default(false),
-});
+export const signInSchema = z
+  .object({
+    userType: z.enum(["Advisor", "Student"]),
+    email: z.string().email().optional().or(z.literal("")), // Allow email to be optional
+    registrationNo: z
+      .object({
+        session: z.enum(["SP", "FA"]),
+        year: z.string(),
+        degree: z.enum(DEGREES.map((d) => d.value) as [string, ...string[]]),
+        rollNumber: z
+          .number()
+          .min(1)
+          .max(999, { message: "Roll number must be between 1-999" })
+          .optional(),
+      })
+      .optional() // Allow registrationNo to be optional
+      .nullable(), // Allow null value
+    password: z.string().min(8, { message: "Password is required" }),
+    rememberMe: z.boolean().default(false),
+  })
+  .refine(
+    (data) => {
+      if (data.userType === "Advisor") {
+        return !!data.email; // Email must be present for Advisor
+      }
+      return true;
+    },
+    { message: "Email is required for Advisors", path: ["email"] }
+  )
+  .refine(
+    (data) => {
+      if (data.userType === "Student") {
+        return !!data.registrationNo && !!data.registrationNo.rollNumber; // Registration No must be present for Student
+      }
+      return true;
+    },
+    {
+      message: "Registration No is required for Students",
+      path: ["registrationNo"],
+    }
+  );
 
 export const studentSignUpSchema = z.object({
   firstName: z.string().min(1, { message: "First Name is required" }),
   lastName: z.string().min(1, { message: "Last Name is required" }),
-  username: z
-    .string()
-    .min(3, { message: "Username must be at least 3 characters" }),
   email: z.string().email({ message: "Email is required" }),
   registrationNo: z.object({
     session: z.enum(["SP", "FA"], { required_error: "Session is required" }),
@@ -58,9 +89,6 @@ export const advisorSignUpSchema = z.object({
   firstName: z.string().min(1, { message: "First Name is required" }),
   lastName: z.string().min(1, { message: "Last Name is required" }),
   displayName: z.string().min(1, { message: "Display Name is required" }),
-  username: z
-    .string()
-    .min(3, { message: "Username must be at least 3 characters" }),
   email: z.enum(
     SOCIETIES_ADVISORS.map((s) => s.email) as [string, ...string[]],
     {

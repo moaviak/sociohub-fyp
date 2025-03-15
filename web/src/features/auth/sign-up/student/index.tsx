@@ -27,7 +27,6 @@ import { getYearOptions } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { studentSignUpSchema } from "@/schema";
 import { Button } from "@/components/ui/button";
-import { Google } from "@/features/auth/components/google";
 
 import { useStudentSignUpMutation } from "../../api";
 import { AuthResponse } from "../../types";
@@ -44,7 +43,6 @@ const StudentSignUp = () => {
     defaultValues: {
       firstName: "",
       lastName: "",
-      username: "",
       email: "",
       password: "",
       registrationNo: {
@@ -61,7 +59,6 @@ const StudentSignUp = () => {
 
     const response = await signUp({
       email: values.email,
-      username: values.username,
       password: values.password,
       firstName: values.firstName,
       lastName: values.lastName,
@@ -132,25 +129,109 @@ const StudentSignUp = () => {
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-8">
-            <FormField
-              control={form.control}
-              name="username"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Username</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="johndoe"
-                      {...field}
-                      className="outline-1 outline-neutral-300"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+          <div className="space-y-2">
+            <FormLabel>Registration No.</FormLabel>
+            <div className="grid grid-cols-4 gap-2">
+              <FormField
+                control={form.control}
+                name="registrationNo.session"
+                render={({ field }) => (
+                  <FormItem>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger className="outline-1 outline-neutral-300">
+                          <SelectValue defaultValue={field.value} />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="SP">SP</SelectItem>
+                        <SelectItem value="FA">FA</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
+              <FormField
+                control={form.control}
+                name="registrationNo.year"
+                render={({ field }) => (
+                  <FormItem>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger className="outline-1 outline-neutral-300">
+                          <SelectValue defaultValue={field.value} />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {yearOptions.map((year) => (
+                          <SelectItem key={year} value={year}>
+                            {year}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="registrationNo.degree"
+                render={({ field }) => (
+                  <FormItem>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger className="outline-1 outline-neutral-300">
+                          <SelectValue defaultValue={field.value} />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {DEGREES.map((degree) => (
+                          <SelectItem key={degree.value} value={degree.value}>
+                            {degree.value}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="registrationNo.rollNumber"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        {...field}
+                        value={field.value ?? ""}
+                        onChange={(e) => field.onChange(Number(e.target.value))}
+                        className="outline-1 outline-neutral-300"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-8">
             <FormField
               control={form.control}
               name="email"
@@ -168,113 +249,6 @@ const StudentSignUp = () => {
                 </FormItem>
               )}
             />
-          </div>
-
-          <div className="grid grid-cols-2 gap-8">
-            <div className="space-y-2">
-              <FormLabel>Registration No.</FormLabel>
-              <div className="grid grid-cols-4 gap-2">
-                <FormField
-                  control={form.control}
-                  name="registrationNo.session"
-                  render={({ field }) => (
-                    <FormItem>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger className="outline-1 outline-neutral-300">
-                            <SelectValue defaultValue={field.value} />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="SP">SP</SelectItem>
-                          <SelectItem value="FA">FA</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="registrationNo.year"
-                  render={({ field }) => (
-                    <FormItem>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger className="outline-1 outline-neutral-300">
-                            <SelectValue defaultValue={field.value} />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {yearOptions.map((year) => (
-                            <SelectItem key={year} value={year}>
-                              {year}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="registrationNo.degree"
-                  render={({ field }) => (
-                    <FormItem>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger className="outline-1 outline-neutral-300">
-                            <SelectValue defaultValue={field.value} />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {DEGREES.map((degree) => (
-                            <SelectItem key={degree.value} value={degree.value}>
-                              {degree.value}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="registrationNo.rollNumber"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormControl>
-                        <Input
-                          type="number"
-                          {...field}
-                          value={field.value ?? ""}
-                          onChange={(e) =>
-                            field.onChange(Number(e.target.value))
-                          }
-                          className="outline-1 outline-neutral-300"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-            </div>
-
             <FormField
               control={form.control}
               name="password"
@@ -317,8 +291,6 @@ const StudentSignUp = () => {
           >
             {isLoading ? "Creating Account..." : "Sign Up"}
           </Button>
-
-          <Google text="Sign Up with Google" disabled={isLoading} />
         </div>
       </form>
     </Form>

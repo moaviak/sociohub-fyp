@@ -9,12 +9,12 @@ export const AuthApi = api.injectEndpoints({
   endpoints: (builder) => ({
     login: builder.mutation<
       AuthResponse | ApiError,
-      { email?: string; username?: string; password: string }
+      { email?: string; registrationNumber?: string; password: string }
     >({
-      query: ({ email, username, password }) => ({
+      query: ({ email, registrationNumber, password }) => ({
         url: "/auth/login",
         method: "POST",
-        body: { email, username, password },
+        body: { email, registrationNumber, password },
       }),
       transformResponse: (response: ApiResponse<AuthResponse>) => {
         if (response.success) {
@@ -46,7 +46,6 @@ export const AuthApi = api.injectEndpoints({
       AuthResponse | ApiError,
       {
         email: string;
-        username: string;
         password: string;
         firstName: string;
         lastName: string;
@@ -108,6 +107,15 @@ export const AuthApi = api.injectEndpoints({
           },
           errorResponse
         );
+      },
+      onQueryStarted: (_, { dispatch, queryFulfilled }) => {
+        queryFulfilled.then(({ data }) => {
+          if (!("error" in data)) {
+            dispatch(
+              AuthApi.endpoints.getUser.initiate(null, { forceRefetch: true })
+            );
+          }
+        });
       },
     }),
 
@@ -231,7 +239,6 @@ export const AuthApi = api.injectEndpoints({
       AuthResponse | ApiError,
       {
         email: string;
-        username: string;
         password: string;
         firstName: string;
         lastName: string;
@@ -283,6 +290,15 @@ export const AuthApi = api.injectEndpoints({
       transformErrorResponse: (response) => {
         const errorResponse = response.data as ApiErrorResponse;
         return createApiError(errorResponse.message);
+      },
+      onQueryStarted: (_, { dispatch, queryFulfilled }) => {
+        queryFulfilled.then(({ data }) => {
+          if (!("error" in data)) {
+            dispatch(
+              AuthApi.endpoints.getUser.initiate(null, { forceRefetch: true })
+            );
+          }
+        });
       },
     }),
   }),

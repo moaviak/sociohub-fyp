@@ -23,10 +23,15 @@ export const isEmail = (input: string): boolean => {
   return emailRegex.test(input);
 };
 
-export const parseCredentials = (emailOrUsername: string) => {
-  const isEmailInput = isEmail(emailOrUsername);
+export const parseCredentials = (emailOrRegNo: string) => {
+  const isEmailInput = isEmail(emailOrRegNo);
+  const registrationNumberRegex = /^(SP|FA)\d{2}-[A-Z]{3}-\d{1,3}$/;
+
   return {
-    email: isEmailInput ? emailOrUsername : undefined,
-    username: !isEmailInput ? emailOrUsername : undefined,
+    email: isEmailInput ? emailOrRegNo : undefined,
+    registrationNumber:
+      !isEmailInput && registrationNumberRegex.test(emailOrRegNo)
+        ? emailOrRegNo
+        : undefined,
   };
 };
