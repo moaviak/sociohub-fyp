@@ -34,12 +34,12 @@ const AuthSlice = createSlice({
       state.accessToken = null;
       state.isAuthChecked = true;
     },
-    updateCheckAuth: (state, action) => {
+    setAuthChecked: (state, action) => {
       state.isAuthChecked = action.payload;
     },
   },
 });
 
-export const { login, logout, updateCheckAuth } = AuthSlice.actions;
+export const { login, logout, setAuthChecked } = AuthSlice.actions;
 
 export default AuthSlice.reducer;

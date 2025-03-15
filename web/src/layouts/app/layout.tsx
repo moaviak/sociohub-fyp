@@ -12,27 +12,42 @@ function AppLayout() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (isAuthChecked && !isAuthenticated) {
-      navigate("/sign-in");
+    if (!isAuthChecked) {
+      // Still loading, don't redirect yet
+      return;
     }
-  }, [isAuthenticated, isAuthChecked, navigate]);
 
-  useEffect(() => {
-    if (userType === UserType.ADVISOR && !(user as Advisor).societyId) {
-      navigate("/sign-up/society-form");
-    } else if (
-      userType === UserType.STUDENT &&
-      !(user as Student).registrationNumber
-    ) {
-      navigate("/sign-up/student/reg-no");
+    if (!isAuthenticated) {
+      // Not authenticated, redirect to sign-in
+      navigate("/sign-in", { replace: true });
+      return;
     }
-  }, [navigate, user, userType]);
+
+    // User is authenticated, check for completion steps
+    if (user) {
+      if (!user.isEmailVerified) {
+        navigate("/sign-up/verify-email", { replace: true });
+      } else if (
+        userType === UserType.ADVISOR &&
+        !(user as Advisor).societyId
+      ) {
+        navigate("/sign-up/society-form", { replace: true });
+      } else if (
+        userType === UserType.STUDENT &&
+        !(user as Student).registrationNumber
+      ) {
+        navigate("/sign-up/student/reg-no", { replace: true });
+      }
+      // If all conditions are met, user stays on the current route (dashboard)
+    }
+  }, [isAuthenticated, isAuthChecked, navigate, user, userType]);
 
   if (!isAuthChecked) {
     // TODO: Add a App Skeleton
     return <div>Loading...</div>;
   }
 
-  return <Outlet />;
+  // Only render the outlet if user is authenticated
+  return isAuthenticated ? <Outlet /> : null;
 }
 export default AppLayout;

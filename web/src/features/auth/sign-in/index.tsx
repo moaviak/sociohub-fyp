@@ -49,8 +49,6 @@ const SignIn = () => {
       password: values.password,
     });
 
-    console.log({ response });
-
     if (!response.error) {
       const data = response.data as AuthResponse;
       if (!data.user.isEmailVerified) {

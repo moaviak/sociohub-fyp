@@ -1,7 +1,9 @@
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useState } from "react";
+import { toast } from "sonner";
 import { Camera } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { useNavigate } from "react-router";
+import { useEffect, useState } from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
 
 import {
   Form,
@@ -11,16 +13,23 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import ApiError from "@/features/api-error";
+import { useAppSelector } from "@/app/hooks";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { societyFormSchema, SocietyFormValues } from "@/schema";
-import { useAppSelector } from "@/app/hooks";
+
 import { Advisor } from "../../types";
+import { useCreateSocietyMutation } from "../../api";
 
 export const SocietyForm = () => {
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const { user } = useAppSelector((state) => state.auth);
+  const navigate = useNavigate();
+
+  const [createSociety, { isError, isLoading, error }] =
+    useCreateSocietyMutation();
 
   const societyName = user && (user as Advisor).societyName;
 
@@ -44,10 +53,30 @@ export const SocietyForm = () => {
     }
   };
 
-  const onSubmit = (data: SocietyFormValues) => {
-    console.log(data);
-    // Handle form submission here
+  const onSubmit = async (data: SocietyFormValues) => {
+    const formData = new FormData();
+    formData.append("name", data.name);
+    formData.append("description", data.description);
+    formData.append("logo", data.logo || "");
+
+    const response = await createSociety(formData);
+
+    if (!("error" in response) && response.data) {
+      toast.success("Society created successfully.");
+      navigate("/dashboard", { replace: true });
+    }
   };
+
+  useEffect(() => {
+    if (isError) {
+      toast.error(
+        (error as ApiError)?.errorMessage || "An unexpected error occurred",
+        {
+          duration: 10000,
+        }
+      );
+    }
+  }, [isError, error]);
 
   return (
     <Form {...form}>
@@ -117,8 +146,8 @@ export const SocietyForm = () => {
           )}
         />
 
-        <Button type="submit" size="lg" className="w-full">
-          Save
+        <Button type="submit" size="lg" className="w-full" disabled={isLoading}>
+          {isLoading ? "Creating" : "Create"}
         </Button>
       </form>
     </Form>

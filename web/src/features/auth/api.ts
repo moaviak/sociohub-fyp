@@ -2,7 +2,7 @@ import { api } from "@/features/api";
 
 import { ApiResponse } from "../api-response";
 import { AuthResponse, SocietyAdvisor } from "./types";
-import { login, logout, updateCheckAuth } from "./slice";
+import { login, logout, setAuthChecked } from "./slice";
 import ApiError, { ApiErrorResponse, createApiError } from "../api-error";
 
 export const AuthApi = api.injectEndpoints({
@@ -157,11 +157,11 @@ export const AuthApi = api.injectEndpoints({
             dispatch(logout());
           }
 
-          dispatch(updateCheckAuth(true));
+          dispatch(setAuthChecked(true));
         });
         queryFulfilled.catch(() => {
           dispatch(logout());
-          dispatch(updateCheckAuth(true));
+          dispatch(setAuthChecked(true));
         });
       },
     }),
@@ -268,6 +268,23 @@ export const AuthApi = api.injectEndpoints({
         });
       },
     }),
+    createSociety: builder.mutation<AuthResponse | ApiError, FormData>({
+      query: (credentials) => ({
+        url: "/society",
+        method: "POST",
+        body: credentials,
+      }),
+      transformResponse: (response: ApiResponse<AuthResponse>) => {
+        if (response.success) {
+          return response.data;
+        }
+        return createApiError(response.message);
+      },
+      transformErrorResponse: (response) => {
+        const errorResponse = response.data as ApiErrorResponse;
+        return createApiError(errorResponse.message);
+      },
+    }),
   }),
 });
 
@@ -281,4 +298,5 @@ export const {
   useSetRegistrationNumberMutation,
   useGetAdvisorsListQuery,
   useAdvisorSignUpMutation,
+  useCreateSocietyMutation,
 } = AuthApi;

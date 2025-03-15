@@ -21,27 +21,34 @@ function App() {
   return (
     <Routes>
       <Route element={<MainLayout />}>
-        {/* Public Routes */}
+        {/* Public Marketing Routes */}
         <Route element={<MarketingLayout />}>
           <Route path="/" element={<LandingPage />} />
           <Route path="/contact-us" element={<ContactPage />} />
         </Route>
 
+        {/* Auth Routes */}
         <Route element={<AuthLayout />}>
+          {/* Public Auth Routes */}
           <Route path="/sign-in" element={<SignInPage />} />
           <Route path="/sign-up" element={<SignUpPage />}>
-            <Route path="student" element={<StudentSignUpPage />}>
-              <Route path="reg-no" element={<StudentRegNoPage />} />
-            </Route>
+            <Route path="student" element={<StudentSignUpPage />} />
             <Route path="advisor" element={<AdvisorSignUpPage />} />
-            <Route path="verify-email" element={<VerifyEmailPage />} />
-            <Route path="society-form" element={<SocietyFormPage />} />
           </Route>
+
+          {/* Auth-Required Onboarding Routes */}
+          <Route path="/sign-up/verify-email" element={<VerifyEmailPage />} />
+          <Route path="/sign-up/society-form" element={<SocietyFormPage />} />
+          <Route
+            path="/sign-up/student/reg-no"
+            element={<StudentRegNoPage />}
+          />
         </Route>
 
         {/* Private Routes */}
         <Route element={<AppLayout />}>
           <Route path="/dashboard" element={<DashboardPage />} />
+          {/* Add other private routes here */}
         </Route>
       </Route>
     </Routes>
