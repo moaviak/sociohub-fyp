@@ -12,8 +12,5 @@ export const userLoginValidator = () => {
 };
 
 export const verifyEmailValidator = () => {
-  return [
-    body("email").notEmpty().withMessage("Email is required"),
-    body("code").notEmpty().withMessage("Verification code is required"),
-  ];
+  return [body("code").notEmpty().withMessage("Verification code is required")];
 };

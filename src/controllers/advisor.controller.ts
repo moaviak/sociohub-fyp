@@ -6,7 +6,10 @@ import { ApiError } from "../utils/ApiError";
 import { ApiResponse } from "../utils/ApiResponse";
 import { asyncHandler } from "../utils/asyncHandler";
 import { sendVerificationEmail } from "../utils/mail";
-import { generateAccessAndRefreshTokens } from "../utils/helpers";
+import {
+  generateAccessAndRefreshTokens,
+  generateAvatarUrlFromInitials,
+} from "../utils/helpers";
 import { UserType } from "../types";
 
 export const listSocietyAdvisors = asyncHandler(
@@ -47,6 +50,9 @@ export const registerAdvisor = asyncHandler(
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    // Generate initials avatar
+    const avatar = generateAvatarUrlFromInitials(firstName, lastName);
+
     // Generate Verification code
     const { code, codeExpiry } = prisma.advisor.generateVerificationCode();
 
@@ -56,6 +62,7 @@ export const registerAdvisor = asyncHandler(
         lastName,
         email,
         displayName,
+        avatar,
         password: hashedPassword,
         emailVerificationCode: code,
         emailVerificationExpiry: new Date(codeExpiry),
@@ -65,6 +72,7 @@ export const registerAdvisor = asyncHandler(
         firstName: true,
         lastName: true,
         email: true,
+        avatar: true,
         societyId: true,
         displayName: true,
         createdAt: true,

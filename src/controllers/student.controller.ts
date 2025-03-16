@@ -7,7 +7,10 @@ import { ApiError } from "../utils/ApiError";
 import { ApiResponse } from "../utils/ApiResponse";
 import { asyncHandler } from "../utils/asyncHandler";
 import { sendVerificationEmail } from "../utils/mail";
-import { generateAccessAndRefreshTokens } from "../utils/helpers";
+import {
+  generateAccessAndRefreshTokens,
+  generateAvatarUrlFromInitials,
+} from "../utils/helpers";
 
 export const registerStudent = asyncHandler(
   async (req: Request, res: Response) => {
@@ -31,6 +34,9 @@ export const registerStudent = asyncHandler(
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    // Generate initials avatar
+    const avatar = generateAvatarUrlFromInitials(firstName, lastName);
+
     // Generate verification code
     const { code, codeExpiry } = prisma.student.generateVerificationCode();
 
@@ -40,6 +46,7 @@ export const registerStudent = asyncHandler(
         lastName,
         email,
         registrationNumber,
+        avatar,
         password: hashedPassword,
         emailVerificationCode: code,
         emailVerificationExpiry: new Date(codeExpiry),
@@ -49,6 +56,7 @@ export const registerStudent = asyncHandler(
         firstName: true,
         lastName: true,
         email: true,
+        avatar: true,
         registrationNumber: true,
         createdAt: true,
         updatedAt: true,

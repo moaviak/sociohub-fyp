@@ -109,3 +109,18 @@ export const extractPublicId = (url: string): string | null => {
   const matches = url.match(/\/upload\/(?:v\d+\/)?(.+?)(\.[a-z]+)?$/);
   return matches ? matches[1] : null;
 };
+
+/**
+ * Generates a URL for an avatar based on the user's initials.
+ * @param firstName - The first name of the user (e.g., "Muhammad")
+ * @param lastName - The last name of the user (e.g., "Moavia")
+ * @returns A URL string for the avatar
+ */
+export const generateAvatarUrlFromInitials = (
+  firstName: string,
+  lastName: string
+): string => {
+  const baseUrl = "https://avatar.iran.liara.run/username";
+
+  return `${baseUrl}?username=${firstName}+${lastName}`;
+};

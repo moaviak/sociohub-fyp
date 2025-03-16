@@ -14,41 +14,43 @@ datasource db {
 }
 
 model Student {
-  id                 String   @id @default(uuid())
-  firstName          String
-  lastName           String
-  email              String   @unique
-  registrationNumber String?   @unique
-  password           String
-  refreshToken       String?
-  isEmailVerified  Boolean @default(false)
-  emailVerificationCode String?
+  id                      String    @id @default(uuid())
+  firstName               String
+  lastName                String
+  email                   String    @unique
+  registrationNumber      String?   @unique
+  password                String
+  avatar                  String?
+  refreshToken            String?
+  isEmailVerified         Boolean   @default(false)
+  emailVerificationCode   String?
   emailVerificationExpiry DateTime?
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
 }
 
 model Advisor {
-  id                      String   @id @default(uuid())
+  id                      String    @id @default(uuid())
   firstName               String
   lastName                String
   displayName             String
-  email                   String   @unique
+  email                   String    @unique
   password                String
+  avatar                  String?
   refreshToken            String?
-  isEmailVerified         Boolean @default(false)
+  isEmailVerified         Boolean   @default(false)
   emailVerificationCode   String?
   emailVerificationExpiry DateTime?
-  createdAt               DateTime @default(now())
-  updatedAt               DateTime @updatedAt
-  societyId               String? @unique
-  society                 Society? @relation(fields: [societyId], references: [id], onDelete: SetNull)
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
+  societyId               String?   @unique
+  society                 Society?  @relation(fields: [societyId], references: [id], onDelete: SetNull)
 
   @@index([societyId])
 }
 
 model Society {
-  id          String @id @default(uuid())
+  id          String   @id @default(uuid())
   name        String
   description String
   logo        String
@@ -58,12 +60,12 @@ model Society {
 }
 
 model SocietyAdvisor {
-  id String @id @default(uuid())
-  firstName String
-  lastName String
+  id          String   @id @default(uuid())
+  firstName   String
+  lastName    String
   displayName String
-  email String @unique
-  society String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  email       String   @unique
+  society     String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }

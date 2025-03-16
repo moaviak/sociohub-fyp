@@ -18,19 +18,16 @@ export const loginUser = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Registration number or email is required");
   }
 
-  // Search in both tables simultaneously using Promise.all
-  const [student, advisor] = await Promise.all([
-    prisma.student.findFirst({
-      where: {
-        registrationNumber,
-      },
-    }),
-    prisma.advisor.findFirst({
-      where: {
-        email,
-      },
-    }),
-  ]);
+  let student = null;
+  let advisor = null;
+
+  if (registrationNumber) {
+    student = await prisma.student.findUnique({
+      where: { registrationNumber },
+    });
+  } else {
+    advisor = await prisma.advisor.findUnique({ where: { email } });
+  }
 
   // Determine which user exists
   const user = student || advisor;
@@ -95,10 +92,29 @@ export const loginUser = asyncHandler(async (req, res) => {
     }
   }
 
-  if (userType === UserType.ADVISOR && !(user as Advisor).societyId) {
-    const society = await prisma.societyAdvisor.findFirst({
-      where: { email },
-    });
+  if (userType === UserType.ADVISOR) {
+    let responseData = {
+      user: {
+        id: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        isEmailVerified: user.isEmailVerified,
+        avatar: user.avatar,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+        societyId: (user as Advisor).societyId,
+        societyName: "",
+      },
+    };
+
+    if (!(user as Advisor).societyId) {
+      const society = await prisma.societyAdvisor.findFirst({
+        where: { email },
+      });
+
+      responseData.user.societyName = society?.society || "";
+    }
 
     return res
       .status(200)
@@ -108,17 +124,7 @@ export const loginUser = asyncHandler(async (req, res) => {
         new ApiResponse(
           200,
           {
-            user: {
-              id: user.id,
-              email: user.email,
-              firstName: user.firstName,
-              lastName: user.lastName,
-              isEmailVerified: user.isEmailVerified,
-              createdAt: user.createdAt,
-              updatedAt: user.updatedAt,
-              societyId: (user as Advisor).societyId,
-              societyName: society?.society,
-            },
+            ...responseData,
             userType,
             accessToken,
           },
@@ -139,6 +145,7 @@ export const loginUser = asyncHandler(async (req, res) => {
               email: user.email,
               firstName: user.firstName,
               lastName: user.lastName,
+              avatar: user.avatar,
               isEmailVerified: user.isEmailVerified,
               createdAt: user.createdAt,
               updatedAt: user.updatedAt,
@@ -209,7 +216,12 @@ export const refreshAccessToken = asyncHandler(
 );
 
 export const verifyEmail = asyncHandler(async (req, res) => {
-  const { code, email } = req.body;
+  const { code } = req.body;
+
+  if (!isAuthUser(req.user)) {
+    throw new ApiError(401, "Unauthorized request");
+  }
+  const { email } = req.user;
 
   if (!code || !email) {
     throw new ApiError(400, "Verification code and email are required");
@@ -257,6 +269,7 @@ export const verifyEmail = asyncHandler(async (req, res) => {
       firstName: true,
       lastName: true,
       isEmailVerified: true,
+      avatar: true,
       ...(userType === UserType.STUDENT && { registrationNumber: true }), // Only include for Student
       ...(userType === UserType.ADVISOR && {
         societyId: true,
@@ -369,41 +382,3 @@ export const logoutUser = asyncHandler(async (req: Request, res: Response) => {
     .clearCookie("refreshToken", options)
     .json(new ApiResponse(200, {}, "User logged out"));
 });
-
-export const handleGoogleLogin = asyncHandler(
-  async (req: Request, res: Response) => {
-    const user = await prisma.student.findUnique({
-      where: { id: (req.user as IUser).id },
-    });
-
-    if (!user) {
-      throw new ApiError(404, "User does not exist");
-    }
-
-    const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(
-      user.id,
-      UserType.STUDENT
-    );
-
-    const options = {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-    };
-
-    if (user.registrationNumber) {
-      return res
-        .status(301)
-        .cookie("accessToken", accessToken, options)
-        .cookie("refreshToken", refreshToken, options)
-        .redirect(process.env.CLIENT_SSO_REDIRECT_URL! + "/dashboard");
-    } else {
-      return res
-        .status(301)
-        .cookie("accessToken", accessToken, options)
-        .cookie("refreshToken", refreshToken, options)
-        .redirect(
-          process.env.CLIENT_SSO_REDIRECT_URL! + "/sign-up/student/reg-no"
-        );
-    }
-  }
-);

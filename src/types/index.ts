@@ -18,6 +18,7 @@ export type IUser = {
   firstName: string;
   lastName: string;
   displayName?: string;
+  avatar?: string;
   registrationNumber?: string;
   societyId?: string;
   userType: UserType;
