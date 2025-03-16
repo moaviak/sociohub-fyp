@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router";
 import { useAppSelector } from "@/app/hooks";
-import { Advisor, Student, UserType } from "@/features/auth/types";
+import { Advisor, UserType } from "@/features/auth/types";
 import { Header } from "./components/header";
 
 function AuthLayout() {
@@ -13,13 +13,11 @@ function AuthLayout() {
   );
 
   const isVerifyEmail = location.pathname === "/sign-up/verify-email";
-  const isStudentRegNo = location.pathname === "/sign-up/student/reg-no";
   const isSocietyForm = location.pathname === "/sign-up/society-form";
   const isSignIn = location.pathname === "/sign-in";
   const isSignUp =
     location.pathname.startsWith("/sign-up") &&
     !isVerifyEmail &&
-    !isStudentRegNo &&
     !isSocietyForm;
 
   useEffect(() => {
@@ -29,10 +27,7 @@ function AuthLayout() {
     }
 
     // Handle special auth routes that require authentication
-    if (
-      (isVerifyEmail || isStudentRegNo || isSocietyForm) &&
-      !isAuthenticated
-    ) {
+    if ((isVerifyEmail || isSocietyForm) && !isAuthenticated) {
       navigate("/sign-in", { replace: true });
       return;
     }
@@ -43,11 +38,6 @@ function AuthLayout() {
       if (user && user.isEmailVerified) {
         if (userType === UserType.ADVISOR && !(user as Advisor).societyId) {
           navigate("/sign-up/society-form", { replace: true });
-        } else if (
-          userType === UserType.STUDENT &&
-          !(user as Student).registrationNumber
-        ) {
-          navigate("/sign-up/student/reg-no", { replace: true });
         } else {
           // All steps completed, go to dashboard
           navigate("/dashboard", { replace: true });
@@ -57,22 +47,30 @@ function AuthLayout() {
       }
     }
 
-    // Additional check for the society form route
-    if (
-      isSocietyForm &&
-      isAuthenticated &&
-      user &&
-      user.isEmailVerified &&
-      userType === UserType.ADVISOR &&
-      (user as Advisor).societyId
-    ) {
-      navigate("/dashboard", { replace: true });
+    // Additional check for the verify email and society form routes
+    if (isAuthenticated && user) {
+      // If email is verified and on verify email page, redirect to appropriate next step
+      if (isVerifyEmail && user.isEmailVerified) {
+        if (userType === UserType.ADVISOR && !(user as Advisor).societyId) {
+          navigate("/sign-up/society-form", { replace: true });
+        } else {
+          navigate("/dashboard", { replace: true });
+        }
+      }
+
+      // If society is created and on society form page, redirect to dashboard
+      if (
+        isSocietyForm &&
+        userType === UserType.ADVISOR &&
+        (user as Advisor).societyId
+      ) {
+        navigate("/dashboard", { replace: true });
+      }
     }
   }, [
     isAuthenticated,
     isAuthChecked,
     isVerifyEmail,
-    isStudentRegNo,
     isSocietyForm,
     isSignIn,
     isSignUp,
@@ -81,7 +79,7 @@ function AuthLayout() {
     userType,
   ]);
 
-  if (!isAuthChecked && (isVerifyEmail || isStudentRegNo || isSocietyForm)) {
+  if (!isAuthChecked && (isVerifyEmail || isSocietyForm)) {
     // TODO: Render the App Skeleton
     return <div>Loading...</div>;
   }

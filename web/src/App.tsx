@@ -15,7 +15,6 @@ import AdvisorSignUpPage from "@/pages/public/advisor-signup-page";
 import DashboardPage from "@/pages/app/dashboard-page";
 import VerifyEmailPage from "@/pages/verify-email-page";
 import SocietyFormPage from "@/pages/society-form-page";
-import StudentRegNoPage from "@/pages/student-regno-page";
 
 function App() {
   return (
@@ -39,10 +38,6 @@ function App() {
           {/* Auth-Required Onboarding Routes */}
           <Route path="/sign-up/verify-email" element={<VerifyEmailPage />} />
           <Route path="/sign-up/society-form" element={<SocietyFormPage />} />
-          <Route
-            path="/sign-up/student/reg-no"
-            element={<StudentRegNoPage />}
-          />
         </Route>
 
         {/* Private Routes */}

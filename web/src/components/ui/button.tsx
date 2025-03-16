@@ -17,7 +17,7 @@ const buttonVariants = cva(
           "border border-primary-600 text-primary-600 bg-background shadow-sm hover:bg-primary-600 hover:text-primary-foreground",
         secondary:
           "bg-secondary-600 text-white shadow-sm hover:bg-secondary-600/80",
-        ghost: "hover:bg-accent hover:text-primary-700",
+        ghost: "hover:bg-accent hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
         google:
           "bg-neutral-100 text-neutral-900 border border-neutral-900 hover:bg-neutral-200",
@@ -27,6 +27,7 @@ const buttonVariants = cva(
         sm: "h-8 rounded-md px-3 text-xs",
         lg: "h-12 rounded-md px-8",
         icon: "h-9 w-9",
+        inline: "h-auto p-1 text-sm",
       },
     },
     defaultVariants: {

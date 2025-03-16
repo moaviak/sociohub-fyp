@@ -22,7 +22,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { getYearOptions } from "@/lib/utils";
 
-import { AuthResponse } from "../types";
+import { Advisor, AuthResponse, UserType } from "../types";
 import { useLoginMutation } from "../api";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -73,8 +73,17 @@ const SignIn = () => {
       if (!data.user.isEmailVerified) {
         navigate("/sign-up/verify-email");
         sessionStorage.setItem("verificationEmail", data.user.email);
+      } else if (
+        data.userType === UserType.ADVISOR &&
+        !(data.user as Advisor).societyId
+      ) {
+        navigate("/sign-up/society-form", { replace: true });
+        sessionStorage.setItem(
+          "societyName",
+          (data.user as Advisor).societyName || ""
+        );
       } else {
-        navigate("/dashboard");
+        navigate("/dashboard", { replace: true });
       }
     }
   };

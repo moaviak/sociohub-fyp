@@ -1,6 +1,6 @@
 import { toast } from "sonner";
 import { useEffect, useState } from "react";
-import { Navigate, useNavigate } from "react-router";
+import { useNavigate } from "react-router";
 
 import {
   InputOTP,
@@ -15,7 +15,6 @@ import { useVerifyEmailMutation, useResendEmailMutation } from "../api";
 import { UserType } from "../types";
 
 export const VerifyEmail = () => {
-  const email = sessionStorage.getItem("verificationEmail");
   const [otp, setOtp] = useState("");
   const navigate = useNavigate();
 
@@ -37,10 +36,6 @@ export const VerifyEmail = () => {
     }
   }, [isError, error, isResendError, resendError]);
 
-  if (!email) {
-    return <Navigate to="/sign-in" />;
-  }
-
   const onVerify = async () => {
     if (otp.length !== 6) {
       toast.error("Please enter a valid OTP");
@@ -48,7 +43,7 @@ export const VerifyEmail = () => {
     }
 
     try {
-      const response = await verifyEmail({ email, otp });
+      const response = await verifyEmail({ otp });
 
       if (response.data && "user" in response.data) {
         if (response.data.user.isEmailVerified) {

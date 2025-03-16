@@ -27,7 +27,7 @@ import { Input } from "@/components/ui/input";
 import { advisorSignUpSchema } from "@/schema";
 import { Button } from "@/components/ui/button";
 
-import { AuthResponse, SocietyAdvisor } from "../../types";
+import { Advisor, AuthResponse, SocietyAdvisor } from "../../types";
 import { useAdvisorSignUpMutation, useGetAdvisorsListQuery } from "../../api";
 
 const AdvisorSignUp = () => {
@@ -62,10 +62,10 @@ const AdvisorSignUp = () => {
     });
 
     if (!("error" in response) && response.data) {
-      const user = response.data as AuthResponse;
+      const user = (response.data as AuthResponse).user as Advisor;
       toast.success("Account created successfully! Please verify your email.");
       navigate(`/sign-up/verify-email`);
-      sessionStorage.setItem("verificationEmail", user.user.email);
+      sessionStorage.setItem("societyName", user.societyName || "");
     }
   };
 

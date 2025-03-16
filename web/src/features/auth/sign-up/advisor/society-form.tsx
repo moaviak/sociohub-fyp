@@ -14,24 +14,21 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import ApiError from "@/features/api-error";
-import { useAppSelector } from "@/app/hooks";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { societyFormSchema, SocietyFormValues } from "@/schema";
 
-import { Advisor } from "../../types";
 import { useCreateSocietyMutation } from "../../api";
 
 export const SocietyForm = () => {
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
-  const { user } = useAppSelector((state) => state.auth);
   const navigate = useNavigate();
 
   const [createSociety, { isError, isLoading, error }] =
     useCreateSocietyMutation();
 
-  const societyName = user && (user as Advisor).societyName;
+  const societyName = sessionStorage.getItem("societyName");
 
   const form = useForm<SocietyFormValues>({
     resolver: zodResolver(societyFormSchema),
@@ -64,6 +61,7 @@ export const SocietyForm = () => {
     if (!("error" in response) && response.data) {
       toast.success("Society created successfully.");
       navigate("/dashboard", { replace: true });
+      sessionStorage.removeItem("societyName");
     }
   };
 

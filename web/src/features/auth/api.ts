@@ -82,14 +82,11 @@ export const AuthApi = api.injectEndpoints({
         });
       },
     }),
-    verifyEmail: builder.mutation<
-      AuthResponse | ApiError,
-      { email: string; otp: string }
-    >({
-      query: ({ email, otp }) => ({
+    verifyEmail: builder.mutation<AuthResponse | ApiError, { otp: string }>({
+      query: ({ otp }) => ({
         url: "/auth/verify-email",
         method: "POST",
-        body: { email, code: otp },
+        body: { code: otp },
       }),
       transformResponse: (response: ApiResponse<AuthResponse>) => {
         if (response.success) {
@@ -111,9 +108,7 @@ export const AuthApi = api.injectEndpoints({
       onQueryStarted: (_, { dispatch, queryFulfilled }) => {
         queryFulfilled.then(({ data }) => {
           if (!("error" in data)) {
-            dispatch(
-              AuthApi.endpoints.getUser.initiate(null, { forceRefetch: true })
-            );
+            dispatch(login(data));
           }
         });
       },
@@ -173,35 +168,12 @@ export const AuthApi = api.injectEndpoints({
         });
       },
     }),
-    logout: builder.mutation<null | ApiError, null>({
+    logout: builder.mutation<void | ApiError, void>({
       query: () => ({
         url: "/auth/logout",
         method: "POST",
       }),
-      transformResponse: (response: ApiResponse<null>) => {
-        if (response.success) {
-          return response.data;
-        }
-        return createApiError(response.message);
-      },
-      transformErrorResponse: (response) => {
-        const errorResponse = response.data as ApiErrorResponse;
-        return createApiError(errorResponse.message);
-      },
-      onQueryStarted: (_, { dispatch }) => {
-        dispatch(logout());
-      },
-    }),
-    setRegistrationNumber: builder.mutation<
-      AuthResponse | ApiError,
-      { registrationNumber: string }
-    >({
-      query: ({ registrationNumber }) => ({
-        url: "/student/reg-no",
-        method: "POST",
-        body: { registrationNumber },
-      }),
-      transformResponse: (response: ApiResponse<AuthResponse>) => {
+      transformResponse: (response: ApiResponse<void>) => {
         if (response.success) {
           return response.data;
         }
@@ -212,10 +184,8 @@ export const AuthApi = api.injectEndpoints({
         return createApiError(errorResponse.message);
       },
       onQueryStarted: (_, { dispatch, queryFulfilled }) => {
-        queryFulfilled.then(({ data }) => {
-          if (!("error" in data)) {
-            dispatch(login(data));
-          }
+        queryFulfilled.then(() => {
+          dispatch(logout());
         });
       },
     }),
@@ -294,9 +264,7 @@ export const AuthApi = api.injectEndpoints({
       onQueryStarted: (_, { dispatch, queryFulfilled }) => {
         queryFulfilled.then(({ data }) => {
           if (!("error" in data)) {
-            dispatch(
-              AuthApi.endpoints.getUser.initiate(null, { forceRefetch: true })
-            );
+            dispatch(login(data));
           }
         });
       },
@@ -311,7 +279,6 @@ export const {
   useResendEmailMutation,
   useGetUserQuery,
   useLogoutMutation,
-  useSetRegistrationNumberMutation,
   useGetAdvisorsListQuery,
   useAdvisorSignUpMutation,
   useCreateSocietyMutation,
