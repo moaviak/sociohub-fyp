@@ -3,6 +3,7 @@ import { Outlet, useNavigate } from "react-router";
 
 import { useAppSelector } from "@/app/hooks";
 import { Advisor, Student, UserType } from "@/features/auth/types";
+import Sidebar from "@/features/app/sidebar";
 
 function AppLayout() {
   const { isAuthenticated, isAuthChecked, user, userType } = useAppSelector(
@@ -48,6 +49,13 @@ function AppLayout() {
   }
 
   // Only render the outlet if user is authenticated
-  return isAuthenticated ? <Outlet /> : null;
+  return isAuthenticated ? (
+    <div className="flex w-full">
+      <Sidebar />
+      <div className="flex-1">
+        <Outlet />
+      </div>
+    </div>
+  ) : null;
 }
 export default AppLayout;

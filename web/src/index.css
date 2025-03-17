@@ -196,6 +196,23 @@
       drop-shadow(0px 2px 4px rgba(0, 0, 0, 0.1))
       drop-shadow(0px 1px 8px rgba(0, 0, 0, 0.08));
   }
+
+  /* COMPONENTS */
+  .custom-scrollbar::-webkit-scrollbar {
+    @apply w-1 h-1 rounded-xs;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    @apply text-neutral-300;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    @apply bg-neutral-400 rounded-4xl;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    @apply bg-neutral-500;
+  }
 }
 
 :root {
