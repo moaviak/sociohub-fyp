@@ -21,7 +21,7 @@ router.route("/login").post(userLoginValidator(), validate, loginUser);
 router.route("/refresh-token").post(refreshAccessToken);
 router
   .route("/verify-email")
-  .post(verifyEmailValidator(), validate, verifyEmail);
+  .post(verifyEmailValidator(), validate, verifyJWT, verifyEmail);
 router
   .route("/resend-email-verification")
   .post(verifyJWT, resendEmailVerification);
