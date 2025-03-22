@@ -91,7 +91,7 @@ export const registerStudent = asyncHandler(
       .json(
         new ApiResponse(
           200,
-          { user: student, accessToken },
+          { user: student, userType: UserType.STUDENT, accessToken },
           "Student registered successfully and verification code has been sent to your email."
         )
       );
