@@ -32,7 +32,7 @@ export const registerStudent = asyncHandler(
       );
     }
 
-    const emailDomain = `${registrationNumber}@cuiatk.edu.pk`;
+    const emailDomain = `${registrationNumber.toLowerCase()}@cuiatk.edu.pk`;
     if (email !== emailDomain) {
       throw new ApiError(400, "Email must be an official university email.");
     }
