@@ -12,6 +12,7 @@ import { UserType } from "@/types";
 import ApiError from "@/features/api-error";
 import { Button } from "@/components/ui/button";
 
+import { ResendEmail } from "./resend-email";
 import { useVerifyEmailMutation, useResendEmailMutation } from "../api";
 
 export const VerifyEmail = () => {
@@ -65,18 +66,6 @@ export const VerifyEmail = () => {
     }
   };
 
-  const onResend = async () => {
-    try {
-      const response = await resendEmail(null);
-      if (response.data) {
-        toast.success("Mail has been sent to your email.");
-        setOtp("");
-      }
-    } catch (error) {
-      console.error("Resend error:", error);
-    }
-  };
-
   return (
     <div className="flex flex-col items-center gap-y-8">
       <InputOTP maxLength={6} value={otp} onChange={(value) => setOtp(value)}>
@@ -115,16 +104,11 @@ export const VerifyEmail = () => {
           {isLoading ? "Verifying..." : "Verify"}
         </Button>
 
-        <div className="text-sm text-neutral-800">
-          Didn't receive the code?{" "}
-          <Button
-            variant="ghost"
-            className="text-blue-600 p-0"
-            onClick={onResend}
-          >
-            Resend Code
-          </Button>
-        </div>
+        <ResendEmail
+          setOtp={setOtp}
+          resendEmail={resendEmail}
+          disabled={isLoading || isResending}
+        />
       </div>
     </div>
   );
