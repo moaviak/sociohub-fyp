@@ -41,3 +41,11 @@ export const formatTime = (seconds: number) => {
   const secs = seconds % 60;
   return `${String(minutes).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
 };
+
+export const formatCount = (count: number) => {
+  if (count > 9) {
+    return "9+";
+  } else {
+    return count;
+  }
+};

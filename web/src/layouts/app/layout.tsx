@@ -4,6 +4,7 @@ import { Outlet, useNavigate } from "react-router";
 import { useAppSelector } from "@/app/hooks";
 import Sidebar from "@/features/app/sidebar";
 import { Advisor, Student, UserType } from "@/types";
+import TopBar from "@/features/app/topbar";
 
 function AppLayout() {
   const { isAuthenticated, isAuthChecked, user, userType } = useAppSelector(
@@ -52,8 +53,11 @@ function AppLayout() {
   return isAuthenticated ? (
     <div className="flex w-full">
       <Sidebar />
-      <div className="flex-1">
-        <Outlet />
+      <div className="flex-1 flex flex-col">
+        <TopBar />
+        <div className="flex-1">
+          <Outlet />
+        </div>
       </div>
     </div>
   ) : null;
