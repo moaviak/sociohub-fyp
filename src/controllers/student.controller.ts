@@ -32,6 +32,11 @@ export const registerStudent = asyncHandler(
       );
     }
 
+    const emailDomain = `${registrationNumber}@cuiatk.edu.pk`;
+    if (email !== emailDomain) {
+      throw new ApiError(400, "Email must be an official university email.");
+    }
+
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // Generate initials avatar
@@ -88,51 +93,6 @@ export const registerStudent = asyncHandler(
           200,
           { user: student, accessToken },
           "Student registered successfully and verification code has been sent to your email."
-        )
-      );
-  }
-);
-
-export const updateRegistrationNumber = asyncHandler(
-  async (req: Request, res: Response) => {
-    const { registrationNumber } = req.body;
-    const userId = (req.user as IUser)?.id;
-
-    // Find the student by user ID
-    const student = await prisma.student.findUnique({
-      where: { id: userId },
-    });
-
-    // Check if the student has a registration number already set
-    if (student?.registrationNumber) {
-      throw new ApiError(400, "Registration number is already set.");
-    }
-
-    // Validate the uniqueness of the registration number
-    const existingStudent = await prisma.student.findUnique({
-      where: { registrationNumber },
-    });
-
-    if (existingStudent) {
-      throw new ApiError(
-        400,
-        "User already exists with this registration number."
-      );
-    }
-
-    // Update the registration number
-    await prisma.student.update({
-      where: { id: userId },
-      data: { registrationNumber },
-    });
-
-    return res
-      .status(200)
-      .json(
-        new ApiResponse(
-          200,
-          { user: student },
-          "Registration number added successfully."
         )
       );
   }
