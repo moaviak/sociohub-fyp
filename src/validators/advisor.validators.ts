@@ -15,5 +15,10 @@ export const advisorRegisterValidator = () => {
       .trim()
       .notEmpty()
       .withMessage("Display name is required"),
+    body("phone")
+      .trim()
+      .optional({ values: "falsy" })
+      .matches(/^057\d{7}$/)
+      .withMessage("Phone number must follow the pattern 057xxxxxxx"),
   ];
 };

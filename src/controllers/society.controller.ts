@@ -31,7 +31,7 @@ export const createSociety = asyncHandler(
 
     const logo = req.file?.filename && getLocalPath(req.file?.filename);
 
-    const uploadResult = await uploadOnCloudinary(logo || "", advisor.id);
+    const uploadResult = await uploadOnCloudinary(logo || "", name);
     const society = await prisma.society.create({
       data: {
         name,

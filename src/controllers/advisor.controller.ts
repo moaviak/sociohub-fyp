@@ -9,8 +9,10 @@ import { sendVerificationEmail } from "../utils/mail";
 import {
   generateAccessAndRefreshTokens,
   generateAvatarUrlFromInitials,
+  getLocalPath,
 } from "../utils/helpers";
 import { UserType } from "../types";
+import { uploadOnCloudinary } from "../utils/cloudinary";
 
 export const listSocietyAdvisors = asyncHandler(
   async (req: Request, res: Response) => {
@@ -26,7 +28,8 @@ export const listSocietyAdvisors = asyncHandler(
 
 export const registerAdvisor = asyncHandler(
   async (req: Request, res: Response) => {
-    const { firstName, lastName, displayName, email, password } = req.body;
+    const { firstName, lastName, displayName, email, password, phone } =
+      req.body;
 
     const existingAdvisor = await prisma.advisor.findFirst({
       where: {
@@ -50,8 +53,8 @@ export const registerAdvisor = asyncHandler(
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Generate initials avatar
-    const avatar = generateAvatarUrlFromInitials(firstName, lastName);
+    const avatar = req.file?.filename && getLocalPath(req.file?.filename);
+    const uploadResult = await uploadOnCloudinary(avatar || "", email);
 
     // Generate Verification code
     const { code, codeExpiry } = prisma.advisor.generateVerificationCode();
@@ -62,7 +65,10 @@ export const registerAdvisor = asyncHandler(
         lastName,
         email,
         displayName,
-        avatar,
+        avatar:
+          uploadResult?.secure_url ??
+          generateAvatarUrlFromInitials(firstName, lastName),
+        phone: phone || null,
         password: hashedPassword,
         emailVerificationCode: code,
         emailVerificationExpiry: new Date(codeExpiry),
