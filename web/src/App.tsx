@@ -12,6 +12,7 @@ import ContactPage from "@/pages/public/contact-page";
 import StudentSignUpPage from "@/pages/public/student-signup-page";
 import AdvisorSignUpPage from "@/pages/public/advisor-signup-page";
 
+import ExplorePage from "@/pages/app/explore-page";
 import DashboardPage from "@/pages/app/dashboard-page";
 import VerifyEmailPage from "@/pages/verify-email-page";
 import SocietyFormPage from "@/pages/society-form-page";
@@ -43,6 +44,10 @@ function App() {
         {/* Private Routes */}
         <Route element={<AppLayout />}>
           <Route path="/dashboard" element={<DashboardPage />} />
+
+          {/* Student specific pages */}
+          <Route path="/explore" element={<ExplorePage />} />
+
           {/* Add other private routes here */}
         </Route>
       </Route>

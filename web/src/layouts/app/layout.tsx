@@ -55,7 +55,7 @@ function AppLayout() {
       <Sidebar />
       <div className="flex-1 flex flex-col">
         <TopBar />
-        <div className="flex-1">
+        <div className="flex-1 mx-6 my-2">
           <Outlet />
         </div>
       </div>
