@@ -17,19 +17,19 @@ export const NavItem = ({ item }: NavItemProps) => {
     <Link
       key={item.href}
       className={cn(
-        "flex gap-x-6 w-[240px] b2-regular justify-start items-center"
+        "flex gap-x-4 w-[220px] b3-regular justify-start items-center"
       )}
       to={item.href}
     >
       <span
         className={cn(
-          "h-full w-[8px] rounded-sm",
+          "h-full w-[8px] rounded-r-sm",
           location.pathname === item.href && "bg-primary-600"
         )}
       />
       <div
         className={cn(
-          "flex gap-x-2  p-4 w-full rounded-sm",
+          "flex gap-x-2 p-4 w-full rounded-sm",
           location.pathname === item.href && "bg-primary-600 text-white"
         )}
       >

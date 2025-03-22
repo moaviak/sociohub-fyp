@@ -32,7 +32,7 @@ export const SOCIETIES_ADVISORS = [
     displayName: "Ms. Ameena",
     firstName: "Ameena",
     lastName: "Arshad",
-    email: "ameen.arshad@cuiatk.edu.pk",
+    email: "ameena.arshad@cuiatk.edu.pk",
     society: "Environmental Protection Society (EPS)",
   },
   {

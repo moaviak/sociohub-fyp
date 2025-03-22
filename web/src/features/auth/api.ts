@@ -1,8 +1,15 @@
+import { Society } from "@/types";
 import { api } from "@/features/api";
 
+import {
+  login,
+  logout,
+  setAuthChecked,
+  setSociety,
+  verifyEmail,
+} from "./slice";
 import { ApiResponse } from "../api-response";
 import { AuthResponse, SocietyAdvisor } from "./types";
-import { login, logout, setAuthChecked } from "./slice";
 import ApiError, { ApiErrorResponse, createApiError } from "../api-error";
 
 export const AuthApi = api.injectEndpoints({
@@ -108,7 +115,7 @@ export const AuthApi = api.injectEndpoints({
       onQueryStarted: (_, { dispatch, queryFulfilled }) => {
         queryFulfilled.then(({ data }) => {
           if (!("error" in data)) {
-            dispatch(login(data));
+            dispatch(verifyEmail());
           }
         });
       },
@@ -205,16 +212,7 @@ export const AuthApi = api.injectEndpoints({
         return createApiError(errorResponse.message);
       },
     }),
-    advisorSignUp: builder.mutation<
-      AuthResponse | ApiError,
-      {
-        email: string;
-        password: string;
-        firstName: string;
-        lastName: string;
-        displayName: string;
-      }
-    >({
+    advisorSignUp: builder.mutation<AuthResponse | ApiError, FormData>({
       query: (credentials) => ({
         url: "/advisor",
         method: "POST",
@@ -245,13 +243,13 @@ export const AuthApi = api.injectEndpoints({
         });
       },
     }),
-    createSociety: builder.mutation<AuthResponse | ApiError, FormData>({
+    createSociety: builder.mutation<Society | ApiError, FormData>({
       query: (credentials) => ({
         url: "/society",
         method: "POST",
         body: credentials,
       }),
-      transformResponse: (response: ApiResponse<AuthResponse>) => {
+      transformResponse: (response: ApiResponse<Society>) => {
         if (response.success) {
           return response.data;
         }
@@ -264,7 +262,7 @@ export const AuthApi = api.injectEndpoints({
       onQueryStarted: (_, { dispatch, queryFulfilled }) => {
         queryFulfilled.then(({ data }) => {
           if (!("error" in data)) {
-            dispatch(login(data));
+            dispatch(setSociety(data));
           }
         });
       },

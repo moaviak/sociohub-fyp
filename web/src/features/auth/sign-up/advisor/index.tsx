@@ -2,7 +2,7 @@ import { z } from "zod";
 import { toast } from "sonner";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router";
-import { Eye, EyeOff } from "lucide-react";
+import { Camera, Eye, EyeOff } from "lucide-react";
 import { useEffect, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 
@@ -21,19 +21,21 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Advisor } from "@/types";
 import { SOCIETIES_ADVISORS } from "@/data";
 import ApiError from "@/features/api-error";
 import { Input } from "@/components/ui/input";
 import { advisorSignUpSchema } from "@/schema";
 import { Button } from "@/components/ui/button";
 
-import { Advisor, AuthResponse, SocietyAdvisor } from "../../types";
+import { AuthResponse, SocietyAdvisor } from "../../types";
 import { useAdvisorSignUpMutation, useGetAdvisorsListQuery } from "../../api";
 
 const AdvisorSignUp = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [advisors, setAdvisors] =
     useState<SocietyAdvisor[]>(SOCIETIES_ADVISORS);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
 
   const { data: advisorList, isSuccess } = useGetAdvisorsListQuery(null);
 
@@ -52,14 +54,29 @@ const AdvisorSignUp = () => {
 
   const navigate = useNavigate();
 
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      form.setValue("avatar", file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setAvatarPreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const onSubmit = async (values: z.infer<typeof advisorSignUpSchema>) => {
-    const response = await signUp({
-      email: values.email,
-      password: values.password,
-      firstName: values.firstName,
-      lastName: values.lastName,
-      displayName: values.displayName,
-    });
+    const formData = new FormData();
+    formData.append("email", values.email);
+    formData.append("password", values.password);
+    formData.append("firstName", values.firstName);
+    formData.append("lastName", values.lastName);
+    formData.append("displayName", values.displayName);
+    formData.append("avatar", values.avatar || "");
+    formData.append("phone", values.phone || "");
+
+    const response = await signUp(formData);
 
     if (!("error" in response) && response.data) {
       const user = (response.data as AuthResponse).user as Advisor;
@@ -91,6 +108,61 @@ const AdvisorSignUp = () => {
         className="space-y-10 w-full"
       >
         <div className="space-y-7">
+          <div className="grid grid-cols-2 gap-8 items-center">
+            <div className="flex items-center gap-x-6">
+              <div className="relative w-24 h-24 rounded-full bg-gray-200 flex items-center justify-center mb-2">
+                {avatarPreview ? (
+                  <img
+                    src={avatarPreview}
+                    alt="Logo preview"
+                    className="w-full h-full rounded-full object-cover"
+                  />
+                ) : (
+                  <div className="text-gray-400 flex flex-col items-center justify-center">
+                    <img
+                      src="/assets/images/placeholder.png"
+                      alt="Placeholder"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                )}
+                <label
+                  htmlFor="logo-upload"
+                  className="absolute bottom-0 right-0 bg-blue-500 rounded-full p-1 cursor-pointer"
+                >
+                  <Camera className="h-5 w-5 text-white" />
+                </label>
+                <input
+                  id="logo-upload"
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleAvatarChange}
+                />
+              </div>
+              <div className="flex flex-col items-center">
+                <p className="b1-medium">Profile Picture</p>
+                <p className="b3-regular">Upload your profile picture.</p>
+              </div>
+            </div>
+            <FormField
+              control={form.control}
+              name="displayName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Display Name</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="John Doe"
+                      {...field}
+                      className="outline-1 outline-neutral-300"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
           <div className="grid grid-cols-2 gap-8">
             <FormField
               control={form.control}
@@ -130,23 +202,6 @@ const AdvisorSignUp = () => {
           </div>
 
           <div className="grid grid-cols-2 gap-8">
-            <FormField
-              control={form.control}
-              name="displayName"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Display Name</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="John Doe"
-                      {...field}
-                      className="outline-1 outline-neutral-300"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
             <FormField
               control={form.control}
               name="email"
@@ -191,8 +246,24 @@ const AdvisorSignUp = () => {
                 </FormItem>
               )}
             />
+            <FormField
+              control={form.control}
+              name="phone"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Phone #</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="057xxxxxxx"
+                      {...field}
+                      className="outline-1 outline-neutral-300"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
           </div>
-
           <div>
             <FormField
               control={form.control}

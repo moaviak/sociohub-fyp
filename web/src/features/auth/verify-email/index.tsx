@@ -8,11 +8,11 @@ import {
   InputOTPSeparator,
   InputOTPSlot,
 } from "@/components/ui/input-otp";
+import { UserType } from "@/types";
 import ApiError from "@/features/api-error";
 import { Button } from "@/components/ui/button";
 
 import { useVerifyEmailMutation, useResendEmailMutation } from "../api";
-import { UserType } from "../types";
 
 export const VerifyEmail = () => {
   const [otp, setOtp] = useState("");

@@ -2,8 +2,8 @@ import { useEffect } from "react";
 import { Outlet, useNavigate } from "react-router";
 
 import { useAppSelector } from "@/app/hooks";
-import { Advisor, Student, UserType } from "@/features/auth/types";
 import Sidebar from "@/features/app/sidebar";
+import { Advisor, Student, UserType } from "@/types";
 
 function AppLayout() {
   const { isAuthenticated, isAuthChecked, user, userType } = useAppSelector(

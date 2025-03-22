@@ -14,7 +14,7 @@ import ApiError from "@/features/api-error";
 import { Button } from "@/components/ui/button";
 import { useLogoutMutation } from "@/features/auth/api";
 import { Avatar, AvatarImage } from "@/components/ui/avatar";
-import { Advisor, Student, UserType } from "@/features/auth/types";
+import { Advisor, Student, UserType } from "@/types";
 
 interface AvatarGroupProps {
   user: Student | Advisor;

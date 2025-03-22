@@ -1,28 +1,4 @@
-export interface User {
-  id: string;
-  email: string;
-  firstName?: string;
-  lastName?: string;
-  isEmailVerified?: boolean;
-  avatar?: string;
-  createdAt?: string;
-  updatedAt?: string;
-}
-
-export interface Student extends User {
-  registrationNumber?: string;
-}
-
-export interface Advisor extends User {
-  displayName?: string;
-  societyId?: string;
-  societyName?: string;
-}
-
-export enum LOGIN_TYPES {
-  EMAIL_PASSWORD = "EMAIL_PASSWORD",
-  GOOGLE = "GOOGLE",
-}
+import { Advisor, Student, UserType } from "@/types";
 
 export type AuthResponse = {
   user: Student | Advisor;
@@ -37,8 +13,3 @@ export type SocietyAdvisor = {
   email: string;
   society: string;
 };
-
-export enum UserType {
-  STUDENT = "student",
-  ADVISOR = "advisor",
-}

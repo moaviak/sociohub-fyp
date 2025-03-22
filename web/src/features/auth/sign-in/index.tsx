@@ -17,12 +17,13 @@ import {
 import { DEGREES } from "@/data";
 import { signInSchema } from "@/schema";
 import ApiError from "@/features/api-error";
+import { Advisor, UserType } from "@/types";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { getYearOptions } from "@/lib/utils";
 
-import { Advisor, AuthResponse, UserType } from "../types";
+import { AuthResponse } from "../types";
 import { useLoginMutation } from "../api";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -223,12 +224,7 @@ const SignIn = () => {
                     <FormItem>
                       <FormControl>
                         <Input
-                          type="number"
                           {...field}
-                          value={field.value ?? ""}
-                          onChange={(e) =>
-                            field.onChange(Number(e.target.value))
-                          }
                           className="outline-1 outline-neutral-300"
                         />
                       </FormControl>

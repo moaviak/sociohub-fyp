@@ -49,7 +49,7 @@ const StudentSignUp = () => {
         session: "SP",
         year: yearOptions[yearOptions.length - 1],
         degree: DEGREES[0].value,
-        rollNumber: undefined,
+        rollNumber: "",
       },
     },
   });
@@ -217,10 +217,7 @@ const StudentSignUp = () => {
                   <FormItem>
                     <FormControl>
                       <Input
-                        type="number"
                         {...field}
-                        value={field.value ?? ""}
-                        onChange={(e) => field.onChange(Number(e.target.value))}
                         className="outline-1 outline-neutral-300"
                       />
                     </FormControl>

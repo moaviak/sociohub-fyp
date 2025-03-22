@@ -1,5 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { Advisor, Student, UserType } from "./types";
+import { Advisor, Student, UserType } from "@/types";
 
 interface AuthState {
   user: Student | Advisor | null;
@@ -37,9 +37,18 @@ const AuthSlice = createSlice({
     setAuthChecked: (state, action) => {
       state.isAuthChecked = action.payload;
     },
+    setSociety: (state, action) => {
+      (state.user as Advisor).societyId = action.payload.society.id;
+    },
+    verifyEmail: (state) => {
+      if (state.user) {
+        state.user.isEmailVerified = true;
+      }
+    },
   },
 });
 
-export const { login, logout, setAuthChecked } = AuthSlice.actions;
+export const { login, logout, setAuthChecked, setSociety, verifyEmail } =
+  AuthSlice.actions;
 
 export default AuthSlice.reducer;

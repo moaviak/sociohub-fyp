@@ -1,7 +1,7 @@
 import { Logo } from "@/components/logo";
 import { useAppSelector } from "@/app/hooks";
 import { Navigate } from "react-router";
-import { UserType } from "@/features/auth/types";
+import { UserType } from "@/types";
 
 import { AdvisorSidebar } from "./advisor-sidebar";
 import { StudentSidebar } from "./student-sidebar";

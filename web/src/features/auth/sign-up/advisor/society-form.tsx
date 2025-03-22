@@ -117,7 +117,7 @@ export const SocietyForm = () => {
           name="name"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Name</FormLabel>
+              <FormLabel>Society Name</FormLabel>
               <FormControl>
                 <Input placeholder="Society Name" {...field} />
               </FormControl>
@@ -131,10 +131,10 @@ export const SocietyForm = () => {
           name="description"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Statement of Purpose</FormLabel>
+              <FormLabel>Society Vision</FormLabel>
               <FormControl>
                 <Textarea
-                  placeholder="Write a brief statement of purpose of society"
+                  placeholder="Write a brief society's vision"
                   className="min-h-28 resize-none"
                   {...field}
                 />

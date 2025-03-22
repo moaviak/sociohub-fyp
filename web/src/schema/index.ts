@@ -33,9 +33,10 @@ export const signInSchema = z
         year: z.string(),
         degree: z.enum(DEGREES.map((d) => d.value) as [string, ...string[]]),
         rollNumber: z
-          .number()
-          .min(1)
-          .max(999, { message: "Roll number must be between 1-999" })
+          .string()
+          .regex(/^\d{3}$/, {
+            message: "Roll number must be a three-digit string",
+          })
           .optional(),
       })
       .optional() // Allow registrationNo to be optional
@@ -75,10 +76,9 @@ export const studentSignUpSchema = z.object({
     degree: z.enum(DEGREES.map((d) => d.value) as [string, ...string[]], {
       required_error: "Degree is required",
     }),
-    rollNumber: z
-      .number()
-      .min(1)
-      .max(999, { message: "Roll number must be between 1-999" }),
+    rollNumber: z.string().regex(/^\d{3}$/, {
+      message: "Roll number must be a three-digit string",
+    }),
   }),
   password: z
     .string()
@@ -95,9 +95,14 @@ export const advisorSignUpSchema = z.object({
       required_error: "Email is required",
     }
   ),
+  phone: z
+    .string()
+    .regex(/^057\d{7}$/, { message: "Invalid phone number" })
+    .optional(),
   password: z
     .string()
     .min(8, { message: "Password must be at least 8 characters." }),
+  avatar: z.instanceof(File).optional(),
 });
 
 export const societyFormSchema = z.object({

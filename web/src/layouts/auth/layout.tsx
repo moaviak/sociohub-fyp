@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router";
 import { useAppSelector } from "@/app/hooks";
-import { Advisor, UserType } from "@/features/auth/types";
+import { Advisor, UserType } from "@/types";
 import { Header } from "./components/header";
 
 function AuthLayout() {
