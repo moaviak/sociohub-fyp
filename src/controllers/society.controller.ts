@@ -49,3 +49,13 @@ export const createSociety = asyncHandler(
       .json(new ApiResponse(201, { society }, "Society successfully created."));
   }
 );
+
+export const getSocieties = asyncHandler(
+  async (req: Request, res: Response) => {
+    const societies = await prisma.society.findMany();
+
+    res
+      .status(200)
+      .json(new ApiResponse(200, societies, "Societies successfully fetched."));
+  }
+);
