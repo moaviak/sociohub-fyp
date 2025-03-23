@@ -1,10 +1,11 @@
 import { useEffect } from "react";
 import { Outlet, useNavigate } from "react-router";
 
-import { useAppSelector } from "@/app/hooks";
-import Sidebar from "@/features/app/sidebar";
-import { Advisor, Student, UserType } from "@/types";
 import TopBar from "@/features/app/topbar";
+import Sidebar from "@/features/app/sidebar";
+import { useAppSelector } from "@/app/hooks";
+import { Advisor, Student, UserType } from "@/types";
+import { AppSkeleton } from "@/components/skeleton/app-skeleton";
 
 function AppLayout() {
   const { isAuthenticated, isAuthChecked, user, userType } = useAppSelector(
@@ -45,17 +46,16 @@ function AppLayout() {
   }, [isAuthenticated, isAuthChecked, navigate, user, userType]);
 
   if (!isAuthChecked) {
-    // TODO: Add a App Skeleton
-    return <div>Loading...</div>;
+    return <AppSkeleton />;
   }
 
   // Only render the outlet if user is authenticated
   return isAuthenticated ? (
-    <div className="flex w-full">
+    <div className="flex w-full max-h-screen overflow-y-hidden">
       <Sidebar />
       <div className="flex-1 flex flex-col">
         <TopBar />
-        <div className="flex-1 mx-6 my-2">
+        <div className="flex-1 mx-6 my-2 max-h-full overflow-hidden">
           <Outlet />
         </div>
       </div>

@@ -4,6 +4,7 @@ import { Outlet } from "react-router";
 import { useAppDispatch } from "@/app/hooks";
 import { useGetUserQuery } from "@/features/auth/api";
 import { setAuthChecked } from "@/features/auth/slice";
+import { AppSkeleton } from "@/components/skeleton/app-skeleton";
 
 function MainLayout() {
   const dispatch = useAppDispatch();
@@ -18,8 +19,7 @@ function MainLayout() {
   }, [isLoading, dispatch]);
 
   if (isLoading) {
-    // TODO: Render the App Skeleton
-    return <div>Loading...</div>;
+    return <AppSkeleton />;
   }
 
   return <Outlet />;

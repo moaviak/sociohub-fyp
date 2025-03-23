@@ -1,7 +1,10 @@
 import { useEffect } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router";
-import { useAppSelector } from "@/app/hooks";
+
 import { Advisor, UserType } from "@/types";
+import { useAppSelector } from "@/app/hooks";
+import { AppSkeleton } from "@/components/skeleton/app-skeleton";
+
 import { Header } from "./components/header";
 
 function AuthLayout() {
@@ -80,8 +83,7 @@ function AuthLayout() {
   ]);
 
   if (!isAuthChecked && (isVerifyEmail || isSocietyForm)) {
-    // TODO: Render the App Skeleton
-    return <div>Loading...</div>;
+    return <AppSkeleton />;
   }
 
   return (
