@@ -193,6 +193,7 @@ export const AuthApi = api.injectEndpoints({
       onQueryStarted: (_, { dispatch, queryFulfilled }) => {
         queryFulfilled.then(() => {
           dispatch(logout());
+          dispatch(api.util.resetApiState());
         });
       },
     }),

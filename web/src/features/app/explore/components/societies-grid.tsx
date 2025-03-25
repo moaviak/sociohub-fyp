@@ -1,10 +1,8 @@
-import { Society } from "@/types";
-import { Skeleton } from "@/components/ui/skeleton";
-
 import { SocietyTile } from "./society-tile";
+import { type Societies } from "../types";
 
 interface SocietiesGridProps {
-  societies: Society[];
+  societies: Societies;
 }
 
 export const SocietiesGrid = ({ societies }: SocietiesGridProps) => {
@@ -18,5 +16,11 @@ export const SocietiesGrid = ({ societies }: SocietiesGridProps) => {
 };
 
 SocietiesGrid.Skeleton = function SocietiesGridSkeleton() {
-  return <Skeleton className="w-20 h-10" />;
+  return (
+    <div className="grid grid-cols-3 py-6 gap-4 overflow-y-auto custom-scrollbar">
+      <SocietyTile.Skeleton />
+      <SocietyTile.Skeleton />
+      <SocietyTile.Skeleton />
+    </div>
+  );
 };

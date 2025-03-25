@@ -1,8 +1,8 @@
-import { Society } from "@/types";
 import { useGetSocietiesQuery } from "./api";
 import { EmptyState } from "./components/empty-state";
 import { SearchInput } from "./components/search-input";
 import { SocietiesGrid } from "./components/societies-grid";
+import { type Societies } from "./types";
 
 const Societies = () => {
   const { data: societies, isLoading } = useGetSocietiesQuery();
@@ -24,7 +24,7 @@ const Societies = () => {
       {isLoading ? (
         <SocietiesGrid.Skeleton />
       ) : (
-        <SocietiesGrid societies={societies as Society[]} />
+        <SocietiesGrid societies={societies as Societies} />
       )}
     </div>
   );

@@ -15,6 +15,7 @@ export interface Student extends User {
 
 export interface Advisor extends User {
   displayName?: string;
+  phone?: string;
   societyId?: string;
   societyName?: string;
 }
@@ -29,6 +30,21 @@ export interface Society {
   name: string;
   description: string;
   logo?: string;
+  createdAt: string;
+  updatedAt: string;
+  advisor?: Advisor;
+  _count?: {
+    members: number;
+    joinRequests: number;
+  };
+}
+
+export interface JoinRequest {
+  studentId: string;
+  societyId: string;
+  reason: string;
+  expectations: string;
+  skills?: string;
   createdAt: string;
   updatedAt: string;
 }
