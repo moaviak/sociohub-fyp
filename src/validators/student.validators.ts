@@ -19,3 +19,17 @@ export const studentRegisterValidator = () => {
       .withMessage("Registration number is invalid."),
   ];
 };
+
+export const societyJoinRequestValidator = () => {
+  return [
+    body("societyId").trim().notEmpty().withMessage("Society Id is required"),
+    body("reason")
+      .trim()
+      .notEmpty()
+      .withMessage("Reason for joining is required"),
+    body("expectations")
+      .trim()
+      .notEmpty()
+      .withMessage("Expectations from the society is required"),
+  ];
+};

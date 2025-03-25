@@ -97,3 +97,90 @@ export const registerStudent = asyncHandler(
       );
   }
 );
+
+export const sendJoinRequest = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { societyId, reason, expectations, skills } = req.body;
+    const { id } = req.user as IUser;
+
+    // Fetch user, society, and existing join request in a single query
+    const [society, existingRequest] = await prisma.$transaction([
+      prisma.society.findFirst({
+        where: {
+          id: societyId,
+          members: { none: { studentId: id } }, // Ensures user is not already a member
+        },
+      }),
+      prisma.joinRequest.findFirst({
+        where: { studentId: id, societyId },
+      }),
+    ]);
+
+    if (!society) {
+      throw new ApiError(400, "Invalid society.");
+    }
+
+    if (existingRequest) {
+      throw new ApiError(
+        403,
+        "You have already requested to join, please wait for approval."
+      );
+    }
+
+    // Create the join request
+    const newRequest = await prisma.joinRequest.create({
+      data: {
+        reason,
+        expectations,
+        skills,
+        studentId: id,
+        societyId: society.id,
+      },
+    });
+
+    return res
+      .status(201)
+      .json(
+        new ApiResponse(
+          200,
+          newRequest,
+          "Join Request has been successfully sent."
+        )
+      );
+  }
+);
+
+export const cancelJoinRequest = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { id: studentId } = req.user as IUser;
+    const { societyId } = req.params;
+
+    if (!societyId) {
+      throw new ApiError(400, "Society ID is required.");
+    }
+
+    // Use transaction to check and delete in one go
+    const [request] = await prisma.$transaction([
+      prisma.joinRequest.findUnique({
+        where: { studentId_societyId: { studentId, societyId } },
+      }),
+      prisma.joinRequest.deleteMany({
+        where: { studentId, societyId },
+      }),
+    ]);
+
+    if (!request) {
+      throw new ApiError(400, "No join request found.");
+    }
+
+    return res
+      .status(200)
+      .json(
+        new ApiResponse(
+          200,
+          null,
+          "Join request has been successfully canceled."
+        )
+      );
+  }
+);

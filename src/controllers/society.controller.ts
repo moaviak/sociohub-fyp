@@ -52,10 +52,61 @@ export const createSociety = asyncHandler(
 
 export const getSocieties = asyncHandler(
   async (req: Request, res: Response) => {
-    const societies = await prisma.society.findMany();
+    const user = req.user as IUser;
+
+    const societies = await prisma.society.findMany({
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        logo: true,
+        createdAt: true,
+        updatedAt: true,
+        advisor: {
+          select: {
+            id: true,
+            displayName: true,
+            email: true,
+            firstName: true,
+            lastName: true,
+            avatar: true,
+            phone: true,
+          },
+        },
+        _count: {
+          select: {
+            members: true, // Count of members
+            joinRequests: true, // Count of join requests
+          },
+        },
+        members: {
+          where: { studentId: user.id }, // Check if user is a member
+          select: { studentId: true },
+        },
+        joinRequests: {
+          where: { studentId: user.id }, // Check if user has sent a join request
+          select: { studentId: true },
+        },
+      },
+    });
+
+    // Modify each society object to include membership/request status
+    const societiesWithStatus = societies.map((society) => ({
+      ...society,
+      isMember: society.members.length > 0, // If the user is found in members, they're a member
+      hasRequestedToJoin: society.joinRequests.length > 0, // If the user is found in joinRequests, they've requested to join
+      members: undefined, // Remove members array
+      joinRequests: undefined, // Remove joinRequests array
+    }));
 
     res
       .status(200)
-      .json(new ApiResponse(200, societies, "Societies successfully fetched."));
+      .json(
+        new ApiResponse(
+          200,
+          societiesWithStatus,
+          "Societies successfully fetched."
+        )
+      );
   }
 );

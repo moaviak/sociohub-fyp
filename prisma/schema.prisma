@@ -1,0 +1,105 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Student {
+  id                      String    @id @default(uuid())
+  firstName               String
+  lastName                String
+  email                   String    @unique
+  registrationNumber      String?   @unique
+  password                String
+  avatar                  String?
+  refreshToken            String?
+  isEmailVerified         Boolean   @default(false)
+  emailVerificationCode   String?
+  emailVerificationExpiry DateTime?
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
+
+  joinRequests JoinRequest[]    @relation
+  societies    StudentSociety[] @relation
+}
+
+model Advisor {
+  id                      String    @id @default(uuid())
+  firstName               String
+  lastName                String
+  displayName             String
+  email                   String    @unique
+  password                String
+  avatar                  String?
+  phone                   String?   @unique
+  refreshToken            String?
+  isEmailVerified         Boolean   @default(false)
+  emailVerificationCode   String?
+  emailVerificationExpiry DateTime?
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
+  societyId               String?   @unique
+  society                 Society?  @relation(fields: [societyId], references: [id], onDelete: SetNull)
+
+  @@index([societyId])
+}
+
+model Society {
+  id          String   @id @default(uuid())
+  name        String
+  description String
+  logo        String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  advisor     Advisor? @relation
+
+  joinRequests JoinRequest[]    @relation
+  members      StudentSociety[] @relation
+}
+
+model JoinRequest {
+  studentId    String
+  societyId    String
+  reason       String
+  expectations String
+  skills       String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  society Society @relation(fields: [societyId], references: [id], onDelete: Cascade)
+
+  @@id([studentId, societyId])
+}
+
+model StudentSociety {
+  studentId String
+  societyId String
+
+  student Student @relation(fields: [studentId], references: [id])
+  society Society @relation(fields: [societyId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@id([studentId, societyId])
+}
+
+model SocietyAdvisor {
+  id          String   @id @default(uuid())
+  firstName   String
+  lastName    String
+  displayName String
+  email       String   @unique
+  society     String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
