@@ -136,6 +136,25 @@ export const sendJoinRequest = asyncHandler(
         studentId: id,
         societyId: society.id,
       },
+      select: {
+        studentId: true,
+        societyId: true,
+        student: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            avatar: true,
+            registrationNumber: true,
+          },
+        },
+        reason: true,
+        expectations: true,
+        skills: true,
+        createdAt: true,
+        updatedAt: true,
+      },
     });
 
     return res

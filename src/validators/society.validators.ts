@@ -9,3 +9,13 @@ export const createSocietyValidator = () => {
       .withMessage("Society statement of purpose is required."),
   ];
 };
+
+export const handleRequestValidator = () => {
+  return [
+    body("studentId").trim().notEmpty().withMessage("Student ID is required."),
+    body("action")
+      .trim()
+      .isIn(["accept", "reject"])
+      .withMessage("Action must be either 'accept' or 'reject'."),
+  ];
+};

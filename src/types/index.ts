@@ -39,3 +39,8 @@ export function isAuthUser(user: any): user is IUser {
     user.updatedAt instanceof Date
   );
 }
+
+export enum RequestAction {
+  ACCEPT = "accept",
+  REJECT = "reject",
+}

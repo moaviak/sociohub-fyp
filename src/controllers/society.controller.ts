@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { asyncHandler } from "../utils/asyncHandler";
-import { IUser } from "../types";
+import { IUser, RequestAction } from "../types";
 import prisma from "../db";
 import { ApiError } from "../utils/ApiError";
 import { uploadOnCloudinary } from "../utils/cloudinary";
@@ -108,5 +108,137 @@ export const getSocieties = asyncHandler(
           "Societies successfully fetched."
         )
       );
+  }
+);
+
+export const getSocietyRequests = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { societyId } = req.params;
+    const user = req.user as IUser;
+
+    if (!societyId) {
+      throw new ApiError(400, "Society ID is required.");
+    }
+
+    const society = await prisma.society.findUnique({
+      where: { id: societyId },
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        logo: true,
+        createdAt: true,
+        updatedAt: true,
+        advisor: {
+          select: {
+            id: true,
+            displayName: true,
+            email: true,
+            firstName: true,
+            lastName: true,
+            avatar: true,
+            phone: true,
+          },
+        },
+      },
+    });
+
+    if (!society) {
+      throw new ApiError(400, "Invalid Society ID.");
+    }
+
+    // TODO: add the authorization check for students as well, whether they have the privilege to access the society requests
+    if (society.advisor?.id !== user.id) {
+      throw new ApiError(
+        403,
+        "You are not authorized to access this society requests."
+      );
+    }
+
+    const requests = await prisma.joinRequest.findMany({
+      where: { societyId: society.id },
+      orderBy: { createdAt: "desc" },
+      select: {
+        studentId: true,
+        societyId: true,
+        student: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            avatar: true,
+            registrationNumber: true,
+          },
+        },
+        reason: true,
+        expectations: true,
+        skills: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+
+    res
+      .status(200)
+      .json(
+        new ApiResponse(200, requests, "Society requests successfully fetched.")
+      );
+  }
+);
+
+export const handleRequest = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { societyId } = req.params;
+    const { studentId, action } = req.body;
+
+    if (!societyId || !studentId) {
+      throw new ApiError(400, "Society ID and Student ID are required.");
+    }
+
+    // Fetch join request
+    const request = await prisma.joinRequest.findUnique({
+      where: { studentId_societyId: { studentId, societyId } },
+    });
+
+    if (!request) {
+      throw new ApiError(400, "No pending join request found.");
+    }
+
+    if (action === RequestAction.ACCEPT) {
+      // Accept request: Add student to society (StudentSociety) and remove join request
+      await prisma.$transaction([
+        prisma.studentSociety.create({
+          data: {
+            studentId,
+            societyId,
+          },
+        }),
+        prisma.joinRequest.delete({
+          where: { studentId_societyId: { studentId, societyId } },
+        }),
+      ]);
+
+      return res
+        .status(200)
+        .json(
+          new ApiResponse(
+            200,
+            null,
+            "Student has been successfully added to the society."
+          )
+        );
+    } else if (action === RequestAction.REJECT) {
+      // Reject request: Just delete the join request
+      await prisma.joinRequest.delete({
+        where: { studentId_societyId: { studentId, societyId } },
+      });
+
+      return res
+        .status(200)
+        .json(new ApiResponse(200, null, "Join request has been rejected."));
+    }
+
+    throw new ApiError(400, "Invalid action specified.");
   }
 );
