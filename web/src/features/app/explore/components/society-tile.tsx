@@ -8,7 +8,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 import { useCancelJoinRequestMutation } from "../api";
 import { RegistrationForm } from "./registration-form";
-import { Hint } from "@/components/hint";
 
 interface SocietyProps {
   society: Society & { isMember: boolean; hasRequestedToJoin: boolean };
@@ -38,7 +37,7 @@ export const SocietyTile = ({ society }: SocietyProps) => {
   }, [isError, error]);
 
   return (
-    <div className="flex flex-col items-center text-center p-4 gap-y-4">
+    <div className="flex flex-col items-center text-center p-4 gap-y-4 rounded-md drop-shadow-md bg-white">
       <img
         src={society.logo || "/assets/images/society-placeholder.png"}
         className="rounded-full w-12 h-12"
@@ -50,16 +49,14 @@ export const SocietyTile = ({ society }: SocietyProps) => {
         </p>
       </div>
       {society.isMember || society.hasRequestedToJoin ? (
-        <Hint description="Cancel request">
-          <Button
-            variant={"outline"}
-            disabled={society.isMember || isLoading}
-            className="w-full"
-            onClick={onCancelRequest}
-          >
-            {society.hasRequestedToJoin ? "Requested" : "Joined"}
-          </Button>
-        </Hint>
+        <Button
+          variant={society.hasRequestedToJoin ? "destructive" : "outline"}
+          disabled={society.isMember || isLoading}
+          className="w-full"
+          onClick={onCancelRequest}
+        >
+          {society.hasRequestedToJoin ? "Cancel Request" : "Joined"}
+        </Button>
       ) : (
         <RegistrationForm society={society} />
       )}

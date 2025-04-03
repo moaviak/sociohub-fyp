@@ -12,10 +12,14 @@ import ContactPage from "@/pages/public/contact-page";
 import StudentSignUpPage from "@/pages/public/student-signup-page";
 import AdvisorSignUpPage from "@/pages/public/advisor-signup-page";
 
+import MembersPage from "@/pages/app/members";
+import NotFoundPage from "@/pages/not-found-page";
 import ExplorePage from "@/pages/app/explore-page";
 import DashboardPage from "@/pages/app/dashboard-page";
-import VerifyEmailPage from "@/pages/verify-email-page";
+import RolesPage from "@/pages/app/members/roles-page";
 import SocietyFormPage from "@/pages/society-form-page";
+import VerifyEmailPage from "@/pages/verify-email-page";
+import RequestsPage from "@/pages/app/members/requests-page";
 
 function App() {
   return (
@@ -45,11 +49,21 @@ function App() {
         <Route element={<AppLayout />}>
           <Route path="/dashboard" element={<DashboardPage />} />
 
-          {/* Student specific pages */}
+          {/* Student specific routes */}
           <Route path="/explore" element={<ExplorePage />} />
+
+          {/* Advisor specific  routes*/}
+          <Route path="/members" element={<MembersPage />}>
+            <Route path="roles" element={<RolesPage />} />
+            <Route path="requests" element={<RequestsPage />} />
+            <Route path=":societyId" element={<MembersPage />} />
+          </Route>
 
           {/* Add other private routes here */}
         </Route>
+
+        {/* 404 Route */}
+        <Route path="*" element={<NotFoundPage />} />
       </Route>
     </Routes>
   );

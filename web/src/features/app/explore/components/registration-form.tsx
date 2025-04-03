@@ -27,11 +27,11 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import ApiError from "@/features/api-error";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 
 import { useSendJoinRequestMutation } from "../api";
-import ApiError from "@/features/api-error";
 
 interface RegistrationFormProps {
   society: Society & { isMember: boolean; hasRequestedToJoin: boolean };

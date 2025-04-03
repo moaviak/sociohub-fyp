@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/navigation-menu";
 import { useAppSelector } from "@/app/hooks";
 import { Button } from "@/components/ui/button";
-import { AvatarGroup } from "@/components/avatar-group";
+import { UserAvatarMenu } from "@/components/user-avatar-menu";
 
 import { NavItem } from "./nav-item";
 
@@ -44,7 +44,7 @@ export const Navbar = () => {
             </Button>
           </div>
         ) : (
-          <AvatarGroup user={user} userType={userType} />
+          <UserAvatarMenu user={user} userType={userType} />
         )}
       </div>
     </div>

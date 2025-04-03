@@ -1,6 +1,7 @@
+import { SearchInput } from "@/components/search-input";
+
 import { useGetSocietiesQuery } from "./api";
 import { EmptyState } from "./components/empty-state";
-import { SearchInput } from "./components/search-input";
 import { SocietiesGrid } from "./components/societies-grid";
 import { type Societies } from "./types";
 

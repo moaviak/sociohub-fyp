@@ -42,9 +42,15 @@ export interface Society {
 export interface JoinRequest {
   studentId: string;
   societyId: string;
+  student: Student;
   reason: string;
   expectations: string;
   skills?: string;
   createdAt: string;
   updatedAt: string;
+}
+
+export enum RequestAction {
+  ACCEPT = "accept",
+  REJECT = "reject",
 }

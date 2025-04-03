@@ -12,6 +12,7 @@ interface NavItemProps {
 
 export const NavItem = ({ item }: NavItemProps) => {
   const location = useLocation();
+  const isActive = location.pathname.startsWith(item.href);
 
   return (
     <Link
@@ -24,13 +25,13 @@ export const NavItem = ({ item }: NavItemProps) => {
       <span
         className={cn(
           "h-full w-[8px] rounded-r-sm",
-          location.pathname === item.href && "bg-primary-600"
+          isActive && "bg-primary-600"
         )}
       />
       <div
         className={cn(
           "flex gap-x-2 p-4 w-full rounded-sm",
-          location.pathname === item.href && "bg-primary-600 text-white"
+          isActive && "bg-primary-600 text-white"
         )}
       >
         {item.icon}
