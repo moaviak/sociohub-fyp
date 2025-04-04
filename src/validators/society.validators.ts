@@ -19,3 +19,9 @@ export const handleRequestValidator = () => {
       .withMessage("Action must be either 'accept' or 'reject'."),
   ];
 };
+
+export const removeMemberValidator = () => {
+  return [
+    body("studentId").trim().notEmpty().withMessage("Student ID is required."),
+  ];
+};

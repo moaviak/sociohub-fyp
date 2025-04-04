@@ -90,6 +90,44 @@ async function main() {
       },
     ],
   });
+
+  await prisma.privilege.deleteMany();
+  await prisma.privilege.createMany({
+    data: [
+      {
+        key: "event_management",
+        title: "Event Management",
+        description: "Can create, update, and delete events.",
+      },
+      {
+        key: "member_management",
+        title: "Member Management",
+        description: "Can invite, approve, or remove members from the society.",
+      },
+      {
+        key: "announcement_management",
+        title: "Announcement Management",
+        description: "Can create and publish announcements.",
+      },
+      {
+        key: "content_management",
+        title: "Content Management",
+        description:
+          "Can create, edit, and delete posts on the society’s public page.",
+      },
+      {
+        key: "event_ticket_handling",
+        title: "Event Ticket Handling",
+        description: "Can scan and validate tickets to manage event entry.",
+      },
+      {
+        key: "payment_finance_management",
+        title: "Payment and Finance Management",
+        description:
+          "Can manage society finances, event payments, withdrawals, and payment methods.",
+      },
+    ],
+  });
 }
 
 main()

@@ -4,7 +4,7 @@ import { IUser, RequestAction } from "../types";
 import prisma from "../db";
 import { ApiError } from "../utils/ApiError";
 import { uploadOnCloudinary } from "../utils/cloudinary";
-import { getLocalPath } from "../utils/helpers";
+import { getLocalPath, haveMembersPrivilege } from "../utils/helpers";
 import { ApiResponse } from "../utils/ApiResponse";
 
 export const createSociety = asyncHandler(
@@ -42,6 +42,15 @@ export const createSociety = asyncHandler(
             id: advisor.id,
           },
         },
+      },
+    });
+
+    await prisma.role.create({
+      data: {
+        name: "Member",
+        societyId: society.id,
+        description:
+          "A member of the society who participates in activities and events.",
       },
     });
     res
@@ -120,25 +129,14 @@ export const getSocietyRequests = asyncHandler(
       throw new ApiError(400, "Society ID is required.");
     }
 
+    // Fetch society with advisor details
     const society = await prisma.society.findUnique({
       where: { id: societyId },
       select: {
         id: true,
         name: true,
-        description: true,
-        logo: true,
-        createdAt: true,
-        updatedAt: true,
         advisor: {
-          select: {
-            id: true,
-            displayName: true,
-            email: true,
-            firstName: true,
-            lastName: true,
-            avatar: true,
-            phone: true,
-          },
+          select: { id: true },
         },
       },
     });
@@ -147,14 +145,16 @@ export const getSocietyRequests = asyncHandler(
       throw new ApiError(400, "Invalid Society ID.");
     }
 
-    // TODO: add the authorization check for students as well, whether they have the privilege to access the society requests
-    if (society.advisor?.id !== user.id) {
+    let isAuthorized = haveMembersPrivilege(user.id, society.id);
+
+    if (!isAuthorized) {
       throw new ApiError(
         403,
-        "You are not authorized to access this society requests."
+        "You are not authorized to access this society's requests."
       );
     }
 
+    // Fetch join requests
     const requests = await prisma.joinRequest.findMany({
       where: { societyId: society.id },
       orderBy: { createdAt: "desc" },
@@ -191,9 +191,19 @@ export const handleRequest = asyncHandler(
   async (req: Request, res: Response) => {
     const { societyId } = req.params;
     const { studentId, action } = req.body;
+    const user = req.user as IUser;
 
     if (!societyId || !studentId) {
       throw new ApiError(400, "Society ID and Student ID are required.");
+    }
+
+    let isAuthorized = haveMembersPrivilege(user.id, societyId);
+
+    if (!isAuthorized) {
+      throw new ApiError(
+        403,
+        "You are not authorized to access this society's requests."
+      );
     }
 
     // Fetch join request
@@ -206,12 +216,30 @@ export const handleRequest = asyncHandler(
     }
 
     if (action === RequestAction.ACCEPT) {
-      // Accept request: Add student to society (StudentSociety) and remove join request
+      // Accept request: Add student to society (StudentSociety), assign Member role, and remove join request
+      const role = await prisma.role.findFirst({
+        where: {
+          name: "Member",
+          societyId,
+        },
+      });
+
+      if (!role) {
+        throw new ApiError(500, "Member role not found for the society.");
+      }
+
       await prisma.$transaction([
         prisma.studentSociety.create({
           data: {
             studentId,
             societyId,
+          },
+        }),
+        prisma.studentSocietyRole.create({
+          data: {
+            roleId: role.id,
+            societyId,
+            studentId,
           },
         }),
         prisma.joinRequest.delete({
@@ -240,5 +268,153 @@ export const handleRequest = asyncHandler(
     }
 
     throw new ApiError(400, "Invalid action specified.");
+  }
+);
+
+export const getSocietyMembers = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { societyId } = req.params;
+    const user = req.user as IUser;
+
+    if (!societyId) {
+      throw new ApiError(400, "Society ID is required.");
+    }
+
+    // 1. Check if the user is the advisor or member of the society
+    const [isAdvisor, isMember] = await prisma.$transaction([
+      prisma.advisor.findFirst({
+        where: {
+          id: user.id,
+          societyId: societyId,
+        },
+        select: { id: true },
+      }),
+      prisma.studentSociety.findFirst({
+        where: {
+          studentId: user.id,
+          societyId: societyId,
+        },
+        select: { studentId: true },
+      }),
+    ]);
+
+    if (!isAdvisor && !isMember) {
+      throw new ApiError(
+        403,
+        "You are not authorized to view members of this society."
+      );
+    }
+
+    // 2. Fetch members with their roles
+    const members = await prisma.studentSociety.findMany({
+      where: { societyId },
+      select: {
+        societyId: true,
+        student: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            registrationNumber: true,
+            avatar: true,
+          },
+        },
+        roles: {
+          select: {
+            role: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    // 3. Format the response
+    const formattedMembers = members.map((member) => ({
+      id: member.student.id,
+      societyId: member.societyId,
+      firstName: member.student.firstName,
+      lastName: member.student.lastName,
+      email: member.student.email,
+      registrationNumber: member.student.registrationNumber,
+      roles: member.roles.map((role) => ({
+        name: role.role.name,
+        id: role.role.id,
+      })),
+      avatar: member.student.avatar,
+    }));
+
+    return res
+      .status(200)
+      .json(
+        new ApiResponse(
+          200,
+          formattedMembers,
+          "Society members fetched successfully."
+        )
+      );
+  }
+);
+
+export const removeMember = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { societyId } = req.params;
+    const { studentId } = req.body;
+    const user = req.user as IUser;
+
+    if (!societyId || !studentId) {
+      throw new ApiError(400, "Society ID and Student ID are required.");
+    }
+
+    // Check if the user is authorized
+    const isAuthorized = await haveMembersPrivilege(user.id, societyId);
+    if (!isAuthorized) {
+      throw new ApiError(
+        403,
+        "You are not authorized to remove members from this society."
+      );
+    }
+
+    // Check if the student is actually a member of the society
+    const studentMembership = await prisma.studentSociety.findUnique({
+      where: {
+        studentId_societyId: {
+          studentId,
+          societyId,
+        },
+      },
+    });
+
+    if (!studentMembership) {
+      throw new ApiError(
+        400,
+        "The specified student is not a member of this society."
+      );
+    }
+
+    // Start a transaction to delete related records first
+    await prisma.$transaction([
+      prisma.studentSocietyRole.deleteMany({
+        where: { studentId, societyId },
+      }),
+      prisma.studentSociety.delete({
+        where: {
+          studentId_societyId: {
+            studentId,
+            societyId,
+          },
+        },
+      }),
+    ]);
+
+    res
+      .status(200)
+      .json(
+        new ApiResponse(200, null, "Member has been successfully removed.")
+      );
   }
 );

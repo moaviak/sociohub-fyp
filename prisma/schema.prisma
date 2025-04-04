@@ -62,6 +62,7 @@ model Society {
   updatedAt   DateTime @updatedAt
   advisor     Advisor? @relation
 
+  roles        Role[]
   joinRequests JoinRequest[]    @relation
   members      StudentSociety[] @relation
 }
@@ -81,6 +82,31 @@ model JoinRequest {
   @@id([studentId, societyId])
 }
 
+model Role {
+  id                 String               @id @default(uuid())
+  societyId          String
+  name               String               @unique
+  description        String?
+  privileges         Privilege[]          @relation("RolePrivileges")
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+  StudentSocietyRole StudentSocietyRole[]
+
+  society Society @relation(fields: [societyId], references: [id])
+
+  @@unique([societyId, name])
+}
+
+model Privilege {
+  id          String   @id @default(uuid())
+  key         String   @unique
+  title       String
+  description String?
+  roles       Role[]   @relation("RolePrivileges")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
 model StudentSociety {
   studentId String
   societyId String
@@ -88,9 +114,23 @@ model StudentSociety {
   student Student @relation(fields: [studentId], references: [id])
   society Society @relation(fields: [societyId], references: [id])
 
+  // Each membership can have multiple roles.
+  roles StudentSocietyRole[]
+
   createdAt DateTime @default(now())
 
   @@id([studentId, societyId])
+}
+
+model StudentSocietyRole {
+  studentId String
+  societyId String
+  roleId    String
+
+  studentSociety StudentSociety @relation(fields: [studentId, societyId], references: [studentId, societyId])
+  role           Role           @relation(fields: [roleId], references: [id])
+
+  @@id([studentId, societyId, roleId])
 }
 
 model SocietyAdvisor {
