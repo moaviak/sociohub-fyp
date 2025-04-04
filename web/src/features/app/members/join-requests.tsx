@@ -35,7 +35,11 @@ const JoinRequests = () => {
         </Badge>
       </div>
       <div className="container mx-auto">
-        <DataTable columns={requestsColumns} data={requests || []} />
+        <DataTable
+          columns={requestsColumns}
+          data={requests || []}
+          isLoading={isLoading}
+        />
       </div>
     </div>
   );

@@ -54,3 +54,14 @@ export enum RequestAction {
   ACCEPT = "accept",
   REJECT = "reject",
 }
+
+export interface Member extends Student {
+  roles?: Role[];
+  societyId: string;
+}
+
+export interface Role {
+  id: string;
+  name: string;
+  description?: string;
+}

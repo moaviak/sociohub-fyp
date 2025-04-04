@@ -1,9 +1,12 @@
 import { ColumnDef } from "@tanstack/react-table";
 
-import { AvatarGroup } from "@/components/avatar-group";
-import { JoinRequest, Student, UserType } from "@/types";
-import { RequestForm } from "./components/request-form";
 import { formatDate } from "@/lib/utils";
+import { AvatarGroup } from "@/components/avatar-group";
+import { JoinRequest, Member, Student, UserType } from "@/types";
+
+import { MemberMenu } from "./components/member-menu";
+import { RequestForm } from "./components/request-form";
+import { RolesBadges } from "./components/roles-badges";
 
 export const requestsColumns: ColumnDef<JoinRequest>[] = [
   {
@@ -37,6 +40,34 @@ export const requestsColumns: ColumnDef<JoinRequest>[] = [
           <RequestForm request={request} />
         </div>
       );
+    },
+  },
+];
+
+export const membersColumns: ColumnDef<Member>[] = [
+  {
+    accessorKey: "id",
+    header: "Student",
+    cell: ({ row }) => {
+      const student = row.original;
+      return <AvatarGroup user={student} userType={UserType.STUDENT} />;
+    },
+  },
+  {
+    accessorKey: "email",
+    header: "Email",
+  },
+  {
+    accessorKey: "roles",
+    header: "Roles",
+    cell: ({ row }) => <RolesBadges roles={row.getValue("roles")} />,
+  },
+  {
+    id: "actions",
+    cell: ({ row }) => {
+      const member = row.original;
+
+      return <MemberMenu member={member} />;
     },
   },
 ];
