@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router";
+import { Link } from "react-router";
 
 import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import { Advisor, Student, UserType } from "@/types";
@@ -15,14 +15,12 @@ export const AvatarGroup = ({
   userType,
   className,
 }: AvatarGroupProps) => {
-  const navigate = useNavigate();
-
   return (
-    <div className={cn("flex gap-x-3 items-center", className)}>
-      <Avatar
-        onClick={() => navigate(`/profile/${user.id}`)}
-        className="h-10 w-10 cursor-pointer"
-      >
+    <Link
+      to={`/profile/${user.id}`}
+      className={cn("flex gap-x-3 items-center", className)}
+    >
+      <Avatar className="h-10 w-10 cursor-pointer">
         <AvatarImage
           src={user.avatar ?? "/assets/images/avatar-placeholder.png"}
         />
@@ -35,6 +33,6 @@ export const AvatarGroup = ({
             : (user as Student).registrationNumber}
         </p>
       </div>
-    </div>
+    </Link>
   );
 };

@@ -1,12 +1,15 @@
 import { ColumnDef } from "@tanstack/react-table";
 
 import { formatDate } from "@/lib/utils";
+import { Avatars } from "@/components/avatars";
+import { Checkbox } from "@/components/ui/checkbox";
 import { AvatarGroup } from "@/components/avatar-group";
-import { JoinRequest, Member, Student, UserType } from "@/types";
+import { JoinRequest, Member, Role, Student, UserType } from "@/types";
 
 import { MemberMenu } from "./components/member-menu";
 import { RequestForm } from "./components/request-form";
 import { RolesBadges } from "./components/roles-badges";
+import { RoleActions } from "./components/role-actions";
 
 export const requestsColumns: ColumnDef<JoinRequest>[] = [
   {
@@ -69,5 +72,86 @@ export const membersColumns: ColumnDef<Member>[] = [
 
       return <MemberMenu member={member} />;
     },
+  },
+];
+
+export const rolesColumns: ColumnDef<Role>[] = [
+  {
+    accessorKey: "id",
+    header: "Role Name",
+    cell: ({ row }) => {
+      const role = row.original;
+      return (
+        <div className="whitespace-normal">
+          <p className="b2-medium">{role.name}</p>
+          <p className="b3-regular">{role.description}</p>
+        </div>
+      );
+    },
+  },
+  {
+    accessorKey: "assignedMembers",
+    header: "Assigned Members",
+    cell: ({ row }) => {
+      const members = row.original.assignedMembers;
+      return (
+        <div>
+          {members && members.length === 1 ? (
+            <AvatarGroup user={members[0]} userType={UserType.STUDENT} />
+          ) : members && members.length > 1 ? (
+            <Avatars users={members || []} />
+          ) : (
+            <div>No assigned members</div>
+          )}
+        </div>
+      );
+    },
+  },
+  {
+    id: "actions",
+    cell: ({ row }) => {
+      const role = row.original;
+
+      return <RoleActions role={role} />;
+    },
+  },
+];
+
+export const rolesMemberColumns: ColumnDef<Member>[] = [
+  {
+    id: "select",
+    // header: ({ table }) => (
+    //   <Checkbox
+    //     checked={
+    //       table.getIsAllPageRowsSelected() ||
+    //       (table.getIsSomePageRowsSelected() && "indeterminate")
+    //     }
+    //     onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+    //     aria-label="Select all"
+    //   />
+    // ),
+    cell: ({ row }) => (
+      <Checkbox
+        checked={row.getIsSelected()}
+        onCheckedChange={(value) => row.toggleSelected(!!value)}
+        aria-label="Select row"
+        className="border-neutral-400 data-[state=checked]:bg-primary-600 data-[state=checked]:border-primary-600"
+      />
+    ),
+    enableSorting: false,
+    enableHiding: false,
+  },
+  {
+    accessorKey: "id",
+    header: "Member",
+    cell: ({ row }) => {
+      const student = row.original;
+      return <AvatarGroup user={student} userType={UserType.STUDENT} />;
+    },
+  },
+  {
+    accessorKey: "roles",
+    header: "Roles",
+    cell: ({ row }) => <RolesBadges roles={row.getValue("roles")} />,
   },
 ];

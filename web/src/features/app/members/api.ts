@@ -1,5 +1,5 @@
 import { api } from "@/features/api";
-import { JoinRequest, Member, RequestAction } from "@/types";
+import { JoinRequest, Member, RequestAction, Role } from "@/types";
 import { ApiResponse } from "@/features/api-response";
 import ApiError, {
   ApiErrorResponse,
@@ -124,6 +124,128 @@ export const MembersApi = api.injectEndpoints({
         { type: "Members", id: `${arg.societyId},${arg.studentId}` },
       ],
     }),
+    getSocietyRoles: builder.query<Role[] | ApiError, { societyId: string }>({
+      query: ({ societyId }) => ({
+        url: `/society/roles/${societyId}`,
+      }),
+      transformResponse: (response: ApiResponse<Role[]>) => {
+        if (response.success) {
+          return response.data;
+        }
+        return createApiError(response.message);
+      },
+      transformErrorResponse: (response) => {
+        const errorResponse = response.data as ApiErrorResponse;
+        return createApiError(errorResponse.message);
+      },
+      providesTags: (result, _error, arg) => {
+        if (result && !("error" in result)) {
+          return [
+            ...result.map(({ id }) => ({
+              type: "Roles" as const,
+              id: `${arg.societyId},${id}`,
+            })),
+            { type: "Roles", id: "LIST" },
+          ];
+        } else {
+          return [{ type: "Roles", id: "LIST" }];
+        }
+      },
+    }),
+    createRole: builder.mutation<
+      Role | ApiError,
+      {
+        societyId: string;
+        name: string;
+        description?: string | undefined;
+        privileges?: string[] | undefined;
+        members?: string[] | undefined;
+      }
+    >({
+      query: ({ societyId, name, description, privileges, members }) => ({
+        url: `/society/roles/${societyId}`,
+        method: "POST",
+        body: { name, description, privileges, members },
+      }),
+      transformResponse: (response: ApiResponse<Role>) => {
+        if (response.success) {
+          return response.data;
+        }
+        return createApiError(response.message);
+      },
+      transformErrorResponse: (response) => {
+        const errorResponse = response.data as ApiErrorResponse;
+        return createApiError(errorResponse.message);
+      },
+      invalidatesTags: [
+        { type: "Roles", id: "LIST" },
+        { type: "Members", id: "LIST" },
+      ],
+    }),
+    deleteRole: builder.mutation<
+      void | ApiError,
+      { societyId: string; roleId: string }
+    >({
+      query: ({ societyId, roleId }) => ({
+        url: `/society/roles/${societyId}`,
+        method: "DELETE",
+        body: { roleId },
+      }),
+      transformResponse: (response: ApiResponse<void>) => {
+        if (response.success) {
+          return response.data;
+        }
+        return createApiError(response.message);
+      },
+      transformErrorResponse: (response) => {
+        const errorResponse = response.data as ApiErrorResponse;
+        return createApiError(errorResponse.message);
+      },
+      invalidatesTags: [
+        { type: "Roles", id: "LIST" },
+        { type: "Members", id: "LIST" },
+      ],
+    }),
+    updateRole: builder.mutation<
+      Role | ApiError,
+      {
+        roleId: string;
+        societyId: string;
+        name: string;
+        description?: string | undefined;
+        privileges?: string[] | undefined;
+        members?: string[] | undefined;
+      }
+    >({
+      query: ({ societyId, ...body }) => ({
+        url: `/society/roles/${societyId}`,
+        method: "PUT",
+        body: { ...body },
+      }),
+      transformResponse: (response: ApiResponse<Role>) => {
+        if (response.success) {
+          return response.data;
+        }
+        return createApiError(response.message);
+      },
+      transformErrorResponse: (response) => {
+        const errorResponse = response.data as ApiErrorResponse;
+        return createApiError(errorResponse.message);
+      },
+      invalidatesTags: (result, _error, arg) => {
+        if (result && !("error" in result)) {
+          return [
+            { type: "Roles", id: `${arg.societyId},${result.id}` },
+            { type: "Members", id: "LIST" },
+          ];
+        } else {
+          return [
+            { type: "Roles", id: "LIST" },
+            { type: "Members", id: "LIST" },
+          ];
+        }
+      },
+    }),
   }),
 });
 
@@ -132,4 +254,8 @@ export const {
   useHandleSocietyRequestMutation,
   useGetSocietyMembersQuery,
   useRemoveMemberMutation,
+  useGetSocietyRolesQuery,
+  useCreateRoleMutation,
+  useDeleteRoleMutation,
+  useUpdateRoleMutation,
 } = MembersApi;

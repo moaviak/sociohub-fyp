@@ -1,7 +1,5 @@
-import { useParams } from "react-router";
-
-import { useAppSelector } from "@/app/hooks";
 import { Badge } from "@/components/ui/badge";
+import useGetSocietyId from "@/hooks/useGetSocietyId";
 import { DataTable } from "@/components/ui/data-table";
 import { SearchInput } from "@/components/search-input";
 
@@ -9,17 +7,10 @@ import { membersColumns } from "./columns";
 import { useGetSocietyMembersQuery } from "./api";
 
 const Members = () => {
-  const { societyId } = useParams();
-  const { user } = useAppSelector((state) => state.auth);
-
-  let id = societyId;
-
-  if (user && "societyId" in user) {
-    id = id || user.societyId;
-  }
+  const societyId = useGetSocietyId();
 
   const { data: members, isLoading } = useGetSocietyMembersQuery({
-    societyId: id || "",
+    societyId: societyId || "",
   });
 
   if (members && "error" in members) {

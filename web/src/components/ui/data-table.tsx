@@ -1,3 +1,4 @@
+import React, { useEffect, useRef } from "react";
 import {
   ColumnDef,
   flexRender,
@@ -19,18 +20,61 @@ interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
   isLoading?: boolean;
+  onRowSelectionChange?: (selectedRows: TData[]) => void;
+  initialRowSelection?: Record<string, boolean>;
 }
 
 export function DataTable<TData, TValue>({
   columns,
   data,
   isLoading,
+  onRowSelectionChange,
+  initialRowSelection = {},
 }: DataTableProps<TData, TValue>) {
+  const [rowSelection, setRowSelection] =
+    React.useState<Record<string, boolean>>(initialRowSelection);
+
+  // Keep track of previously selected rows to prevent unnecessary updates
+  const prevSelectedRowsRef = useRef<TData[]>([]);
+
   const table = useReactTable({
     data,
     columns,
     getCoreRowModel: getCoreRowModel(),
+    onRowSelectionChange: setRowSelection,
+    state: {
+      rowSelection,
+    },
   });
+
+  // Call onRowSelectionChange when rowSelection changes
+  useEffect(() => {
+    if (onRowSelectionChange) {
+      const selectedRows = table
+        .getRowModel()
+        .rows.filter((row) => row.getIsSelected())
+        .map((row) => row.original);
+
+      // Only update if the selection has actually changed
+      if (
+        JSON.stringify(selectedRows) !==
+        JSON.stringify(prevSelectedRowsRef.current)
+      ) {
+        prevSelectedRowsRef.current = selectedRows;
+        onRowSelectionChange(selectedRows);
+      }
+    }
+  }, [rowSelection, table, onRowSelectionChange]);
+
+  // Update rowSelection when initialRowSelection changes
+  useEffect(() => {
+    if (
+      Object.keys(initialRowSelection).length > 0 &&
+      JSON.stringify(initialRowSelection) !== JSON.stringify(rowSelection)
+    ) {
+      setRowSelection(initialRowSelection);
+    }
+  }, [initialRowSelection]);
 
   return (
     <div className="rounded-md border">

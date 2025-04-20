@@ -1,3 +1,5 @@
+import { Link, useParams } from "react-router";
+
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -7,7 +9,6 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import JoinRequests from "@/features/app/members/join-requests";
-import { Link, useParams } from "react-router";
 
 function RequestsPage() {
   const { societyId } = useParams();

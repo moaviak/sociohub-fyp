@@ -64,4 +64,8 @@ export interface Role {
   id: string;
   name: string;
   description?: string;
+  assignedMembers?: Member[];
+  privileges?: string[];
+  createdAt?: string;
+  updatedAt?: string;
 }

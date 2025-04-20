@@ -7,7 +7,7 @@ interface RolesBadgesProps {
 
 export const RolesBadges = ({ roles }: RolesBadgesProps) => {
   return (
-    <div>
+    <div className="space-x-1">
       {roles.slice(0, 2).map((role, index) => (
         <Badge
           key={role.id}

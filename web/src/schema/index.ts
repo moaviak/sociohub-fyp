@@ -129,3 +129,14 @@ export const SocietyRegistrationFormSchema = z.object({
 export type SocietyRegistrationFormValues = z.infer<
   typeof SocietyRegistrationFormSchema
 >;
+
+export const RolesFormSchema = z.object({
+  name: z.string().min(3, {
+    message: "The role name should be atleast 3 characters minimum",
+  }),
+  description: z.string().optional(),
+  privileges: z.array(z.string()).optional(),
+  members: z.array(z.string()).optional(),
+});
+
+export type RolesFormValues = z.infer<typeof RolesFormSchema>;
