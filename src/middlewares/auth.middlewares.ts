@@ -5,7 +5,6 @@ import prisma from "../db";
 import { ApiError } from "../utils/ApiError";
 import { asyncHandler } from "../utils/asyncHandler";
 import { IUser, UserType } from "../types";
-import { Advisor, Student } from "@prisma/client";
 
 export const verifyJWT = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {

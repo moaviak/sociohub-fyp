@@ -2,9 +2,12 @@ import { Router } from "express";
 import { verifyJWT } from "../middlewares/auth.middlewares";
 import { upload } from "../middlewares/multer.middlewares";
 import {
+  createRoleValidator,
   createSocietyValidator,
+  deleteRoleValidator,
   handleRequestValidator,
   removeMemberValidator,
+  updateRoleValidator,
 } from "../validators/society.validators";
 import { validate } from "../validators/validate";
 import {
@@ -15,6 +18,13 @@ import {
   handleRequest,
   removeMember,
 } from "../controllers/society.controller";
+import { verifyMemberPrivilege } from "../middlewares/privilege.middlewares";
+import {
+  createRole,
+  deleteRole,
+  getSocietyRoles,
+  updateRole,
+} from "../controllers/roles.controller";
 
 const router = Router();
 
@@ -38,5 +48,30 @@ router
   .route("/members/:societyId")
   .get(verifyJWT, getSocietyMembers)
   .delete(verifyJWT, removeMemberValidator(), validate, removeMember);
+
+router
+  .route("/roles/:societyId")
+  .get(verifyJWT, verifyMemberPrivilege, getSocietyRoles)
+  .post(
+    verifyJWT,
+    verifyMemberPrivilege,
+    createRoleValidator(),
+    validate,
+    createRole
+  )
+  .put(
+    verifyJWT,
+    verifyMemberPrivilege,
+    updateRoleValidator(),
+    validate,
+    updateRole
+  )
+  .delete(
+    verifyJWT,
+    verifyMemberPrivilege,
+    deleteRoleValidator(),
+    validate,
+    deleteRole
+  );
 
 export default router;

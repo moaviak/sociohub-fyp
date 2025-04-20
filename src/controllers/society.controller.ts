@@ -334,19 +334,29 @@ export const getSocietyMembers = asyncHandler(
     });
 
     // 3. Format the response
-    const formattedMembers = members.map((member) => ({
-      id: member.student.id,
-      societyId: member.societyId,
-      firstName: member.student.firstName,
-      lastName: member.student.lastName,
-      email: member.student.email,
-      registrationNumber: member.student.registrationNumber,
-      roles: member.roles.map((role) => ({
-        name: role.role.name,
-        id: role.role.id,
-      })),
-      avatar: member.student.avatar,
-    }));
+    const formattedMembers = members.map((member) => {
+      const allRoles = member.roles.map((r) => r.role);
+
+      // If there are roles other than "Member", exclude the "Member" role
+      const filteredRoles =
+        allRoles.length > 1
+          ? allRoles.filter((role) => role.name !== "Member")
+          : allRoles;
+
+      return {
+        id: member.student.id,
+        societyId: member.societyId,
+        firstName: member.student.firstName,
+        lastName: member.student.lastName,
+        email: member.student.email,
+        registrationNumber: member.student.registrationNumber,
+        roles: filteredRoles.map((role) => ({
+          id: role.id,
+          name: role.name,
+        })),
+        avatar: member.student.avatar,
+      };
+    });
 
     return res
       .status(200)

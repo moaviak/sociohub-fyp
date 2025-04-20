@@ -12,5 +12,4 @@ const startServer = () => {
   });
 };
 
-// TODO: Connect to DB and start server
 startServer();
