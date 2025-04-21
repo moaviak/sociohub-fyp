@@ -127,7 +127,7 @@ export const ROLES_PRIVILEGES = [
     key: "content_management",
     title: "Content Management",
     description:
-      "Can create, edit, and delete posts on the society’s public page.",
+      "Can create, edit, and delete posts on the society's public page.",
   },
   {
     key: "event_ticket_handling",
@@ -141,3 +141,12 @@ export const ROLES_PRIVILEGES = [
       "Can manage society finances, event payments, withdrawals, and payment methods.",
   },
 ];
+
+export const PRIVILEGES = {
+  EVENT_MANAGEMENT: "event_management",
+  MEMBER_MANAGEMENT: "member_management",
+  ANNOUNCEMENT_MANAGEMENT: "announcement_management",
+  CONTENT_MANAGEMENT: "content_management",
+  EVENT_TICKET_HANDLING: "event_ticket_handling",
+  PAYMENT_FINANCE_MANAGEMENT: "payment_finance_management",
+};

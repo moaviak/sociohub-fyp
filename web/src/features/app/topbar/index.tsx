@@ -18,7 +18,7 @@ const TopBar = () => {
       <div className="flex-1 p-2">
         <SearchInput
           placeholder="Search people, events, and societies"
-          className="w-xl"
+          className="lg:w-xl"
         />
       </div>
       <Notifications />

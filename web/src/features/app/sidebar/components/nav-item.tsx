@@ -18,13 +18,13 @@ export const NavItem = ({ item }: NavItemProps) => {
     <Link
       key={item.href}
       className={cn(
-        "flex gap-x-4 w-[220px] b3-regular justify-start items-center"
+        "flex gap-x-4 max-w-[220px] b3-regular justify-start items-center"
       )}
       to={item.href}
     >
       <span
         className={cn(
-          "h-full w-[8px] rounded-r-sm",
+          "h-13 w-[8px] rounded-r-sm",
           isActive && "bg-primary-600"
         )}
       />

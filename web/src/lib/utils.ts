@@ -59,3 +59,11 @@ export const formatDate = (dateString: string): string => {
   };
   return date.toLocaleDateString("en-US", options);
 };
+
+export const formatSocietyName = (societyName: string): string => {
+  const prefix = "COMSATS ";
+  if (societyName.startsWith(prefix)) {
+    return societyName.slice(prefix.length);
+  }
+  return societyName;
+};
