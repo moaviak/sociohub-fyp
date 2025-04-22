@@ -42,12 +42,24 @@ router
 router
   .route("/requests/:societyId")
   .get(verifyJWT, getSocietyRequests)
-  .put(verifyJWT, handleRequestValidator(), validate, handleRequest);
+  .put(
+    verifyJWT,
+    verifyMemberPrivilege,
+    handleRequestValidator(),
+    validate,
+    handleRequest
+  );
 
 router
   .route("/members/:societyId")
   .get(verifyJWT, getSocietyMembers)
-  .delete(verifyJWT, removeMemberValidator(), validate, removeMember);
+  .delete(
+    verifyJWT,
+    verifyMemberPrivilege,
+    removeMemberValidator(),
+    validate,
+    removeMember
+  );
 
 router
   .route("/roles/:societyId")

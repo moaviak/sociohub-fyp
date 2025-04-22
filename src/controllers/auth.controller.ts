@@ -29,7 +29,6 @@ export const loginUser = asyncHandler(async (req, res) => {
     advisor = await prisma.advisor.findUnique({ where: { email } });
   }
 
-  // Determine which user exists
   const user = student || advisor;
   const userType = student
     ? UserType.STUDENT
@@ -41,7 +40,6 @@ export const loginUser = asyncHandler(async (req, res) => {
     throw new ApiError(404, "User does not exist");
   }
 
-  // Verify password
   const isPasswordValid =
     userType === UserType.STUDENT
       ? await prisma.student.verifyPassword(user as Student, password)
@@ -61,21 +59,17 @@ export const loginUser = asyncHandler(async (req, res) => {
     secure: process.env.NODE_ENV === "production",
   };
 
-  // Check email verification status
   if (!user.isEmailVerified) {
-    // Check if verification code is expired
     const isVerificationExpired =
       !user.emailVerificationExpiry ||
       user.emailVerificationExpiry < new Date();
 
     if (isVerificationExpired) {
-      // Generate verification code
       const { code, codeExpiry } =
         userType === UserType.STUDENT
           ? prisma.student.generateVerificationCode()
           : prisma.advisor.generateVerificationCode();
 
-      // Update user with new verification details
       await (prisma[userType] as any).update({
         where: { id: user.id },
         data: {
@@ -92,6 +86,7 @@ export const loginUser = asyncHandler(async (req, res) => {
     }
   }
 
+  // ✅ Advisor response
   if (userType === UserType.ADVISOR) {
     let responseData = {
       user: {
@@ -131,33 +126,79 @@ export const loginUser = asyncHandler(async (req, res) => {
           "User logged in successfully"
         )
       );
-  } else {
-    return res
-      .status(200)
-      .cookie("accessToken", accessToken, options)
-      .cookie("refreshToken", refreshToken, options)
-      .json(
-        new ApiResponse(
-          200,
-          {
-            user: {
-              id: user.id,
-              email: user.email,
-              firstName: user.firstName,
-              lastName: user.lastName,
-              avatar: user.avatar,
-              isEmailVerified: user.isEmailVerified,
-              createdAt: user.createdAt,
-              updatedAt: user.updatedAt,
-              registrationNumber: (user as Student).registrationNumber,
-            },
-            userType,
-            accessToken,
-          },
-          "User logged in successfully"
-        )
-      );
   }
+
+  // ✅ Student response with societies & privileges
+  const societies = await prisma.studentSociety.findMany({
+    where: { studentId: user.id },
+    select: {
+      society: {
+        select: {
+          id: true,
+          name: true,
+          description: true,
+          logo: true,
+        },
+      },
+      roles: {
+        select: {
+          role: {
+            select: {
+              id: true,
+              name: true,
+              privileges: {
+                select: {
+                  key: true,
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  });
+
+  const formattedSocieties = societies.map((entry) => {
+    const privilegesSet = new Set<string>();
+
+    entry.roles.forEach((r) => {
+      r.role.privileges.forEach((p) => {
+        privilegesSet.add(p.key);
+      });
+    });
+
+    return {
+      ...entry.society,
+      privileges: Array.from(privilegesSet),
+    };
+  });
+
+  return res
+    .status(200)
+    .cookie("accessToken", accessToken, options)
+    .cookie("refreshToken", refreshToken, options)
+    .json(
+      new ApiResponse(
+        200,
+        {
+          user: {
+            id: user.id,
+            email: user.email,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            avatar: user.avatar,
+            isEmailVerified: user.isEmailVerified,
+            createdAt: user.createdAt,
+            updatedAt: user.updatedAt,
+            registrationNumber: (user as Student).registrationNumber,
+            societies: formattedSocieties,
+          },
+          userType,
+          accessToken,
+        },
+        "User logged in successfully"
+      )
+    );
 });
 
 export const refreshAccessToken = asyncHandler(
@@ -345,13 +386,70 @@ export const resendEmailVerification = asyncHandler(
 
 export const getCurrentUser = asyncHandler(
   async (req: Request, res: Response) => {
+    const user = req.user as IUser;
+
+    let responseUser: any = { ...user };
+    let societies = [];
+
+    if (user.userType === UserType.STUDENT) {
+      // Fetch societies and privileges for student
+      const studentSocieties = await prisma.studentSociety.findMany({
+        where: { studentId: user.id },
+        select: {
+          society: {
+            select: {
+              id: true,
+              name: true,
+              description: true,
+              logo: true,
+            },
+          },
+          roles: {
+            select: {
+              role: {
+                select: {
+                  id: true,
+                  name: true,
+                  privileges: {
+                    select: {
+                      key: true,
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      });
+
+      societies = studentSocieties.map((entry) => {
+        const privilegeSet = new Set<string>();
+
+        entry.roles.forEach((r) => {
+          r.role.privileges.forEach((p) => {
+            privilegeSet.add(p.key);
+          });
+        });
+
+        return {
+          ...entry.society,
+          privileges: Array.from(privilegeSet),
+        };
+      });
+
+      responseUser = {
+        ...user,
+        societies,
+      };
+    }
+
     return res.status(200).json(
       new ApiResponse(
         200,
         {
-          user: req.user,
+          user: responseUser,
           accessToken: req.cookies?.accessToken || "",
-          userType: (req.user as IUser).userType,
+          userType: user.userType,
         },
         "Current user fetched successfully"
       )

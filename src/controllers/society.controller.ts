@@ -197,15 +197,6 @@ export const handleRequest = asyncHandler(
       throw new ApiError(400, "Society ID and Student ID are required.");
     }
 
-    let isAuthorized = haveMembersPrivilege(user.id, societyId);
-
-    if (!isAuthorized) {
-      throw new ApiError(
-        403,
-        "You are not authorized to access this society's requests."
-      );
-    }
-
     // Fetch join request
     const request = await prisma.joinRequest.findUnique({
       where: { studentId_societyId: { studentId, societyId } },
@@ -280,7 +271,7 @@ export const getSocietyMembers = asyncHandler(
       throw new ApiError(400, "Society ID is required.");
     }
 
-    // 1. Check if the user is the advisor or member of the society
+    // 1. Check if the user is the advisor or a member of the society
     const [isAdvisor, isMember] = await prisma.$transaction([
       prisma.advisor.findFirst({
         where: {
@@ -305,7 +296,7 @@ export const getSocietyMembers = asyncHandler(
       );
     }
 
-    // 2. Fetch members with their roles
+    // 2. Fetch members with their roles and privileges
     const members = await prisma.studentSociety.findMany({
       where: { societyId },
       select: {
@@ -326,6 +317,11 @@ export const getSocietyMembers = asyncHandler(
               select: {
                 id: true,
                 name: true,
+                privileges: {
+                  select: {
+                    key: true,
+                  },
+                },
               },
             },
           },
@@ -337,7 +333,7 @@ export const getSocietyMembers = asyncHandler(
     const formattedMembers = members.map((member) => {
       const allRoles = member.roles.map((r) => r.role);
 
-      // If there are roles other than "Member", exclude the "Member" role
+      // Filter roles: if there are other roles than "Member", exclude "Member"
       const filteredRoles =
         allRoles.length > 1
           ? allRoles.filter((role) => role.name !== "Member")
@@ -380,13 +376,8 @@ export const removeMember = asyncHandler(
       throw new ApiError(400, "Society ID and Student ID are required.");
     }
 
-    // Check if the user is authorized
-    const isAuthorized = await haveMembersPrivilege(user.id, societyId);
-    if (!isAuthorized) {
-      throw new ApiError(
-        403,
-        "You are not authorized to remove members from this society."
-      );
+    if (studentId === user.id) {
+      throw new ApiError(400, "You can't remove yourself.");
     }
 
     // Check if the student is actually a member of the society
