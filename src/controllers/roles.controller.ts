@@ -100,6 +100,24 @@ export const createRole = asyncHandler(async (req: Request, res: Response) => {
     throw new ApiError(400, "One or more privilege keys are invalid.");
   }
 
+  // Check if a role with the same name already exists in the society
+  const existingRole = await prisma.role.findFirst({
+    where: {
+      societyId,
+      name: {
+        equals: name,
+        mode: "insensitive", // optional: for case-insensitive check
+      },
+    },
+  });
+
+  if (existingRole) {
+    throw new ApiError(
+      409,
+      "A role with this name already exists in the society."
+    );
+  }
+
   // Start a transaction
   const role = await prisma.$transaction(async (tx) => {
     // Create the role
