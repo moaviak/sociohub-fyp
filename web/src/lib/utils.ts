@@ -1,3 +1,5 @@
+import { PRIVILEGES } from "@/data";
+import { Society } from "@/types";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 
@@ -66,4 +68,13 @@ export const formatSocietyName = (societyName: string): string => {
     return societyName.slice(prefix.length);
   }
   return societyName;
+};
+
+export const haveMembersPrivilege = (
+  societies: (Society & { privileges: string[] })[],
+  societyId: string
+) => {
+  const society = societies.find((society) => society.id === societyId);
+
+  return society && society.privileges.includes(PRIVILEGES.MEMBER_MANAGEMENT);
 };

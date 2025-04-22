@@ -5,9 +5,9 @@ import {
   MessageSquare,
 } from "lucide-react";
 
-import { useGetMySocietiesQuery } from "./api";
 import { NavItem } from "./components/nav-item";
 import { SocietyItems } from "./components/society-items";
+import { useAppSelector } from "@/app/hooks";
 
 const navItems = [
   {
@@ -33,7 +33,9 @@ const navItems = [
 ];
 
 export const StudentSidebar = () => {
-  const { data: societies, isLoading } = useGetMySocietiesQuery();
+  const { user } = useAppSelector((state) => state.auth);
+
+  const societies = user && "registrationNumber" in user ? user.societies : [];
 
   return (
     <div className="flex flex-col py-4">
@@ -46,7 +48,6 @@ export const StudentSidebar = () => {
           societies.map((society) => (
             <SocietyItems key={society.id} society={society} />
           ))}
-        {isLoading && <SocietyItems.Skeleton />}
       </div>
     </div>
   );

@@ -15,6 +15,9 @@ import ApiError from "@/features/api-error";
 import { Button } from "@/components/ui/button";
 
 import { useRemoveMemberMutation } from "../api";
+import { useAppSelector } from "@/app/hooks";
+import useGetSocietyId from "@/hooks/useGetSocietyId";
+import { haveMembersPrivilege } from "@/lib/utils";
 
 interface MemberMenuProps {
   member: Member;
@@ -23,6 +26,13 @@ interface MemberMenuProps {
 export const MemberMenu = ({ member }: MemberMenuProps) => {
   const [removeMember, { isLoading, isError, error }] =
     useRemoveMemberMutation();
+  const { user } = useAppSelector((state) => state.auth);
+  const societyId = useGetSocietyId();
+
+  const isStudent = user && "registrationNumber" in user;
+  const havePrivilege = isStudent
+    ? haveMembersPrivilege(user.societies || [], societyId || "")
+    : true;
 
   const onRemove = async () => {
     const response = await removeMember({
@@ -57,20 +67,30 @@ export const MemberMenu = ({ member }: MemberMenuProps) => {
         <DropdownMenuItem className="b3-regular">
           <Link to={`/profile/${member.id}`}>View Profile</Link>
         </DropdownMenuItem>
-        <DropdownMenuItem className="b3-regular">Edit Role</DropdownMenuItem>
-        <DropdownMenuItem className="b3-regular">Send Message</DropdownMenuItem>
-        <DropdownMenuSeparator className="bg-neutral-300" />
-        <DropdownMenuItem>
-          <Button
-            variant="ghost"
-            size="inline"
-            className="text-red-600"
-            onClick={onRemove}
-            disabled={isLoading}
-          >
-            Remove Member
-          </Button>
-        </DropdownMenuItem>
+        {havePrivilege && member.id !== user?.id && (
+          <DropdownMenuItem className="b3-regular">Edit Role</DropdownMenuItem>
+        )}
+        {member.id !== user?.id && (
+          <DropdownMenuItem className="b3-regular">
+            Send Message
+          </DropdownMenuItem>
+        )}
+        {havePrivilege && (
+          <>
+            <DropdownMenuSeparator className="bg-neutral-300" />
+            <DropdownMenuItem>
+              <Button
+                variant="ghost"
+                size="inline"
+                className="text-red-600"
+                onClick={onRemove}
+                disabled={isLoading || member.id === user?.id}
+              >
+                Remove Member
+              </Button>
+            </DropdownMenuItem>
+          </>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   );

@@ -11,6 +11,7 @@ export interface User {
 
 export interface Student extends User {
   registrationNumber?: string;
+  societies?: (Society & { privileges: string[] })[];
 }
 
 export interface Advisor extends User {

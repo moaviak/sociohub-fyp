@@ -29,7 +29,7 @@ const Members = () => {
         </div>
         <SearchInput placeholder="Search member" className="w-xs" />
       </div>
-      <div className="container mx-auto">
+      <div className="container mx-auto overflow-y-auto custom-scrollbar">
         <DataTable
           columns={membersColumns}
           data={members || []}

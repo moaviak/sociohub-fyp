@@ -174,6 +174,7 @@ export const AuthApi = api.injectEndpoints({
           dispatch(setAuthChecked(true));
         });
       },
+      providesTags: ["Auth"],
     }),
     logout: builder.mutation<void | ApiError, void>({
       query: () => ({

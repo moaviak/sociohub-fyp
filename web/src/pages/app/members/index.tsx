@@ -1,18 +1,24 @@
 import { Link, Navigate, Outlet, useLocation, useParams } from "react-router";
 
-import { UserType } from "@/types";
 import { useAppSelector } from "@/app/hooks";
 import Members from "@/features/app/members";
 import { Button } from "@/components/ui/button";
+import { haveMembersPrivilege } from "@/lib/utils";
 
 function MembersPage() {
-  const { userType } = useAppSelector((state) => state.auth);
+  const { user } = useAppSelector((state) => state.auth);
   const { societyId } = useParams();
   const location = useLocation();
 
-  if (userType && userType === UserType.STUDENT && !societyId) {
+  const isStudent = user && "registrationNumber" in user;
+
+  if (isStudent && !societyId) {
     return <Navigate to="/dashboard" />;
   }
+
+  const havePrivilege = isStudent
+    ? haveMembersPrivilege(user.societies || [], societyId || "")
+    : true;
 
   if (
     !(location.pathname === "/members") &&
@@ -30,14 +36,16 @@ function MembersPage() {
             Manage Members and Assign Roles to Streamline Society Operations.
           </p>
         </div>
-        <div className="space-x-4">
-          <Button asChild>
-            <Link to="/members/roles">Manage Roles</Link>
-          </Button>
-          <Button variant="outline" asChild>
-            <Link to="/members/requests">View Join Requests</Link>
-          </Button>
-        </div>
+        {havePrivilege && (
+          <div className="space-x-4">
+            <Button asChild>
+              <Link to="/members/roles">Manage Roles</Link>
+            </Button>
+            <Button variant="outline" asChild>
+              <Link to="/members/requests">View Join Requests</Link>
+            </Button>
+          </div>
+        )}
       </div>
       <div className="flex-1 flex min-h-0 overflow-hidden">
         <Members />
