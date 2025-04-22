@@ -30,9 +30,9 @@ const baseQueryWithReauth: BaseQueryFn<
       if (refreshResult.data) {
         // Retry the original request
         result = await baseQuery(args, api, extraOptions);
+      } else {
+        api.dispatch(logout());
       }
-    } else {
-      api.dispatch(logout());
     }
   }
 
