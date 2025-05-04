@@ -67,32 +67,48 @@ model Society {
   members      StudentSociety[] @relation
 }
 
+enum JoinRequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
 model JoinRequest {
-  studentId    String
-  societyId    String
-  reason       String
-  expectations String
-  skills       String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id               String            @id @default(uuid())
+  studentId        String
+  societyId        String
+  reason           String
+  expectations     String
+  skills           String?
+  whatsappNo       String
+  semester         Int
+  interestedRoleId String?
+  status           JoinRequestStatus @default(PENDING)
+  pdf              String?
+  rejectionReason  String?
 
-  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  society Society @relation(fields: [societyId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  @@id([studentId, societyId])
+  student        Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  society        Society @relation(fields: [societyId], references: [id], onDelete: Cascade)
+  interestedRole Role?   @relation(fields: [interestedRoleId], references: [id], onDelete: SetNull)
 }
 
 model Role {
-  id                 String               @id @default(uuid())
-  societyId          String
-  name               String               @unique
-  description        String?
-  privileges         Privilege[]          @relation("RolePrivileges")
-  createdAt          DateTime             @default(now())
-  updatedAt          DateTime             @updatedAt
-  StudentSocietyRole StudentSocietyRole[]
+  id          String  @id @default(uuid())
+  societyId   String
+  name        String
+  description String?
+  minSemester Int?
 
-  society Society @relation(fields: [societyId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  JoinRequest        JoinRequest[]
+  StudentSocietyRole StudentSocietyRole[]
+  privileges         Privilege[]          @relation("RolePrivileges")
+  society            Society              @relation(fields: [societyId], references: [id])
 
   @@unique([societyId, name])
 }

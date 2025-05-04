@@ -23,6 +23,11 @@ export const studentRegisterValidator = () => {
 export const societyJoinRequestValidator = () => {
   return [
     body("societyId").trim().notEmpty().withMessage("Society Id is required"),
+    body("whatsappNo")
+      .trim()
+      .notEmpty()
+      .withMessage("WhatsApp number is required"),
+    body("semester").isNumeric().notEmpty().withMessage("Semester is required"),
     body("reason")
       .trim()
       .notEmpty()

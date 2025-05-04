@@ -8,9 +8,16 @@ import { ApiResponse } from "../utils/ApiResponse";
 import { asyncHandler } from "../utils/asyncHandler";
 import { sendVerificationEmail } from "../utils/mail";
 import {
+  extractRegistrationNo,
   generateAccessAndRefreshTokens,
   generateAvatarUrlFromInitials,
 } from "../utils/helpers";
+import { generateJoinRequestPDF } from "../utils/pdf";
+import {
+  deleteFromCloudinary,
+  getDownloadableCloudinaryUrl,
+  uploadOnCloudinary,
+} from "../utils/cloudinary";
 
 export const registerStudent = asyncHandler(
   async (req: Request, res: Response) => {
@@ -100,24 +107,39 @@ export const registerStudent = asyncHandler(
 
 export const sendJoinRequest = asyncHandler(
   async (req: Request, res: Response) => {
-    const { societyId, reason, expectations, skills } = req.body;
-    const { id } = req.user as IUser;
+    const {
+      societyId,
+      reason,
+      expectations,
+      skills,
+      whatsappNo,
+      semester,
+      interestedRole,
+    } = req.body;
+    const user = req.user as IUser;
 
     // Fetch user, society, and existing join request in a single query
-    const [society, existingRequest] = await prisma.$transaction([
+    const [society, role, existingRequest] = await prisma.$transaction([
       prisma.society.findFirst({
         where: {
           id: societyId,
-          members: { none: { studentId: id } }, // Ensures user is not already a member
+          members: { none: { studentId: user.id } }, // Ensures user is not already a member
         },
       }),
+      prisma.role.findFirst({
+        where: { id: interestedRole, societyId },
+      }),
       prisma.joinRequest.findFirst({
-        where: { studentId: id, societyId },
+        where: { studentId: user.id, societyId, status: "PENDING" },
       }),
     ]);
 
     if (!society) {
       throw new ApiError(400, "Invalid society.");
+    }
+
+    if (!role) {
+      throw new ApiError(400, "Invalid role selected.");
     }
 
     if (existingRequest) {
@@ -127,35 +149,66 @@ export const sendJoinRequest = asyncHandler(
       );
     }
 
+    if (role?.minSemester && semester < role.minSemester) {
+      throw new ApiError(
+        400,
+        `You must be in semester ${role.minSemester} or higher to apply for this role.`
+      );
+    }
+
+    const pdfPath = await generateJoinRequestPDF({
+      profileImage: user.avatar || "N/A",
+      firstName: user.firstName,
+      lastName: user.lastName,
+      registrationNo: {
+        ...extractRegistrationNo(user.registrationNumber || ""),
+      },
+      email: user.email,
+      whatsappNo: whatsappNo,
+      semester: semester.toString(),
+      role: role.name || "N/A",
+      reason: reason,
+      expectations: expectations,
+      skills: skills || "N/A",
+    });
+
+    const uploadResult = await uploadOnCloudinary(
+      pdfPath,
+      society.name + "/pdfs",
+      "raw"
+    );
+
+    const pdfUrl = getDownloadableCloudinaryUrl(uploadResult);
+
     // Create the join request
     const newRequest = await prisma.joinRequest.create({
       data: {
         reason,
         expectations,
         skills,
-        studentId: id,
+        studentId: user.id,
         societyId: society.id,
+        whatsappNo,
+        semester,
+        interestedRoleId: interestedRole,
+        pdf: pdfUrl,
       },
       select: {
+        id: true,
         studentId: true,
         societyId: true,
-        student: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            email: true,
-            avatar: true,
-            registrationNumber: true,
-          },
-        },
         reason: true,
         expectations: true,
         skills: true,
+        whatsappNo: true,
+        semester: true,
+        interestedRoleId: true,
         createdAt: true,
         updatedAt: true,
       },
     });
+
+    // TODO: Send notification and email to society admins
 
     return res
       .status(201)
@@ -171,20 +224,20 @@ export const sendJoinRequest = asyncHandler(
 
 export const cancelJoinRequest = asyncHandler(
   async (req: Request, res: Response) => {
-    const { id: studentId } = req.user as IUser;
     const { societyId } = req.params;
+    const { id: studentId } = req.user as IUser;
 
     if (!societyId) {
-      throw new ApiError(400, "Society ID is required.");
+      throw new ApiError(400, "Role ID is required.");
     }
 
     // Use transaction to check and delete in one go
     const [request] = await prisma.$transaction([
-      prisma.joinRequest.findUnique({
-        where: { studentId_societyId: { studentId, societyId } },
+      prisma.joinRequest.findFirst({
+        where: { societyId, studentId, status: "PENDING" },
       }),
       prisma.joinRequest.deleteMany({
-        where: { studentId, societyId },
+        where: { societyId, studentId, status: "PENDING" },
       }),
     ]);
 
@@ -192,12 +245,14 @@ export const cancelJoinRequest = asyncHandler(
       throw new ApiError(400, "No join request found.");
     }
 
+    await deleteFromCloudinary(request.pdf || "");
+
     return res
       .status(200)
       .json(
         new ApiResponse(
           200,
-          null,
+          request,
           "Join request has been successfully canceled."
         )
       );

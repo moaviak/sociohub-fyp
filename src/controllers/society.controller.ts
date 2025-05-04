@@ -82,30 +82,36 @@ export const getSocieties = asyncHandler(
             phone: true,
           },
         },
+        roles: {
+          select: {
+            id: true,
+            name: true,
+            minSemester: true,
+          },
+        },
         _count: {
           select: {
-            members: true, // Count of members
-            joinRequests: true, // Count of join requests
+            members: true,
+            joinRequests: true,
           },
         },
         members: {
-          where: { studentId: user.id }, // Check if user is a member
+          where: { studentId: user.id },
           select: { studentId: true },
         },
         joinRequests: {
-          where: { studentId: user.id }, // Check if user has sent a join request
+          where: { studentId: user.id, status: "PENDING" },
           select: { studentId: true },
         },
       },
     });
 
-    // Modify each society object to include membership/request status
     const societiesWithStatus = societies.map((society) => ({
       ...society,
-      isMember: society.members.length > 0, // If the user is found in members, they're a member
-      hasRequestedToJoin: society.joinRequests.length > 0, // If the user is found in joinRequests, they've requested to join
-      members: undefined, // Remove members array
-      joinRequests: undefined, // Remove joinRequests array
+      isMember: society.members.length > 0,
+      hasRequestedToJoin: society.joinRequests.length > 0,
+      members: undefined,
+      joinRequests: undefined,
     }));
 
     res
@@ -123,7 +129,6 @@ export const getSocieties = asyncHandler(
 export const getSocietyRequests = asyncHandler(
   async (req: Request, res: Response) => {
     const { societyId } = req.params;
-    const user = req.user as IUser;
 
     if (!societyId) {
       throw new ApiError(400, "Society ID is required.");
@@ -145,20 +150,12 @@ export const getSocietyRequests = asyncHandler(
       throw new ApiError(400, "Invalid Society ID.");
     }
 
-    let isAuthorized = haveMembersPrivilege(user.id, society.id);
-
-    if (!isAuthorized) {
-      throw new ApiError(
-        403,
-        "You are not authorized to access this society's requests."
-      );
-    }
-
     // Fetch join requests
     const requests = await prisma.joinRequest.findMany({
-      where: { societyId: society.id },
+      where: { societyId: society.id, status: "PENDING" },
       orderBy: { createdAt: "desc" },
       select: {
+        id: true,
         studentId: true,
         societyId: true,
         student: {
@@ -171,7 +168,89 @@ export const getSocietyRequests = asyncHandler(
             registrationNumber: true,
           },
         },
+        whatsappNo: true,
+        semester: true,
+        interestedRole: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        pdf: true,
         reason: true,
+        status: true,
+        expectations: true,
+        skills: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+
+    res
+      .status(200)
+      .json(
+        new ApiResponse(200, requests, "Society requests successfully fetched.")
+      );
+  }
+);
+
+export const getRequestsHistory = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { id } = req.params;
+
+    if (!id) {
+      throw new ApiError(400, "Society ID is required.");
+    }
+
+    // Fetch society with advisor details
+    const society = await prisma.society.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        name: true,
+        advisor: {
+          select: { id: true },
+        },
+      },
+    });
+
+    if (!society) {
+      throw new ApiError(400, "Invalid Society ID.");
+    }
+
+    // Fetch join requests
+    const requests = await prisma.joinRequest.findMany({
+      where: {
+        societyId: society.id,
+        OR: [{ status: "APPROVED" }, { status: "REJECTED" }],
+      },
+      orderBy: { createdAt: "desc" },
+      select: {
+        id: true,
+        studentId: true,
+        societyId: true,
+        student: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            avatar: true,
+            registrationNumber: true,
+          },
+        },
+        whatsappNo: true,
+        semester: true,
+        interestedRole: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+        pdf: true,
+        reason: true,
+        status: true,
+        rejectionReason: true,
         expectations: true,
         skills: true,
         createdAt: true,
@@ -190,16 +269,11 @@ export const getSocietyRequests = asyncHandler(
 export const handleRequest = asyncHandler(
   async (req: Request, res: Response) => {
     const { societyId } = req.params;
-    const { studentId, action } = req.body;
-    const user = req.user as IUser;
-
-    if (!societyId || !studentId) {
-      throw new ApiError(400, "Society ID and Student ID are required.");
-    }
+    const { studentId, action, reason } = req.body;
 
     // Fetch join request
-    const request = await prisma.joinRequest.findUnique({
-      where: { studentId_societyId: { studentId, societyId } },
+    const request = await prisma.joinRequest.findFirst({
+      where: { societyId, studentId, status: "PENDING" },
     });
 
     if (!request) {
@@ -207,34 +281,51 @@ export const handleRequest = asyncHandler(
     }
 
     if (action === RequestAction.ACCEPT) {
-      // Accept request: Add student to society (StudentSociety), assign Member role, and remove join request
+      // Check if already a member (to prevent duplicates)
+      const isAlreadyMember = await prisma.studentSociety.findUnique({
+        where: {
+          studentId_societyId: {
+            studentId: request.studentId,
+            societyId: request.societyId,
+          },
+        },
+      });
+
+      if (isAlreadyMember) {
+        throw new ApiError(400, "Student is already a member of the society.");
+      }
+
       const role = await prisma.role.findFirst({
         where: {
           name: "Member",
-          societyId,
+          societyId: request.societyId,
         },
       });
 
       if (!role) {
-        throw new ApiError(500, "Member role not found for the society.");
+        throw new ApiError(500, "Default 'Member' role not found.");
       }
 
       await prisma.$transaction([
         prisma.studentSociety.create({
           data: {
-            studentId,
-            societyId,
+            studentId: request.studentId,
+            societyId: request.societyId,
           },
         }),
         prisma.studentSocietyRole.create({
           data: {
             roleId: role.id,
-            societyId,
-            studentId,
+            societyId: request.societyId,
+            studentId: request.studentId,
           },
         }),
-        prisma.joinRequest.delete({
-          where: { studentId_societyId: { studentId, societyId } },
+        prisma.joinRequest.update({
+          where: { id: request.id },
+          data: {
+            status: "APPROVED",
+            rejectionReason: null,
+          },
         }),
       ]);
 
@@ -243,19 +334,22 @@ export const handleRequest = asyncHandler(
         .json(
           new ApiResponse(
             200,
-            null,
+            request,
             "Student has been successfully added to the society."
           )
         );
     } else if (action === RequestAction.REJECT) {
-      // Reject request: Just delete the join request
-      await prisma.joinRequest.delete({
-        where: { studentId_societyId: { studentId, societyId } },
+      await prisma.joinRequest.update({
+        where: { id: request.id },
+        data: {
+          status: "REJECTED",
+          rejectionReason: reason || null,
+        },
       });
 
       return res
         .status(200)
-        .json(new ApiResponse(200, null, "Join request has been rejected."));
+        .json(new ApiResponse(200, request, "Join request has been rejected."));
     }
 
     throw new ApiError(400, "Invalid action specified.");

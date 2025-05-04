@@ -7,9 +7,9 @@ import { ApiError } from "../utils/ApiError";
 export const verifyMemberPrivilege = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
     const userId = (req.user as IUser).id;
-    const { societyId } = req.params;
+    const { societyId, id } = req.params;
 
-    if (await haveMembersPrivilege(userId, societyId)) {
+    if (await haveMembersPrivilege(userId, societyId || id)) {
       next();
     } else {
       throw new ApiError(403, "You don't have permission for this operation.");

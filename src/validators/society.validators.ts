@@ -17,6 +17,10 @@ export const handleRequestValidator = () => {
       .trim()
       .isIn(["accept", "reject"])
       .withMessage("Action must be either 'accept' or 'reject'."),
+    body("reason")
+      .if(body("action").equals("reject"))
+      .notEmpty()
+      .withMessage("Reason is required when rejecting a request."),
   ];
 };
 

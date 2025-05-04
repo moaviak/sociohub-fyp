@@ -12,6 +12,7 @@ import {
 import { validate } from "../validators/validate";
 import {
   createSociety,
+  getRequestsHistory,
   getSocieties,
   getSocietyMembers,
   getSocietyRequests,
@@ -41,7 +42,7 @@ router
 
 router
   .route("/requests/:societyId")
-  .get(verifyJWT, getSocietyRequests)
+  .get(verifyJWT, verifyMemberPrivilege, getSocietyRequests)
   .put(
     verifyJWT,
     verifyMemberPrivilege,
@@ -49,6 +50,10 @@ router
     validate,
     handleRequest
   );
+
+router
+  .route("/requests/:id/history")
+  .get(verifyJWT, verifyMemberPrivilege, getRequestsHistory);
 
 router
   .route("/members/:societyId")

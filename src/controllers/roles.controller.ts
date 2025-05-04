@@ -20,6 +20,7 @@ export const getSocietyRoles = asyncHandler(
         id: true,
         name: true,
         description: true,
+        minSemester: true,
         createdAt: true,
         updatedAt: true,
         privileges: {
@@ -53,6 +54,7 @@ export const getSocietyRoles = asyncHandler(
       id: role.id,
       name: role.name,
       description: role.description,
+      minSemester: role.minSemester,
       createdAt: role.createdAt,
       updatedAt: role.updatedAt,
       privileges: role.privileges.map((p) => p.key),
@@ -75,9 +77,8 @@ export const getSocietyRoles = asyncHandler(
 
 export const createRole = asyncHandler(async (req: Request, res: Response) => {
   const { societyId } = req.params;
-  const user = req.user as IUser;
 
-  const { name, description, privileges, members } = req.body;
+  const { name, description, minSemester, privileges, members } = req.body;
 
   if (!societyId) {
     throw new ApiError(400, "Society ID is required.");
@@ -125,6 +126,7 @@ export const createRole = asyncHandler(async (req: Request, res: Response) => {
       data: {
         name,
         description,
+        minSemester,
         societyId,
         privileges: {
           connect: dbPrivileges.map((priv) => ({ id: priv.id })),
@@ -228,7 +230,8 @@ export const deleteRole = asyncHandler(async (req: Request, res: Response) => {
 
 export const updateRole = asyncHandler(async (req: Request, res: Response) => {
   const { societyId } = req.params;
-  const { roleId, name, description, privileges, members } = req.body;
+  const { roleId, name, description, minSemester, privileges, members } =
+    req.body;
 
   if (!societyId || !roleId) {
     throw new ApiError(400, "Society ID and Role ID are required.");
@@ -280,6 +283,7 @@ export const updateRole = asyncHandler(async (req: Request, res: Response) => {
       data: {
         name,
         description,
+        minSemester: minSemester || null,
         privileges: {
           set: privilegeIds.map((id) => ({ id })),
         },

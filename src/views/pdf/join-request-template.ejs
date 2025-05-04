@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Society Join Request</title>
+    <style>
+      /* Inline critical CSS only, avoid unnecessary styles */
+      @page {
+        size: A4;
+        margin: 20mm;
+      }
+
+      body {
+        font-family: Arial, sans-serif;
+        width: 210mm;
+        height: 297mm;
+        margin: 0;
+        padding: 0;
+        background-color: white;
+        position: relative;
+      }
+
+      .container {
+        padding: 32px;
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+      }
+
+      .watermark {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 30%; /* Reduced from 40% */
+        height: 30%; /* Reduced from 40% */
+        opacity: 0.1; /* Reduced from 0.2 for better compression */
+        filter: grayscale(100%);
+        transform: translate(-50%, -50%);
+        z-index: 0;
+      }
+
+      .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        z-index: 1;
+      }
+
+      .header-title h1 {
+        font-size: 36px; /* Reduced from 44px */
+        color: #0369a1;
+        margin: 0;
+      }
+
+      .header-title .sub-heading {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 18px; /* Reduced from 20px */
+        font-weight: bold;
+      }
+
+      .header-title .square {
+        width: 18px; /* Reduced from 20px */
+        height: 18px; /* Reduced from 20px */
+        background-color: #0ea5e9;
+        display: inline-block;
+      }
+
+      .profile-img {
+        width: 30mm; /* Reduced from 35mm */
+        height: 40mm; /* Reduced from 45mm */
+        object-fit: cover;
+        border: 3px solid #0ea5e9; /* Reduced from 4px */
+      }
+
+      .section-heading {
+        background-color: #0ea5e9;
+        color: white;
+        font-size: 16px;
+        font-weight: bold;
+        padding: 8px 28px; /* Reduced from 10px 32px */
+        position: relative;
+      }
+
+      .section-heading span {
+        position: absolute;
+        top: 0;
+        left: 0;
+        background-color: #0369a1;
+        height: 100%;
+        width: 14px; /* Reduced from 16px */
+      }
+
+      .form-group {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 8px;
+        margin-top: 14px; /* Reduced from 16px */
+      }
+
+      .form-group p {
+        font-size: 13px; /* Reduced from 14px */
+        font-weight: bold;
+        margin: 0;
+        width: 110px; /* Reduced from 120px */
+      }
+
+      .form-label {
+        font-size: 13px; /* Reduced from 14px */
+        font-weight: bold;
+        margin: 0 4px;
+      }
+
+      .form-value {
+        border: 1px solid black; /* Reduced from 2px */
+        padding: 4px 8px;
+        flex: 1;
+        flex-grow: 1;
+        flex-basis: 1;
+        width: 100%;
+      }
+
+      .half-width {
+        width: 50%;
+      }
+
+      .grid-row {
+        display: flex;
+        gap: 14px; /* Reduced from 16px */
+      }
+
+      .reg-box {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        flex: 1;
+      }
+
+      .reg-box .form-value {
+        width: auto;
+      }
+
+      .large-box {
+        height: 90px; /* Reduced from 100px */
+      }
+
+      .med-box {
+        height: 70px; /* Reduced from 80px */
+      }
+
+      .footer-strips {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+      }
+
+      .footer-strips .strip-top {
+        height: 10px; /* Reduced from 12px */
+        background-color: #0369a1;
+      }
+
+      .footer-strips .strip-bottom {
+        height: 20px; /* Reduced from 24px */
+        background-color: #0ea5e9;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <!-- Convert the watermark to a data URI or use a smaller optimized version -->
+      <img
+        src="data:image/png;base64,<!-- Base64 encoded small watermark would go here -->"
+        alt="watermark"
+        class="watermark"
+        onerror="this.style.display='none'"
+      />
+
+      <div class="header">
+        <div class="header-title">
+          <h1>SOCIETY</h1>
+          <div class="sub-heading">
+            <span class="square"></span> REGISTRATION FORM
+          </div>
+        </div>
+        <!-- The profile image will be pre-optimized -->
+        <img src="<%= profileImage %>" alt="Profile" class="profile-img" />
+      </div>
+
+      <div class="section-heading" style="position: relative; top: -14px">
+        <span></span> STUDENT INFORMATION
+      </div>
+
+      <div class="grid-row">
+        <div class="form-group half-width">
+          <p>First Name</p>
+          <span class="form-label">:</span>
+          <div class="form-value"><%= firstName %></div>
+        </div>
+        <div class="form-group half-width">
+          <p>Last Name</p>
+          <span class="form-label">:</span>
+          <div class="form-value"><%= lastName %></div>
+        </div>
+      </div>
+
+      <div class="form-group half-width">
+        <p>Registration #</p>
+        <span class="form-label">:</span>
+        <div class="reg-box">
+          <div class="form-value"><%= registrationNo.session %></div>
+          <div class="form-value"><%= registrationNo.year %></div>
+          <strong>-</strong>
+          <div class="form-value"><%= registrationNo.degree %></div>
+          <strong>-</strong>
+          <div class="form-value"><%= registrationNo.rollNo %></div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <p>Email</p>
+        <span class="form-label">:</span>
+        <div class="form-value"><%= email %></div>
+      </div>
+
+      <div class="grid-row">
+        <div class="form-group half-width">
+          <p>Semester</p>
+          <span class="form-label">:</span>
+          <div class="form-value"><%= semester %></div>
+        </div>
+        <div class="form-group half-width">
+          <p>WhatsApp #</p>
+          <span class="form-label">:</span>
+          <div class="form-value"><%= whatsappNo %></div>
+        </div>
+      </div>
+
+      <div class="section-heading" style="margin-top: 22px">
+        <span></span> REQUEST INFORMATION
+      </div>
+
+      <div class="form-group">
+        <p>Interested Role</p>
+        <span class="form-label">:</span>
+        <div class="form-value"><%= role %></div>
+      </div>
+
+      <div class="form-group">
+        <p>Reason for Joining</p>
+        <span class="form-label">:</span>
+        <div class="form-value large-box"><%= reason %></div>
+      </div>
+
+      <div class="form-group">
+        <p>Expectations from the society</p>
+        <span class="form-label">:</span>
+        <div class="form-value large-box"><%= expectations %></div>
+      </div>
+
+      <div class="form-group">
+        <p>Relevant Skills</p>
+        <span class="form-label">:</span>
+        <div class="form-value med-box"><%= skills %></div>
+      </div>
+
+      <div class="footer-strips">
+        <div class="strip-top"></div>
+        <div class="strip-bottom"></div>
+      </div>
+    </div>
+  </body>
+</html>

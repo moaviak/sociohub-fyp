@@ -161,3 +161,12 @@ export const haveMembersPrivilege = async (
 
   return !!studentWithPrivilege;
 };
+
+export const extractRegistrationNo = (registrationNo: string) => {
+  const session = registrationNo.substring(0, 2);
+  const year = registrationNo.substring(2, 4);
+  const degree = registrationNo.substring(5, 8);
+  const rollNo = registrationNo.substring(9, 12);
+
+  return { session, year, degree, rollNo };
+};
