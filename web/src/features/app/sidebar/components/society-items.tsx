@@ -39,7 +39,7 @@ export const SocietyItems = ({
           <img
             src={society.logo || "/assets/images/society-placeholder.png"}
             alt="society logo"
-            className="h-8 w-8"
+            className="h-8 w-8 rounded-full"
           />
           <p className="b2-medium max-w-[140px] truncate">
             {formatSocietyName(society.name)}

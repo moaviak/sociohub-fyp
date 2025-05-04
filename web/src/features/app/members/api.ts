@@ -28,9 +28,9 @@ export const MembersApi = api.injectEndpoints({
       providesTags: (result) => {
         if (result && !("error" in result)) {
           return [
-            ...result.map(({ studentId, societyId }) => ({
+            ...result.map(({ id }) => ({
               type: "Requests" as const,
-              id: `${societyId},${studentId}`,
+              id,
             })),
             { type: "Requests", id: "LIST" },
           ];
@@ -39,20 +39,14 @@ export const MembersApi = api.injectEndpoints({
         }
       },
     }),
-    handleSocietyRequest: builder.mutation<
-      null | ApiError,
-      {
-        societyId: string;
-        studentId: string;
-        action: RequestAction;
-      }
+    getRequestsHistory: builder.query<
+      JoinRequest[] | ApiError,
+      { societyId: string }
     >({
-      query: ({ societyId, studentId, action }) => ({
-        url: `/society/requests/${societyId}`,
-        method: "PUT",
-        body: { studentId, action },
+      query: ({ societyId }) => ({
+        url: `/society/requests/${societyId}/history`,
       }),
-      transformResponse: (response: ApiResponse<null>) => {
+      transformResponse: (response: ApiResponse<JoinRequest[]>) => {
         if (response.success) {
           return response.data;
         }
@@ -62,10 +56,54 @@ export const MembersApi = api.injectEndpoints({
         const errorResponse = response.data as ApiErrorResponse;
         return createApiError(errorResponse.message);
       },
-      invalidatesTags: (_result, _error, arg) => [
-        { type: "Requests", id: `${arg.societyId},${arg.studentId}` },
-        { type: "Members", id: "LIST" },
-      ],
+      providesTags: (result) => {
+        if (result && !("error" in result)) {
+          return [
+            ...result.map(({ id }) => ({
+              type: "Requests" as const,
+              id,
+            })),
+            { type: "Requests", id: "LIST" },
+          ];
+        } else {
+          return [{ type: "Requests", id: "LIST" }];
+        }
+      },
+    }),
+    handleSocietyRequest: builder.mutation<
+      JoinRequest | ApiError,
+      {
+        societyId: string;
+        studentId: string;
+        action: RequestAction;
+        reason?: string;
+      }
+    >({
+      query: ({ societyId, studentId, action, reason }) => ({
+        url: `/society/requests/${societyId}`,
+        method: "PUT",
+        body: { studentId, action, reason },
+      }),
+      transformResponse: (response: ApiResponse<JoinRequest>) => {
+        if (response.success) {
+          return response.data;
+        }
+        return createApiError(response.message);
+      },
+      transformErrorResponse: (response) => {
+        const errorResponse = response.data as ApiErrorResponse;
+        return createApiError(errorResponse.message);
+      },
+      invalidatesTags: (result) => {
+        if (result && !("error" in result)) {
+          return [
+            { type: "Requests", id: result.id },
+            { type: "Members", id: "LIST" },
+          ];
+        } else {
+          return [{ type: "Requests", id: "LIST" }];
+        }
+      },
     }),
     getSocietyMembers: builder.query<
       Member[] | ApiError,
@@ -157,15 +195,16 @@ export const MembersApi = api.injectEndpoints({
       {
         societyId: string;
         name: string;
+        minSemester?: number;
         description?: string | undefined;
         privileges?: string[] | undefined;
         members?: string[] | undefined;
       }
     >({
-      query: ({ societyId, name, description, privileges, members }) => ({
+      query: ({ societyId, ...body }) => ({
         url: `/society/roles/${societyId}`,
         method: "POST",
-        body: { name, description, privileges, members },
+        body: { ...body },
       }),
       transformResponse: (response: ApiResponse<Role>) => {
         if (response.success) {
@@ -212,6 +251,7 @@ export const MembersApi = api.injectEndpoints({
         roleId: string;
         societyId: string;
         name: string;
+        minSemester?: number;
         description?: string | undefined;
         privileges?: string[] | undefined;
         members?: string[] | undefined;
@@ -251,6 +291,7 @@ export const MembersApi = api.injectEndpoints({
 
 export const {
   useGetSocietyRequestsQuery,
+  useGetRequestsHistoryQuery,
   useHandleSocietyRequestMutation,
   useGetSocietyMembersQuery,
   useRemoveMemberMutation,

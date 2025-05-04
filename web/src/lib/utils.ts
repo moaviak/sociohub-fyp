@@ -9,7 +9,7 @@ export function cn(...inputs: ClassValue[]) {
 
 export const getYearOptions = () => {
   const currentYear = new Date().getFullYear();
-  const startYear = currentYear - 5; // Get last 6 years including current year
+  const startYear = currentYear - 4; // Get last 5 years including current year
 
   const years: string[] = [];
   for (let year = currentYear; year >= startYear; year--) {

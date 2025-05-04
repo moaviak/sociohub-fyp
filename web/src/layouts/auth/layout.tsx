@@ -24,6 +24,7 @@ function AuthLayout() {
     !isSocietyForm;
 
   useEffect(() => {
+    
     if (!isAuthChecked) {
       // Still loading, don't redirect yet
       return;

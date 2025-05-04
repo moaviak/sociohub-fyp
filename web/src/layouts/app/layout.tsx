@@ -4,7 +4,7 @@ import { Outlet, useNavigate } from "react-router";
 import TopBar from "@/features/app/topbar";
 import Sidebar from "@/features/app/sidebar";
 import { useAppSelector } from "@/app/hooks";
-import { Advisor, Student, UserType } from "@/types";
+import { Advisor, UserType } from "@/types";
 import { AppSkeleton } from "@/components/skeleton/app-skeleton";
 
 function AppLayout() {
@@ -35,11 +35,6 @@ function AppLayout() {
         !(user as Advisor).societyId
       ) {
         navigate("/sign-up/society-form", { replace: true });
-      } else if (
-        userType === UserType.STUDENT &&
-        !(user as Student).registrationNumber
-      ) {
-        navigate("/sign-up/student/reg-no", { replace: true });
       }
       // If all conditions are met, user stays on the current route (dashboard)
     }

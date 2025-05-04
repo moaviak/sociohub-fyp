@@ -80,12 +80,12 @@ export const SocietyForm = () => {
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 w-full">
         <div className="flex flex-col items-center mb-6">
-          <div className="relative w-24 h-24 rounded-full bg-gray-200 flex items-center justify-center mb-2">
+          <div className="relative w-24 h-24 rounded-full border-2 border-primary-600 flex items-center justify-center mb-2">
             {logoPreview ? (
               <img
                 src={logoPreview}
                 alt="Logo preview"
-                className="w-full h-full rounded-full object-cover"
+                className="w-[95%] h-[95%] rounded-full object-cover"
               />
             ) : (
               <div className="text-gray-400 flex flex-col items-center justify-center">
@@ -98,7 +98,7 @@ export const SocietyForm = () => {
             )}
             <label
               htmlFor="logo-upload"
-              className="absolute bottom-0 right-0 bg-blue-500 rounded-full p-1 cursor-pointer"
+              className="absolute bottom-0 right-0 bg-primary-600 rounded-full p-1 cursor-pointer"
             >
               <Camera className="h-5 w-5 text-white" />
             </label>

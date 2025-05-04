@@ -8,12 +8,16 @@ import { Member } from "@/types";
 import { useMemo } from "react";
 
 interface RolesFormMembersProps {
-  form: UseFormReturn<{
-    name: string;
-    description?: string | undefined;
-    privileges?: string[] | undefined;
-    members?: string[] | undefined;
-  }>;
+  form: UseFormReturn<
+    {
+      name: string;
+      minSemester?: number | undefined;
+      description?: string | undefined;
+      privileges?: string[] | undefined;
+      members?: string[] | undefined;
+    },
+    undefined
+  >;
 }
 
 export const RolesFormMembers = ({ form }: RolesFormMembersProps) => {

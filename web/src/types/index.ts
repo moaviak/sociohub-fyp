@@ -34,16 +34,30 @@ export interface Society {
   createdAt: string;
   updatedAt: string;
   advisor?: Advisor;
+  roles?: Role[];
   _count?: {
     members: number;
     joinRequests: number;
   };
 }
 
+export enum JoinRequestStatus {
+  PENDING = "PENDING",
+  APPROVED = "APPROVED",
+  REJECTED = "REJECTED",
+}
+
 export interface JoinRequest {
+  id: string;
   studentId: string;
   societyId: string;
   student: Student;
+  whatsappNo: string;
+  semester: number;
+  interestedRole?: Role;
+  pdf?: string;
+  status: JoinRequestStatus;
+  rejectionReason?: string;
   reason: string;
   expectations: string;
   skills?: string;
@@ -65,6 +79,7 @@ export interface Role {
   id: string;
   name: string;
   description?: string;
+  minSemester?: number;
   assignedMembers?: Member[];
   privileges?: string[];
   createdAt?: string;

@@ -150,3 +150,31 @@ export const PRIVILEGES = {
   EVENT_TICKET_HANDLING: "event_ticket_handling",
   PAYMENT_FINANCE_MANAGEMENT: "payment_finance_management",
 };
+
+export const REJECT_REASONS = [
+  {
+    title: "Does Not Meet Eligibility Criteria",
+    description:
+      "The applicant does not fulfill the required academic, semester, or department-based eligibility for joining the society.",
+  },
+  {
+    title: "Incomplete or Inaccurate Application",
+    description:
+      "The join request lacks essential information or contains incorrect details that prevent proper evaluation.",
+  },
+  {
+    title: "Quota or Membership Limit Reached",
+    description:
+      "The society has already reached its maximum allowed members and is currently not accepting new applications.",
+  },
+  {
+    title: "Mismatch with Society Objectives",
+    description:
+      "The applicant’s interests or provided motivations do not align well with the goals or nature of the society.",
+  },
+  {
+    title: "Violation of Previous Conduct Rules",
+    description:
+      "The applicant has a history of disciplinary issues or prior removal from the society or similar organizations.",
+  },
+];

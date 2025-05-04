@@ -110,12 +110,12 @@ const AdvisorSignUp = () => {
         <div className="space-y-7">
           <div className="grid grid-cols-2 gap-8 items-center">
             <div className="flex items-center gap-x-6">
-              <div className="relative w-24 h-24 rounded-full bg-gray-200 flex items-center justify-center mb-2">
+              <div className="relative w-24 h-24 rounded-full border-2 border-primary-600 flex items-center justify-center mb-2">
                 {avatarPreview ? (
                   <img
                     src={avatarPreview}
                     alt="Logo preview"
-                    className="w-full h-full rounded-full object-cover"
+                    className="w-[95%] h-[95%] rounded-full object-cover"
                   />
                 ) : (
                   <div className="text-gray-400 flex flex-col items-center justify-center">

@@ -6,12 +6,16 @@ import { cn } from "@/lib/utils";
 import { Checkbox } from "@/components/ui/checkbox";
 
 interface RolesFormPrivilegesProps {
-  form: UseFormReturn<{
-    name: string;
-    description?: string | undefined;
-    privileges?: string[] | undefined;
-    members?: string[] | undefined;
-  }>;
+  form: UseFormReturn<
+    {
+      name: string;
+      minSemester?: number | undefined;
+      description?: string | undefined;
+      privileges?: string[] | undefined;
+      members?: string[] | undefined;
+    },
+    undefined
+  >;
 }
 
 export const RolesFormPrivileges = ({ form }: RolesFormPrivilegesProps) => {

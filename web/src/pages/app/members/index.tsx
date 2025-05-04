@@ -39,10 +39,20 @@ function MembersPage() {
         {havePrivilege && (
           <div className="space-x-4">
             <Button asChild>
-              <Link to="/members/roles">Manage Roles</Link>
+              <Link
+                to={`/members/${societyId ? `${societyId}/roles` : "roles"}`}
+              >
+                Manage Roles
+              </Link>
             </Button>
             <Button variant="outline" asChild>
-              <Link to="/members/requests">View Join Requests</Link>
+              <Link
+                to={`/members/${
+                  societyId ? `${societyId}/requests` : "requests"
+                }`}
+              >
+                View Join Requests
+              </Link>
             </Button>
           </div>
         )}

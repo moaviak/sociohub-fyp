@@ -1,15 +1,23 @@
 import { ColumnDef } from "@tanstack/react-table";
 
-import { formatDate } from "@/lib/utils";
+import { cn, formatDate } from "@/lib/utils";
 import { Avatars } from "@/components/avatars";
 import { Checkbox } from "@/components/ui/checkbox";
 import { AvatarGroup } from "@/components/avatar-group";
-import { JoinRequest, Member, Role, Student, UserType } from "@/types";
+import {
+  JoinRequest,
+  JoinRequestStatus,
+  Member,
+  Role,
+  Student,
+  UserType,
+} from "@/types";
 
 import { MemberMenu } from "./components/member-menu";
 import { RequestForm } from "./components/request-form";
 import { RolesBadges } from "./components/roles-badges";
 import { RoleActions } from "./components/role-actions";
+import { Badge } from "@/components/ui/badge";
 
 export const requestsColumns: ColumnDef<JoinRequest>[] = [
   {
@@ -31,6 +39,67 @@ export const requestsColumns: ColumnDef<JoinRequest>[] = [
       const requestDate = formatDate(row.getValue("createdAt"));
 
       return <p>{requestDate}</p>;
+    },
+  },
+  {
+    id: "action",
+    cell: ({ row }) => {
+      const request = row.original;
+
+      return (
+        <div className="text-right">
+          <RequestForm request={request} />
+        </div>
+      );
+    },
+  },
+];
+
+export const requestsHistoryColumns: ColumnDef<JoinRequest>[] = [
+  {
+    accessorKey: "student",
+    header: "Student",
+    cell: ({ row }) => {
+      const student: Student = row.getValue("student");
+      return <AvatarGroup user={student} userType={UserType.STUDENT} />;
+    },
+  },
+  {
+    accessorKey: "status",
+    header: "Status",
+    cell: ({ row }) => {
+      const status: JoinRequestStatus = row.getValue("status");
+
+      return (
+        <Badge
+          className={cn(
+            "b3-medium",
+            status === JoinRequestStatus.APPROVED
+              ? "bg-emerald-50 border-emerald-400 text-emerald-600"
+              : "bg-red-100 border-red-400 text-red-600"
+          )}
+        >
+          {status}
+        </Badge>
+      );
+    },
+  },
+  {
+    accessorKey: "createdAt",
+    header: "Request Date",
+    cell: ({ row }) => {
+      const requestDate = formatDate(row.getValue("createdAt"));
+
+      return <p>{requestDate}</p>;
+    },
+  },
+  {
+    accessorKey: "updatedAt",
+    header: "Decision Date",
+    cell: ({ row }) => {
+      const decisionDate = formatDate(row.getValue("updatedAt"));
+
+      return <p>{decisionDate}</p>;
     },
   },
   {

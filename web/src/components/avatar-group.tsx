@@ -23,6 +23,7 @@ export const AvatarGroup = ({
       <Avatar className="h-10 w-10 cursor-pointer">
         <AvatarImage
           src={user.avatar ?? "/assets/images/avatar-placeholder.png"}
+          className="object-cover"
         />
       </Avatar>
       <div className="flex flex-col overflow-hidden text-ellipsis whitespace-nowrap">

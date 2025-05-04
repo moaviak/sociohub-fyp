@@ -38,15 +38,18 @@ export const ExploreApi = api.injectEndpoints({
       JoinRequest | ApiError,
       {
         societyId: string;
+        whatsappNo: string;
+        semester: number;
+        interestedRole: string;
         reason: string;
         expectations: string;
         skills?: string;
       }
     >({
-      query: (credentials) => ({
+      query: (body) => ({
         url: "/student/send-request",
         method: "POST",
-        body: credentials,
+        body,
       }),
       transformResponse: (response: ApiResponse<JoinRequest>) => {
         if (response.success) {
@@ -67,7 +70,7 @@ export const ExploreApi = api.injectEndpoints({
       },
     }),
     cancelJoinRequest: builder.mutation<
-      null | ApiError,
+      JoinRequest | ApiError,
       {
         societyId: string;
       }
@@ -76,7 +79,7 @@ export const ExploreApi = api.injectEndpoints({
         url: `/student/cancel-request/${societyId}`,
         method: "DELETE",
       }),
-      transformResponse: (response: ApiResponse<null>) => {
+      transformResponse: (response: ApiResponse<JoinRequest>) => {
         if (response.success) {
           return response.data;
         }
@@ -86,9 +89,13 @@ export const ExploreApi = api.injectEndpoints({
         const errorResponse = response.data as ApiErrorResponse;
         return createApiError(errorResponse.message);
       },
-      invalidatesTags: (_result, _error, arg) => [
-        { type: "Societies", id: arg.societyId },
-      ],
+      invalidatesTags: (result) => {
+        if (result && !("error" in result)) {
+          return [{ type: "Societies", id: result.societyId }];
+        } else {
+          return [{ type: "Societies", id: "LIST" }];
+        }
+      },
     }),
   }),
 });

@@ -18,10 +18,10 @@ import { DEGREES } from "@/data";
 import { signInSchema } from "@/schema";
 import ApiError from "@/features/api-error";
 import { Advisor, UserType } from "@/types";
+import { getYearOptions } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { getYearOptions } from "@/lib/utils";
 
 import { AuthResponse } from "../types";
 import { useLoginMutation } from "../api";

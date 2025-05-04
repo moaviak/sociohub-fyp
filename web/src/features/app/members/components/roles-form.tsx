@@ -56,26 +56,55 @@ export const RolesForm = ({ role, children }: RolesFormProps) => {
   // Reset form with the latest role data when dialog opens
   useEffect(() => {
     if (isOpen) {
+      // Reset form to initial state first
       form.reset({
-        name: role?.name || "",
-        description: role?.description || "",
-        privileges: role?.privileges || [],
-        members: role?.assignedMembers?.map((member) => member.id) || [],
+        name: "",
+        description: "",
+        minSemester: undefined,
+        privileges: [],
+        members: [],
       });
+
+      // Then apply role data if editing
+      if (role) {
+        const minSemester =
+          role.minSemester !== null &&
+          role.minSemester !== undefined &&
+          !isNaN(Number(role.minSemester))
+            ? Number(role.minSemester)
+            : undefined;
+
+        form.reset({
+          name: role.name,
+          description: role.description ?? "",
+          minSemester,
+          privileges: role.privileges ?? [],
+          members: role.assignedMembers?.map((member) => member.id) ?? [],
+        });
+      }
     }
   }, [isOpen, role, form]);
 
   const onSubmit = async (values: RolesFormValues) => {
+    // Ensure minSemester is a valid number or undefined before submitting
+    const processedValues = {
+      ...values,
+      minSemester:
+        values.minSemester !== undefined && !isNaN(Number(values.minSemester))
+          ? Number(values.minSemester)
+          : undefined,
+    };
+
     if (step === totalSteps) {
       const response = !role
         ? await createRole({
             societyId: societyId || "",
-            ...values,
+            ...processedValues,
           })
         : await updateRole({
             societyId: societyId || "",
             roleId: role.id,
-            ...values,
+            ...processedValues,
           });
 
       if (!("error" in response)) {

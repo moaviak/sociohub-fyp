@@ -20,6 +20,7 @@ import RolesPage from "@/pages/app/members/roles-page";
 import SocietyFormPage from "@/pages/society-form-page";
 import VerifyEmailPage from "@/pages/verify-email-page";
 import RequestsPage from "@/pages/app/members/requests-page";
+import RequestsHistoryPage from "./pages/app/members/requests-history-page";
 
 function App() {
   return (
@@ -55,8 +56,16 @@ function App() {
           {/* Advisor specific  routes*/}
           <Route path="/members" element={<MembersPage />}>
             <Route path="roles" element={<RolesPage />} />
-            <Route path="requests" element={<RequestsPage />} />
-            <Route path=":societyId" element={<MembersPage />} />
+            <Route path="requests" element={<RequestsPage />}>
+              <Route path="history" element={<RequestsHistoryPage />} />
+            </Route>
+
+            <Route path=":societyId" element={<MembersPage />}>
+              <Route path="roles" element={<RolesPage />} />
+              <Route path="requests" element={<RequestsPage />}>
+                <Route path="history" element={<RequestsHistoryPage />} />
+              </Route>
+            </Route>
           </Route>
 
           {/* Add other private routes here */}
