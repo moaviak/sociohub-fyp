@@ -18,7 +18,7 @@ model Student {
   firstName               String
   lastName                String
   email                   String    @unique
-  registrationNumber      String?   @unique
+  registrationNumber      String    @unique
   password                String
   avatar                  String?
   refreshToken            String?
@@ -55,9 +55,9 @@ model Advisor {
 
 model Society {
   id          String   @id @default(uuid())
-  name        String
+  name        String   @unique
   description String
-  logo        String
+  logo        String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   advisor     Advisor? @relation
@@ -109,6 +109,7 @@ model Role {
   StudentSocietyRole StudentSocietyRole[]
   privileges         Privilege[]          @relation("RolePrivileges")
   society            Society              @relation(fields: [societyId], references: [id])
+  StudentSociety     StudentSociety[]
 
   @@unique([societyId, name])
 }
@@ -124,11 +125,13 @@ model Privilege {
 }
 
 model StudentSociety {
-  studentId String
-  societyId String
+  studentId        String
+  societyId        String
+  interestedRoleId String?
 
-  student Student @relation(fields: [studentId], references: [id])
-  society Society @relation(fields: [societyId], references: [id])
+  student        Student @relation(fields: [studentId], references: [id])
+  society        Society @relation(fields: [societyId], references: [id])
+  interestedRole Role?   @relation(fields: [interestedRoleId], references: [id], onDelete: Cascade)
 
   // Each membership can have multiple roles.
   roles StudentSocietyRole[]

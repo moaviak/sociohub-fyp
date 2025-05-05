@@ -216,10 +216,16 @@ export const MembersApi = api.injectEndpoints({
         const errorResponse = response.data as ApiErrorResponse;
         return createApiError(errorResponse.message);
       },
-      invalidatesTags: [
-        { type: "Roles", id: "LIST" },
-        { type: "Members", id: "LIST" },
-      ],
+      invalidatesTags: (result, _error, args) => {
+        if (result && !("error" in result) && args.members) {
+          return [
+            ...args.members.map((id) => ({ type: "Members" as const, id })),
+            { type: "Roles", id: "LIST" },
+          ];
+        } else {
+          return [{ type: "Roles", id: "LIST" }];
+        }
+      },
     }),
     deleteRole: builder.mutation<
       void | ApiError,

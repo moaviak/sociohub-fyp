@@ -220,7 +220,17 @@ export const rolesMemberColumns: ColumnDef<Member>[] = [
   },
   {
     accessorKey: "roles",
-    header: "Roles",
+    header: "Current Roles",
     cell: ({ row }) => <RolesBadges roles={row.getValue("roles")} />,
+  },
+  {
+    accessorKey: "interestedRole.name",
+    header: "Interested Role",
+    cell: ({ row }) => {
+      const member = row.original;
+      if (member.interestedRole)
+        return <RolesBadges roles={[member.interestedRole]} />;
+      else return <p>N/A</p>;
+    },
   },
 ];

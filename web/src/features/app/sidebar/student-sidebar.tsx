@@ -38,7 +38,7 @@ export const StudentSidebar = () => {
   const societies = user && "registrationNumber" in user ? user.societies : [];
 
   return (
-    <div className="flex flex-col py-4">
+    <div className="flex flex-col py-4 xl:min-w-[200px]">
       {navItems.map((item) => (
         <NavItem key={item.href} item={item} />
       ))}

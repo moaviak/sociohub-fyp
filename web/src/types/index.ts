@@ -73,6 +73,7 @@ export enum RequestAction {
 export interface Member extends Student {
   roles?: Role[];
   societyId: string;
+  interestedRole?: Role;
 }
 
 export interface Role {

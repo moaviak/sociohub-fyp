@@ -311,6 +311,7 @@ export const handleRequest = asyncHandler(
           data: {
             studentId: request.studentId,
             societyId: request.societyId,
+            interestedRoleId: request.interestedRoleId,
           },
         }),
         prisma.studentSocietyRole.create({
@@ -420,6 +421,12 @@ export const getSocietyMembers = asyncHandler(
             },
           },
         },
+        interestedRole: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
       },
     });
 
@@ -440,6 +447,7 @@ export const getSocietyMembers = asyncHandler(
         lastName: member.student.lastName,
         email: member.student.email,
         registrationNumber: member.student.registrationNumber,
+        interestedRole: member.interestedRole,
         roles: filteredRoles.map((role) => ({
           id: role.id,
           name: role.name,

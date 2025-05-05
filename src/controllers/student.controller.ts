@@ -190,7 +190,7 @@ export const sendJoinRequest = asyncHandler(
         societyId: society.id,
         whatsappNo,
         semester,
-        interestedRoleId: interestedRole,
+        interestedRoleId: role.id,
         pdf: pdfUrl,
       },
       select: {
