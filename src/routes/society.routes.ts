@@ -7,6 +7,7 @@ import {
   deleteRoleValidator,
   handleRequestValidator,
   removeMemberValidator,
+  societySettingsValidator,
   updateRoleValidator,
 } from "../validators/society.validators";
 import { validate } from "../validators/validate";
@@ -14,18 +15,24 @@ import {
   createSociety,
   getRequestsHistory,
   getSocieties,
+  getSociety,
   getSocietyMembers,
   getSocietyRequests,
   handleRequest,
   removeMember,
+  updateSettings,
 } from "../controllers/society.controller";
-import { verifyMemberPrivilege } from "../middlewares/privilege.middlewares";
+import {
+  verifyMemberPrivilege,
+  verifySettingsPrivilege,
+} from "../middlewares/privilege.middlewares";
 import {
   createRole,
   deleteRole,
   getSocietyRoles,
   updateRole,
 } from "../controllers/roles.controller";
+import { societyJoinRequestValidator } from "../validators/student.validators";
 
 const router = Router();
 
@@ -39,6 +46,8 @@ router
     createSociety
   )
   .get(verifyJWT, getSocieties);
+
+router.route("/:societyId").get(verifyJWT, getSociety);
 
 router
   .route("/requests/:societyId")
@@ -89,6 +98,16 @@ router
     deleteRoleValidator(),
     validate,
     deleteRole
+  );
+
+router
+  .route("/settings/:societyId")
+  .patch(
+    verifyJWT,
+    verifySettingsPrivilege,
+    societySettingsValidator(),
+    validate,
+    updateSettings
   );
 
 export default router;

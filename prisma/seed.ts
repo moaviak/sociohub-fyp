@@ -130,6 +130,11 @@ async function main() {
         description:
           "Can manage society finances, event payments, withdrawals, and payment methods.",
       },
+      {
+        key: "society_settings_management",
+        title: "Society Settings Management",
+        description: "Can update society settings.",
+      },
     ],
   });
 

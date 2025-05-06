@@ -4,6 +4,7 @@ import {
   ChevronDown,
   CircleDollarSign,
   Megaphone,
+  Settings,
   ShieldHalf,
   Users,
 } from "lucide-react";
@@ -97,6 +98,15 @@ const getSocietyItems = (society: Society & { privileges: string[] }) => {
       icon: <ShieldHalf className="w-4 h-4" />,
       href: `/teams/${society.id}`,
     },
+    ...(society.privileges.includes(PRIVILEGES.SOCIETY_SETTINGS_MANAGEMENT)
+      ? [
+          {
+            label: "Settings",
+            icon: <Settings className="w-4 h-4" />,
+            href: `/settings/${society.id}`,
+          },
+        ]
+      : []),
   ];
 };
 

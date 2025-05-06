@@ -56,3 +56,18 @@ export const updateRoleValidator = () => {
 export const deleteRoleValidator = () => {
   return [body("roleId").trim().notEmpty().withMessage("Role id is required")];
 };
+
+export const societySettingsValidator = () => {
+  return [
+    body("acceptingNewMembers")
+      .notEmpty()
+      .withMessage("Field is missing.")
+      .isBoolean()
+      .withMessage("Invalid settings."),
+    body("membersLimit")
+      .notEmpty()
+      .withMessage("Field is missing.")
+      .isNumeric()
+      .withMessage("Invalid settings."),
+  ];
+};

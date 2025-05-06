@@ -6,6 +6,7 @@ import {
   ListTodo,
   Megaphone,
   MessageSquare,
+  Settings,
   ShieldHalf,
   Users,
 } from "lucide-react";
@@ -58,11 +59,16 @@ const navItems = [
     icon: <CalendarDays className="w-4 h-4" />,
     href: "/calendar",
   },
+  {
+    label: "Settings",
+    icon: <Settings className="w-4 h-4" />,
+    href: "/settings",
+  },
 ];
 
 export const AdvisorSidebar = () => {
   return (
-    <div className="flex flex-col py-4">
+    <div className="flex flex-col py-4 xl:min-w-[220px]">
       {navItems.map((item) => (
         <NavItem key={item.href} item={item} />
       ))}

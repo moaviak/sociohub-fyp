@@ -31,6 +31,8 @@ export interface Society {
   name: string;
   description: string;
   logo?: string;
+  acceptingNewMembers?: boolean;
+  membersLimit?: number;
   createdAt: string;
   updatedAt: string;
   advisor?: Advisor;

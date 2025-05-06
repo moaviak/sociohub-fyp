@@ -69,6 +69,7 @@ export const getSocieties = asyncHandler(
         name: true,
         description: true,
         logo: true,
+        acceptingNewMembers: true,
         createdAt: true,
         updatedAt: true,
         advisor: {
@@ -125,6 +126,36 @@ export const getSocieties = asyncHandler(
       );
   }
 );
+
+export const getSociety = asyncHandler(async (req: Request, res: Response) => {
+  const { societyId } = req.params;
+
+  if (!societyId) {
+    throw new ApiError(400, "Society id is required.");
+  }
+
+  const society = await prisma.society.findUnique({
+    where: { id: societyId },
+    select: {
+      id: true,
+      name: true,
+      description: true,
+      logo: true,
+      membersLimit: true,
+      acceptingNewMembers: true,
+      createdAt: true,
+      updatedAt: true,
+    },
+  });
+
+  if (!society) {
+    throw new ApiError(400, "Invalid society id.");
+  }
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, society, "Society successfully fetched."));
+});
 
 export const getSocietyRequests = asyncHandler(
   async (req: Request, res: Response) => {
@@ -519,5 +550,36 @@ export const removeMember = asyncHandler(
       .json(
         new ApiResponse(200, null, "Member has been successfully removed.")
       );
+  }
+);
+
+export const updateSettings = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { societyId } = req.params;
+    const { acceptingNewMembers, membersLimit } = req.body;
+
+    if (!societyId) {
+      throw new ApiError(400, "Society id is required.");
+    }
+
+    const society = await prisma.society.update({
+      where: { id: societyId },
+      data: { acceptingNewMembers, membersLimit },
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        acceptingNewMembers: true,
+        membersLimit: true,
+      },
+    });
+
+    if (!society) {
+      throw new ApiError(400, "Invalid society id.");
+    }
+
+    return res
+      .status(200)
+      .json(new ApiResponse(200, society, "Settings updated successfully."));
   }
 );

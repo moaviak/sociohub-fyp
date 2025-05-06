@@ -21,6 +21,7 @@ import SocietyFormPage from "@/pages/society-form-page";
 import VerifyEmailPage from "@/pages/verify-email-page";
 import RequestsPage from "@/pages/app/members/requests-page";
 import RequestsHistoryPage from "./pages/app/members/requests-history-page";
+import SocietySettingsPage from "./pages/app/society-settings-page";
 
 function App() {
   return (
@@ -53,7 +54,7 @@ function App() {
           {/* Student specific routes */}
           <Route path="/explore" element={<ExplorePage />} />
 
-          {/* Advisor specific  routes*/}
+          {/* Society specific  routes*/}
           <Route path="/members" element={<MembersPage />}>
             <Route path="roles" element={<RolesPage />} />
             <Route path="requests" element={<RequestsPage />}>
@@ -66,6 +67,9 @@ function App() {
                 <Route path="history" element={<RequestsHistoryPage />} />
               </Route>
             </Route>
+          </Route>
+          <Route path="/settings" element={<SocietySettingsPage />}>
+            <Route path=":societyId" element={<SocietySettingsPage />} />
           </Route>
 
           {/* Add other private routes here */}

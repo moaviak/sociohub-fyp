@@ -46,11 +46,11 @@ function AppLayout() {
 
   // Only render the outlet if user is authenticated
   return isAuthenticated ? (
-    <div className="flex w-full max-h-screen overflow-y-hidden">
+    <div className="flex w-full h-screen max-h-screen overflow-y-hidden">
       <Sidebar />
       <div className="flex-1 flex flex-col">
         <TopBar />
-        <div className="flex-1 mx-6 my-2 max-h-full overflow-hidden">
+        <div className="flex-1 px-6 py-2 max-h-full overflow-hidden">
           <Outlet />
         </div>
       </div>

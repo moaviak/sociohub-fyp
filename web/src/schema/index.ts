@@ -160,3 +160,10 @@ export const RolesFormSchema = z.object({
 });
 
 export type RolesFormValues = z.infer<typeof RolesFormSchema>;
+
+export const SocietySettingsSchema = z.object({
+  membersLimit: z.number({ message: "Please enter a valid value" }).default(40),
+  acceptingNewMembers: z.boolean().default(true),
+});
+
+export type SocietySettingsValues = z.infer<typeof SocietySettingsSchema>;

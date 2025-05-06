@@ -138,6 +138,10 @@ export const sendJoinRequest = asyncHandler(
       throw new ApiError(400, "Invalid society.");
     }
 
+    if (!society.acceptingNewMembers) {
+      throw new ApiError(400, "Society is closed for registration.");
+    }
+
     if (!role) {
       throw new ApiError(400, "Invalid role selected.");
     }

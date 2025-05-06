@@ -48,7 +48,9 @@ export const SocietyTile = ({ society }: SocietyProps) => {
           {society.description}
         </p>
       </div>
-      {society.isMember || society.hasRequestedToJoin ? (
+      {!society.acceptingNewMembers ? (
+        <></>
+      ) : society.isMember || society.hasRequestedToJoin ? (
         <Button
           variant={society.hasRequestedToJoin ? "destructive" : "outline"}
           disabled={society.isMember || isLoading}

@@ -140,6 +140,11 @@ export const ROLES_PRIVILEGES = [
     description:
       "Can manage society finances, event payments, withdrawals, and payment methods.",
   },
+  {
+    key: "society_settings_management",
+    title: "Society Settings Management",
+    description: "Can update society settings.",
+  },
 ];
 
 export const PRIVILEGES = {
@@ -149,6 +154,7 @@ export const PRIVILEGES = {
   CONTENT_MANAGEMENT: "content_management",
   EVENT_TICKET_HANDLING: "event_ticket_handling",
   PAYMENT_FINANCE_MANAGEMENT: "payment_finance_management",
+  SOCIETY_SETTINGS_MANAGEMENT: "society_settings_management",
 };
 
 export const REJECT_REASONS = [

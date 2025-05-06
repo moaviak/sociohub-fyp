@@ -168,7 +168,7 @@ export const RolesForm = ({ role, children }: RolesFormProps) => {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className="sm:max-w-2xl">
+      <DialogContent className="sm:max-w-2xl max-h-[90vh] min-h-0 flex flex-col">
         <DialogHeader>
           <DialogTitle className="text-primary-600 h5-semibold">
             {role ? "Edit" : "Create"} Role
@@ -181,8 +181,13 @@ export const RolesForm = ({ role, children }: RolesFormProps) => {
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            {renderStepContent()}
+          <form
+            onSubmit={form.handleSubmit(onSubmit)}
+            className="space-y-4 overflow-hidden flex-1 flex flex-col justify-between"
+          >
+            <div className="flex-1 overflow-y-auto custom-scrollbar px-2">
+              {renderStepContent()}
+            </div>
             <DialogFooter className="flex justify-between w-full pt-4">
               <div>
                 {step > 1 && (

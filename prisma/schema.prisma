@@ -54,14 +54,17 @@ model Advisor {
 }
 
 model Society {
-  id          String   @id @default(uuid())
-  name        String   @unique
-  description String
-  logo        String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  advisor     Advisor? @relation
+  id                  String  @id @default(uuid())
+  name                String  @unique
+  description         String
+  logo                String?
+  membersLimit        Int     @default(40)
+  acceptingNewMembers Boolean @default(true)
 
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  advisor      Advisor?         @relation
   roles        Role[]
   joinRequests JoinRequest[]    @relation
   members      StudentSociety[] @relation
