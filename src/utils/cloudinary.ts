@@ -34,16 +34,16 @@ async function compressPDF(pdfPath: string): Promise<string> {
       objectsPerTick: 100, // Process more objects per tick for better compression
     });
 
-    // Write the compressed PDF to a new file
-    const compressedPath = path.join(
+    // Create a temporary file path for the compressed version
+    const tempCompressedPath = path.join(
       path.dirname(pdfPath),
-      `compressed-${path.basename(pdfPath)}`
+      `temp-${path.basename(pdfPath)}`
     );
-    fs.writeFileSync(compressedPath, compressedBytes);
+    fs.writeFileSync(tempCompressedPath, compressedBytes);
 
     // Compare sizes and use the smaller one
     const originalSize = fs.statSync(pdfPath).size;
-    const compressedSize = fs.statSync(compressedPath).size;
+    const compressedSize = fs.statSync(tempCompressedPath).size;
 
     console.log(
       `Original PDF size: ${(originalSize / 1024).toFixed(
@@ -52,12 +52,13 @@ async function compressPDF(pdfPath: string): Promise<string> {
     );
 
     if (compressedSize < originalSize) {
-      // Delete the original if compression was successful
+      // Replace the original with the compressed version
       fs.unlinkSync(pdfPath);
-      return compressedPath;
+      fs.renameSync(tempCompressedPath, pdfPath);
+      return pdfPath;
     } else {
       // Delete the compressed version if it's not smaller
-      fs.unlinkSync(compressedPath);
+      fs.unlinkSync(tempCompressedPath);
       return pdfPath;
     }
   } catch (error) {

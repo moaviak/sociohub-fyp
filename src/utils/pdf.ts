@@ -19,6 +19,7 @@ interface PDFData {
   email: string;
   whatsappNo: string;
   semester: string;
+  society: string;
   role: string;
   reason: string;
   expectations: string;
