@@ -1,11 +1,12 @@
 import fs from "fs";
+import fetch from "node-fetch";
 import { Request } from "express";
-import { Advisor, Student } from "@prisma/client";
 
 import prisma from "../db";
-import { UserType } from "../types";
-import { ApiError } from "./ApiError";
 import logger from "../logger/winston.logger";
+import path from "path";
+import { v4 as uuidv4 } from "uuid";
+import { uploadOnCloudinary } from "./cloudinary";
 
 /**
  * @param {import("express").Request} req
@@ -60,37 +61,6 @@ export const removeLocalFile = (localPath: string) => {
   });
 };
 
-export const generateAccessAndRefreshTokens = async (
-  userId: string,
-  userType: UserType
-) => {
-  try {
-    const user = await prisma[userType].findUnique({ where: { id: userId } });
-
-    if (!user) throw new ApiError(404, "User not found");
-
-    const accessToken =
-      userType === UserType.STUDENT
-        ? prisma.student.generateAccessToken(user as Student)
-        : prisma.advisor.generateAccessToken(user as Advisor);
-
-    const refreshToken =
-      userType === UserType.STUDENT
-        ? prisma.student.generateRefreshToken(user as Student)
-        : prisma.advisor.generateRefreshToken(user as Advisor);
-
-    // Update the user with new refresh token
-    await (prisma[userType] as any).update({
-      where: { id: userId },
-      data: { refreshToken },
-    });
-
-    return { accessToken, refreshToken };
-  } catch (error) {
-    throw new ApiError(500, "Something went wrong while generating tokens");
-  }
-};
-
 /**
  *
  * @param {string} fileName
@@ -108,6 +78,63 @@ export const getLocalPath = (fileName: string) => {
 export const extractPublicId = (url: string): string | null => {
   const matches = url.match(/\/upload\/(?:v\d+\/)?(.+?)(\.[a-z]+)?$/);
   return matches ? matches[1] : null;
+};
+
+/**
+ * Generates a URL for an avatar based on the user's initials, downloads it,
+ * and uploads it to Cloudinary.
+ * @param firstName - The first name of the user (e.g., "Muhammad")
+ * @param lastName - The last name of the user (e.g., "Moavia")
+ * @returns A Promise that resolves to the Cloudinary URL of the uploaded avatar
+ */
+export const generateAndUploadAvatar = async (
+  userId: string,
+  firstName: string,
+  lastName: string
+): Promise<string> => {
+  try {
+    // Generate the avatar URL from initials
+    const avatarUrl = generateAvatarUrlFromInitials(firstName, lastName);
+
+    // Create temp directory if it doesn't exist
+    const tempDir = path.join(process.cwd(), "public", "temp");
+    if (!fs.existsSync(tempDir)) {
+      fs.mkdirSync(tempDir, { recursive: true });
+    }
+
+    // Generate a unique filename for the downloaded image
+    const uniqueFilename = `${uuidv4()}.png`;
+    const localFilePath = path.join(tempDir, uniqueFilename);
+
+    // Download the image
+    const response = await fetch(avatarUrl);
+    if (!response.ok) {
+      throw new Error(`Failed to download avatar: ${response.statusText}`);
+    }
+
+    // Save the image locally
+    const fileStream = fs.createWriteStream(localFilePath);
+    await new Promise<void>((resolve, reject) => {
+      response.body.pipe(fileStream);
+      response.body.on("error", (err) => {
+        reject(err);
+      });
+      fileStream.on("finish", () => {
+        resolve();
+      });
+    });
+
+    // Upload the image to Cloudinary
+    const cloudinaryResult = await uploadOnCloudinary(localFilePath, userId);
+
+    // Clean up the local file
+    fs.unlinkSync(localFilePath);
+
+    return cloudinaryResult?.secure_url || "";
+  } catch (error) {
+    console.error("Error generating and uploading avatar:", error);
+    throw error;
+  }
 };
 
 /**

@@ -2,16 +2,18 @@ import { Router } from "express";
 
 import { validate } from "../validators/validate";
 import {
-  cancelJoinRequest,
   getMySocieties,
   registerStudent,
-  sendJoinRequest,
 } from "../controllers/student.controller";
 import {
   societyJoinRequestValidator,
   studentRegisterValidator,
 } from "../validators/student.validators";
 import { verifyJWT } from "../middlewares/auth.middlewares";
+import {
+  cancelJoinRequest,
+  sendJoinRequest,
+} from "../controllers/request.controller";
 
 const router = Router();
 

@@ -33,6 +33,7 @@ declare type AuthResponse = {
   user: Student | Advisor;
   userType: UserType;
   accessToken?: string;
+  refreshToken?: string;
 };
 
 declare interface Society {

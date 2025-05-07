@@ -2,23 +2,16 @@ import { Router } from "express";
 import { verifyJWT } from "../middlewares/auth.middlewares";
 import { upload } from "../middlewares/multer.middlewares";
 import {
-  createRoleValidator,
   createSocietyValidator,
-  deleteRoleValidator,
-  handleRequestValidator,
   removeMemberValidator,
   societySettingsValidator,
-  updateRoleValidator,
 } from "../validators/society.validators";
 import { validate } from "../validators/validate";
 import {
   createSociety,
-  getRequestsHistory,
   getSocieties,
   getSociety,
   getSocietyMembers,
-  getSocietyRequests,
-  handleRequest,
   removeMember,
   updateSettings,
 } from "../controllers/society.controller";
@@ -26,13 +19,8 @@ import {
   verifyMemberPrivilege,
   verifySettingsPrivilege,
 } from "../middlewares/privilege.middlewares";
-import {
-  createRole,
-  deleteRole,
-  getSocietyRoles,
-  updateRole,
-} from "../controllers/roles.controller";
-import { societyJoinRequestValidator } from "../validators/student.validators";
+import RequestRouter from "./request.routes";
+import RolesRouter from "./roles.routes";
 
 const router = Router();
 
@@ -49,20 +37,7 @@ router
 
 router.route("/:societyId").get(verifyJWT, getSociety);
 
-router
-  .route("/requests/:societyId")
-  .get(verifyJWT, verifyMemberPrivilege, getSocietyRequests)
-  .put(
-    verifyJWT,
-    verifyMemberPrivilege,
-    handleRequestValidator(),
-    validate,
-    handleRequest
-  );
-
-router
-  .route("/requests/:id/history")
-  .get(verifyJWT, verifyMemberPrivilege, getRequestsHistory);
+router.use("/requests", RequestRouter);
 
 router
   .route("/members/:societyId")
@@ -75,30 +50,7 @@ router
     removeMember
   );
 
-router
-  .route("/roles/:societyId")
-  .get(verifyJWT, verifyMemberPrivilege, getSocietyRoles)
-  .post(
-    verifyJWT,
-    verifyMemberPrivilege,
-    createRoleValidator(),
-    validate,
-    createRole
-  )
-  .put(
-    verifyJWT,
-    verifyMemberPrivilege,
-    updateRoleValidator(),
-    validate,
-    updateRole
-  )
-  .delete(
-    verifyJWT,
-    verifyMemberPrivilege,
-    deleteRoleValidator(),
-    validate,
-    deleteRole
-  );
+router.use("/roles", RolesRouter);
 
 router
   .route("/settings/:societyId")

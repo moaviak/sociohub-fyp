@@ -19,6 +19,7 @@ export type IUser = {
   lastName: string;
   displayName?: string;
   avatar?: string;
+  isEmailVerified: boolean;
   registrationNumber?: string;
   societyId?: string;
   userType: UserType;

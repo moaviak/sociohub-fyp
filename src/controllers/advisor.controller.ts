@@ -6,13 +6,11 @@ import { ApiError } from "../utils/ApiError";
 import { ApiResponse } from "../utils/ApiResponse";
 import { asyncHandler } from "../utils/asyncHandler";
 import { sendVerificationEmail } from "../utils/mail";
-import {
-  generateAccessAndRefreshTokens,
-  generateAvatarUrlFromInitials,
-  getLocalPath,
-} from "../utils/helpers";
+import { generateAvatarUrlFromInitials, getLocalPath } from "../utils/helpers";
 import { UserType } from "../types";
 import { uploadOnCloudinary } from "../utils/cloudinary";
+import { generateAccessAndRefreshTokens } from "../utils/authHelpers";
+import { registerAdvisorService } from "../services/advisor.services";
 
 export const listSocietyAdvisors = asyncHandler(
   async (req: Request, res: Response) => {
@@ -31,65 +29,14 @@ export const registerAdvisor = asyncHandler(
     const { firstName, lastName, displayName, email, password, phone } =
       req.body;
 
-    const existingAdvisor = await prisma.advisor.findFirst({
-      where: {
-        email,
-      },
-    });
-
-    // check for existing advisor
-    if (existingAdvisor?.email === email) {
-      throw new ApiError(409, "Advisor already exists with this email.");
-    }
-
-    // validate email from list
-    const isValidEmail = await prisma.societyAdvisor.findUnique({
-      where: { email },
-    });
-
-    if (!isValidEmail) {
-      throw new ApiError(400, "Invalid email address.");
-    }
-
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    const avatar = req.file?.filename && getLocalPath(req.file?.filename);
-    const uploadResult = await uploadOnCloudinary(avatar || "", email);
-
-    // Generate Verification code
-    const { code, codeExpiry } = prisma.advisor.generateVerificationCode();
-
-    const advisor = await prisma.advisor.create({
-      data: {
-        firstName,
-        lastName,
-        email,
-        displayName,
-        avatar:
-          uploadResult?.secure_url ??
-          generateAvatarUrlFromInitials(firstName, lastName),
-        phone: phone || null,
-        password: hashedPassword,
-        emailVerificationCode: code,
-        emailVerificationExpiry: new Date(codeExpiry),
-      },
-      select: {
-        id: true,
-        firstName: true,
-        lastName: true,
-        email: true,
-        avatar: true,
-        societyId: true,
-        displayName: true,
-        createdAt: true,
-        updatedAt: true,
-      },
-    });
-
-    await sendVerificationEmail(advisor.email, {
-      displayName: advisor.displayName,
-      verificationCode: code,
-      userType: "advisor",
+    const advisor = await registerAdvisorService({
+      firstName,
+      lastName,
+      displayName,
+      email,
+      password,
+      phone,
+      file: req.file,
     });
 
     const { accessToken, refreshToken } = await generateAccessAndRefreshTokens(
@@ -108,11 +55,12 @@ export const registerAdvisor = asyncHandler(
       .cookie("refreshToken", refreshToken, options)
       .json(
         new ApiResponse(
-          200,
+          201,
           {
-            user: { ...advisor, societyName: isValidEmail.society },
+            user: { ...advisor, societyName: advisor.society },
             userType: UserType.ADVISOR,
             accessToken,
+            refreshToken,
           },
           "Advisor registered successfully and verification code has been sent to your email."
         )
