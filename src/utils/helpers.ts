@@ -82,63 +82,112 @@ export const extractPublicId = (url: string): string | null => {
 
 /**
  * Generates a URL for an avatar based on the user's initials, downloads it,
- * and uploads it to Cloudinary.
+ * and uploads it to Cloudinary with retry mechanism.
+ * @param userId - The Id of the user
  * @param firstName - The first name of the user (e.g., "Muhammad")
  * @param lastName - The last name of the user (e.g., "Moavia")
+ * @param maxRetries - Maximum number of retry attempts (default: 3)
+ * @param retryDelay - Delay between retries in ms (default: 1000)
  * @returns A Promise that resolves to the Cloudinary URL of the uploaded avatar
  */
 export const generateAndUploadAvatar = async (
   userId: string,
   firstName: string,
-  lastName: string
+  lastName: string,
+  maxRetries: number = 3,
+  retryDelay: number = 1000
 ): Promise<string> => {
-  try {
-    // Generate the avatar URL from initials
-    const avatarUrl = generateAvatarUrlFromInitials(firstName, lastName);
+  let retryCount = 0;
 
-    // Create temp directory if it doesn't exist
-    const tempDir = path.join(process.cwd(), "public", "temp");
-    if (!fs.existsSync(tempDir)) {
-      fs.mkdirSync(tempDir, { recursive: true });
-    }
+  while (retryCount <= maxRetries) {
+    try {
+      // Generate the avatar URL from initials
+      const avatarUrl = generateAvatarUrlFromInitials(firstName, lastName);
 
-    // Generate a unique filename for the downloaded image
-    const uniqueFilename = `${uuidv4()}.png`;
-    const localFilePath = path.join(tempDir, uniqueFilename);
+      // Create temp directory if it doesn't exist
+      const tempDir = path.join(__dirname, "../../public/temp");
+      if (!fs.existsSync(tempDir)) {
+        fs.mkdirSync(tempDir, { recursive: true });
+      }
 
-    // Download the image
-    const response = await fetch(avatarUrl);
-    if (!response.ok) {
-      throw new Error(`Failed to download avatar: ${response.statusText}`);
-    }
+      // Generate a unique filename for the downloaded image
+      const uniqueFilename = `${uuidv4()}.png`;
+      const localFilePath = path.join(tempDir, uniqueFilename);
 
-    // Save the image locally
-    const fileStream = fs.createWriteStream(localFilePath);
-    await new Promise<void>((resolve, reject) => {
-      response.body.pipe(fileStream);
-      response.body.on("error", (err) => {
-        reject(err);
+      // Download the image with timeout
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+
+      const response = await fetch(avatarUrl, {
+        signal: controller.signal,
+        timeout: 10000, // Additional timeout parameter
       });
-      fileStream.on("finish", () => {
-        resolve();
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        throw new Error(`Failed to download avatar: ${response.statusText}`);
+      }
+
+      // Save the image locally
+      const fileStream = fs.createWriteStream(localFilePath);
+      await new Promise<void>((resolve, reject) => {
+        response.body.pipe(fileStream);
+        response.body.on("error", (err) => {
+          reject(err);
+        });
+        fileStream.on("finish", () => {
+          resolve();
+        });
       });
-    });
 
-    // Upload the image to Cloudinary
-    const cloudinaryResult = await uploadOnCloudinary(localFilePath, userId);
+      // Check if file was actually created and has content
+      if (
+        !fs.existsSync(localFilePath) ||
+        fs.statSync(localFilePath).size === 0
+      ) {
+        throw new Error("Downloaded file is empty or not created");
+      }
 
-    // Clean up the local file
-    fs.unlinkSync(localFilePath);
+      // Upload the image to Cloudinary
+      const cloudinaryResult = await uploadOnCloudinary(localFilePath, userId);
 
-    return cloudinaryResult?.secure_url || "";
-  } catch (error) {
-    console.error("Error generating and uploading avatar:", error);
-    throw error;
+      // Clean up the local file
+      try {
+        fs.unlinkSync(localFilePath);
+      } catch (cleanupError) {
+        console.warn("Failed to clean up temporary file:", cleanupError);
+        // Non-critical error, continue execution
+      }
+
+      return cloudinaryResult?.secure_url || "";
+    } catch (error) {
+      retryCount++;
+
+      // If we've exhausted all retries, throw the error
+      if (retryCount > maxRetries) {
+        console.error(`Failed all ${maxRetries} attempts to generate avatar`);
+        throw error;
+      }
+
+      // Log retry attempt
+      console.warn(
+        `Avatar generation attempt ${retryCount} failed. Retrying in ${retryDelay}ms...`,
+        error
+      );
+
+      // Wait before retrying
+      await new Promise((resolve) => setTimeout(resolve, retryDelay));
+    }
   }
+
+  // This should never be reached due to the throw in the catch block above
+  // but TypeScript needs a return statement
+  throw new Error("Failed to generate and upload avatar after maximum retries");
 };
 
 /**
- * Generates a URL for an avatar based on the user's initials.
+ * Generates a URL for an avatar based on the user's initials with proper URL encoding.
  * @param firstName - The first name of the user (e.g., "Muhammad")
  * @param lastName - The last name of the user (e.g., "Moavia")
  * @returns A URL string for the avatar
@@ -149,7 +198,30 @@ export const generateAvatarUrlFromInitials = (
 ): string => {
   const baseUrl = "https://avatar.iran.liara.run/username";
 
-  return `${baseUrl}?username=${firstName}+${lastName}`;
+  // Sanitize inputs - trim whitespace and ensure they're defined
+  const sanitizedFirstName = (firstName || "").trim();
+  const sanitizedLastName = (lastName || "").trim();
+
+  // Default to a single letter if name is empty
+  const firstInitial = sanitizedFirstName ? sanitizedFirstName[0] : "U";
+  const lastInitial = sanitizedLastName ? sanitizedLastName[0] : "U";
+
+  // Build username - use initials if both names are provided, otherwise use available name
+  let username = "";
+  if (sanitizedFirstName && sanitizedLastName) {
+    username = `${firstInitial}${lastInitial}`;
+  } else if (sanitizedFirstName) {
+    username = sanitizedFirstName;
+  } else if (sanitizedLastName) {
+    username = sanitizedLastName;
+  } else {
+    username = "User"; // Default if no name provided
+  }
+
+  // Properly encode the username for URL
+  const encodedUsername = encodeURIComponent(username);
+
+  return `${baseUrl}?username=${encodedUsername}`;
 };
 
 /**
