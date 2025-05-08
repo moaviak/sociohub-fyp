@@ -4,6 +4,7 @@ import { IUser } from "../types";
 import { ApiError } from "../utils/ApiError";
 import prisma from "../db";
 import { ApiResponse } from "../utils/ApiResponse";
+import { sendRoleAssignmentEmails } from "../services/role-email.service";
 
 export const getSocietyRoles = asyncHandler(
   async (req: Request, res: Response) => {
@@ -167,6 +168,17 @@ export const createRole = asyncHandler(async (req: Request, res: Response) => {
     return newRole;
   });
 
+  // Send notification emails in the background
+  if (Array.isArray(members) && members.length > 0) {
+    sendRoleAssignmentEmails({
+      roleId: role.id,
+      societyId,
+      memberIds: members,
+    }).catch((error) => {
+      console.error("Background email processing failed:", error);
+    });
+  }
+
   res
     .status(201)
     .json(
@@ -275,6 +287,13 @@ export const updateRole = asyncHandler(async (req: Request, res: Response) => {
 
   const privilegeIds = fetchedPrivileges.map((p) => p.id);
 
+  // Get current members before update to track changes
+  const currentAssignments = await prisma.studentSocietyRole.findMany({
+    where: { roleId },
+    select: { studentId: true },
+  });
+  const currentMemberIds = currentAssignments.map((a) => a.studentId);
+
   // Transaction to update role, reset privileges and member assignments
   const updatedRole = await prisma.$transaction(async (tx) => {
     // Update the role
@@ -309,6 +328,23 @@ export const updateRole = asyncHandler(async (req: Request, res: Response) => {
 
     return updated;
   });
+
+  // Determine newly assigned members (those in members but not in currentMemberIds)
+  const newlyAssignedMembers =
+    members && members.length > 0
+      ? members.filter((id: string) => !currentMemberIds.includes(id))
+      : [];
+
+  // Send notification emails to newly assigned members in the background
+  if (newlyAssignedMembers.length > 0) {
+    sendRoleAssignmentEmails({
+      roleId,
+      societyId,
+      memberIds: newlyAssignedMembers,
+    }).catch((error) => {
+      console.error("Background email processing failed:", error);
+    });
+  }
 
   return res
     .status(200)

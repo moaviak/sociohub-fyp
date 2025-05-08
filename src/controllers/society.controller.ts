@@ -6,6 +6,7 @@ import { ApiError } from "../utils/ApiError";
 import { uploadOnCloudinary } from "../utils/cloudinary";
 import { getLocalPath, haveMembersPrivilege } from "../utils/helpers";
 import { ApiResponse } from "../utils/ApiResponse";
+import { sendMemberRemovalStatusEmail } from "../services/society-email.service";
 
 export const createSociety = asyncHandler(
   async (req: Request, res: Response) => {
@@ -271,7 +272,7 @@ export const getSocietyMembers = asyncHandler(
 export const removeMember = asyncHandler(
   async (req: Request, res: Response) => {
     const { societyId } = req.params;
-    const { studentId } = req.body;
+    const { studentId, reason } = req.body;
     const user = req.user as IUser;
 
     if (!societyId || !studentId) {
@@ -313,6 +314,15 @@ export const removeMember = asyncHandler(
         },
       }),
     ]);
+
+    // Send email notification in the background
+    sendMemberRemovalStatusEmail({
+      studentId,
+      societyId,
+      reason,
+    }).catch((error) => {
+      console.error("Background email processing failed:", error);
+    });
 
     res
       .status(200)

@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      .container {
+        font-family: Arial, sans-serif;
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+      .logo {
+        text-align: center;
+        margin-bottom: 30px;
+      }
+      .message {
+        background-color: #f8f9fa;
+        padding: 20px;
+        border-radius: 8px;
+        margin: 25px 0;
+      }
+      .reason-container {
+        background-color: #f9f9f9;
+        border-left: 4px solid #666;
+        padding: 15px;
+        margin: 20px 0;
+        border-radius: 4px;
+      }
+      .next-steps {
+        margin: 30px 0;
+      }
+      .button {
+        display: inline-block;
+        background-color: #0066cc;
+        color: white;
+        padding: 12px 24px;
+        text-decoration: none;
+        border-radius: 4px;
+        font-weight: bold;
+        margin-top: 15px;
+      }
+      .footer {
+        color: #666;
+        font-size: 14px;
+        margin-top: 30px;
+        text-align: center;
+        border-top: 1px solid #eee;
+        padding-top: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="logo">
+        <img
+          src="http://localhost:3000/assets/images/logo-sociohub.svg"
+          alt="SocioHub"
+          width="120"
+        />
+      </div>
+
+      <h2>Hello <%= studentName %>,</h2>
+
+      <div class="message">
+        <p>
+          This is to inform you that your membership with
+          <strong><%= societyName %></strong> has been discontinued.
+        </p>
+      </div>
+
+      <% if (reason && reason.trim().length > 0) { %>
+      <p>The following reason was provided:</p>
+      <div class="reason-container">
+        <p><%= reason %></p>
+      </div>
+      <% } %>
+
+      <div class="next-steps">
+        <p>What's next?</p>
+        <ul>
+          <li>
+            You can explore other societies that align with your interests
+          </li>
+          <li>
+            You may reach out to the society leadership for clarification if
+            needed
+          </li>
+          <li>Continue to participate in other campus activities</li>
+        </ul>
+      </div>
+
+      <p>
+        SocioHub offers many opportunities to stay engaged with campus life!
+      </p>
+
+      <a href="http://localhost:5173/explore" class="button"
+        >Explore Other Societies</a
+      >
+
+      <div class="footer">
+        <p>Best Regards,<br />SocioHub Team</p>
+      </div>
+    </div>
+  </body>
+</html>

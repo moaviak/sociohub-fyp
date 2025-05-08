@@ -11,7 +11,7 @@ import {
   refreshAccessTokenService,
   resendEmailVerificationService,
   verifyEmailService,
-} from "../services/auth.services";
+} from "../services/auth.service";
 
 export const loginUser = asyncHandler(async (req, res) => {
   const result = await loginUserService(req.body);

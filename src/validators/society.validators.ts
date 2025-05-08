@@ -12,6 +12,7 @@ export const createSocietyValidator = () => {
 
 export const removeMemberValidator = () => {
   return [
+    body("reason").trim().notEmpty().withMessage("Removal reason is required."),
     body("studentId").trim().notEmpty().withMessage("Student ID is required."),
   ];
 };

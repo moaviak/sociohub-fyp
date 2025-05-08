@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      .container {
+        font-family: Arial, sans-serif;
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+      .logo {
+        text-align: center;
+        margin-bottom: 30px;
+      }
+      .message {
+        background-color: #f0f7ff;
+        border-left: 4px solid #0066cc;
+        padding: 15px;
+        margin: 20px 0;
+        border-radius: 4px;
+      }
+      .role-info {
+        background-color: #f8f9fa;
+        padding: 15px;
+        border-radius: 8px;
+        margin: 25px 0;
+      }
+      .button {
+        display: inline-block;
+        background-color: #0066cc;
+        color: white;
+        padding: 12px 24px;
+        text-decoration: none;
+        border-radius: 4px;
+        font-weight: bold;
+        margin-top: 15px;
+      }
+      .footer {
+        color: #666;
+        font-size: 14px;
+        margin-top: 30px;
+        text-align: center;
+        border-top: 1px solid #eee;
+        padding-top: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="logo">
+        <img
+          src="http://localhost:3000/assets/images/logo-sociohub.svg"
+          alt="SocioHub"
+          width="120"
+        />
+      </div>
+
+      <h2>Hello <%= studentName %>,</h2>
+
+      <div class="message">
+        <p>
+          You have been assigned a new role in
+          <strong><%= societyName %></strong>!
+        </p>
+      </div>
+
+      <p>
+        We're pleased to inform you that you have been assigned the role of
+        <strong><%= roleName %></strong>.
+      </p>
+
+      <div class="role-info">
+        <h3>About Your Role:</h3>
+        <% if (roleDescription && roleDescription.trim().length > 0) { %>
+        <p><%= roleDescription %></p>
+        <% } else { %>
+        <p>
+          This role comes with specific responsibilities and privileges within
+          the society.
+        </p>
+        <% } %> <% if (privileges && privileges.length > 0) { %>
+        <h4>Your Role Privileges:</h4>
+        <ul>
+          <% privileges.forEach(function(privilege) { %>
+          <li><%= privilege %></li>
+          <% }); %>
+        </ul>
+        <% } %>
+      </div>
+
+      <p>
+        Log in to your SocioHub account to see your updated role and
+        responsibilities.
+      </p>
+
+      <a href="http://localhost:5173/societies/<%= societyId %>" class="button"
+        >View Society</a
+      >
+
+      <div class="footer">
+        <p>Best Regards,<br />The <%= societyName %> Team</p>
+      </div>
+    </div>
+  </body>
+</html>

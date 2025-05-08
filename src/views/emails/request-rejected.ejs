@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      .container {
+        font-family: Arial, sans-serif;
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+      .logo {
+        text-align: center;
+        margin-bottom: 30px;
+      }
+      .message {
+        background-color: #f8f9fa;
+        padding: 20px;
+        border-radius: 8px;
+        margin: 25px 0;
+      }
+      .reason-container {
+        background-color: #f9f9f9;
+        border-left: 4px solid #666;
+        padding: 15px;
+        margin: 20px 0;
+        border-radius: 4px;
+      }
+      .other-options {
+        margin: 30px 0;
+      }
+      .button {
+        display: inline-block;
+        background-color: #0066cc;
+        color: white;
+        padding: 12px 24px;
+        text-decoration: none;
+        border-radius: 4px;
+        font-weight: bold;
+        margin-top: 15px;
+      }
+      .footer {
+        color: #666;
+        font-size: 14px;
+        margin-top: 30px;
+        text-align: center;
+        border-top: 1px solid #eee;
+        padding-top: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="logo">
+        <img
+          src="http://localhost:3000/assets/images/logo-sociohub.svg"
+          alt="SocioHub"
+          width="120"
+        />
+      </div>
+
+      <h2>Hello <%= studentName %>,</h2>
+
+      <div class="message">
+        <p>
+          Thank you for your interest in joining
+          <strong><%= societyName %></strong>.
+        </p>
+        <p>
+          After careful consideration, we regret to inform you that your request
+          to join the society has not been approved at this time.
+        </p>
+      </div>
+
+      <% if (rejectionReason && rejectionReason.trim().length > 0) { %>
+      <p>The society has provided the following feedback:</p>
+      <div class="reason-container">
+        <p><%= rejectionReason %></p>
+      </div>
+      <% } %>
+
+      <div class="other-options">
+        <p>We encourage you to:</p>
+        <ul>
+          <li>Explore other societies that might align with your interests</li>
+          <li>Apply again in the future with an updated application</li>
+          <li>Reach out if you have any questions or need clarification</li>
+        </ul>
+      </div>
+
+      <p>
+        Keep exploring opportunities on SocioHub. There are many ways to get
+        involved in campus life!
+      </p>
+
+      <a href="http://localhost:5173/explore" class="button"
+        >Explore Other Societies</a
+      >
+
+      <div class="footer">
+        <p>Best Regards,<br />The <%= societyName %> Team</p>
+      </div>
+    </div>
+  </body>
+</html>

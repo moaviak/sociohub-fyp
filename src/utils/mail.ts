@@ -6,7 +6,7 @@ import path from "path";
 import logger from "../logger/winston.logger";
 
 interface EmailOptions {
-  email: string;
+  email: string | string[];
   subject: string;
   template: string;
   data: Record<string, any>;
@@ -16,6 +16,33 @@ interface VerificationEmailData {
   displayName: string;
   verificationCode: string;
   userType: "student" | "advisor";
+}
+
+interface RequestApprovalEmailData {
+  studentName: string;
+  societyName: string;
+  roleName: string;
+}
+
+interface RequestRejectionEmailData {
+  studentName: string;
+  societyName: string;
+  rejectionReason?: string;
+}
+
+interface MemberRemovalEmailData {
+  studentName: string;
+  societyName: string;
+  reason?: string;
+}
+
+interface RoleAssignmentEmailData {
+  studentName: string;
+  societyName: string;
+  societyId: string;
+  roleName: string;
+  roleDescription?: string;
+  privileges?: string[];
 }
 
 /**
@@ -65,6 +92,54 @@ export const sendVerificationEmail = async (
     email,
     subject: "Verify your email",
     template: "verification.ejs",
+    data,
+  });
+};
+
+export const sendRequestApprovalEmail = async (
+  email: string,
+  data: RequestApprovalEmailData
+) => {
+  await sendEmail({
+    email,
+    subject: `Welcome to ${data.societyName}!`,
+    template: "request-approved.ejs",
+    data,
+  });
+};
+
+export const sendRequestRejectionEmail = async (
+  email: string,
+  data: RequestRejectionEmailData
+) => {
+  await sendEmail({
+    email,
+    subject: `Update on your request to join ${data.societyName}`,
+    template: "request-rejected.ejs",
+    data,
+  });
+};
+
+export const sendMemberRemovalEmail = async (
+  email: string,
+  data: MemberRemovalEmailData
+) => {
+  await sendEmail({
+    email,
+    subject: `Important: Update on your ${data.societyName} membership`,
+    template: "member-removed.ejs",
+    data,
+  });
+};
+
+export const sendRoleAssignmentEmail = async (
+  emails: string | string[],
+  data: RoleAssignmentEmailData
+) => {
+  await sendEmail({
+    email: emails,
+    subject: `Role Assignment: ${data.roleName} in ${data.societyName}`,
+    template: "role-assigned.ejs",
     data,
   });
 };

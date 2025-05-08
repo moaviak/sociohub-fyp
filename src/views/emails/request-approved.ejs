@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      .container {
+        font-family: Arial, sans-serif;
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+      .logo {
+        text-align: center;
+        margin-bottom: 30px;
+      }
+      .welcome-message {
+        background-color: #f0f7ff;
+        border-left: 4px solid #0066cc;
+        padding: 15px;
+        margin: 20px 0;
+        border-radius: 4px;
+      }
+      .society-info {
+        background-color: #f8f9fa;
+        padding: 15px;
+        border-radius: 8px;
+        margin: 25px 0;
+      }
+      .button {
+        display: inline-block;
+        background-color: #0066cc;
+        color: white;
+        padding: 12px 24px;
+        text-decoration: none;
+        border-radius: 4px;
+        font-weight: bold;
+        margin-top: 15px;
+      }
+      .footer {
+        color: #666;
+        font-size: 14px;
+        margin-top: 30px;
+        text-align: center;
+        border-top: 1px solid #eee;
+        padding-top: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="logo">
+        <img
+          src="http://localhost:3000/assets/images/logo-sociohub.svg"
+          alt="SocioHub"
+          width="120"
+        />
+      </div>
+
+      <h2>Welcome to <%= societyName %>, <%= studentName %>!</h2>
+
+      <div class="welcome-message">
+        <p>
+          Great news! Your request to join
+          <strong><%= societyName %></strong> has been approved.
+        </p>
+      </div>
+
+      <p>
+        We're excited to have you on board as a member of our society. You now
+        have access to:
+      </p>
+
+      <div class="society-info">
+        <ul>
+          <li>Society events and activities</li>
+          <li>Member-only resources and communications</li>
+          <li>Opportunity to collaborate with fellow members</li>
+          <li>Access to society meetings and discussions</li>
+        </ul>
+      </div>
+
+      <p>Your role: <strong><%= roleName %></strong></p>
+
+      <p>
+        Log in to your SocioHub account to explore the society's activities and
+        connect with other members.
+      </p>
+
+      <a href="http://localhost:5173/login" class="button">Go to SocioHub</a>
+
+      <div class="footer">
+        <p>Best Regards,<br />The <%= societyName %> Team</p>
+      </div>
+    </div>
+  </body>
+</html>

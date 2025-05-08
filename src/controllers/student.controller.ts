@@ -5,7 +5,7 @@ import { IUser, UserType } from "../types";
 import { ApiResponse } from "../utils/ApiResponse";
 import { asyncHandler } from "../utils/asyncHandler";
 import { generateAccessAndRefreshTokens } from "../utils/authHelpers";
-import { registerStudentService } from "../services/student.services";
+import { registerStudentService } from "../services/student.service";
 
 export const registerStudent = asyncHandler(
   async (req: Request, res: Response) => {

@@ -23,29 +23,9 @@ interface RolesFormMembersProps {
 export const RolesFormMembers = ({ form }: RolesFormMembersProps) => {
   const societyId = useGetSocietyId();
 
-  const { data: members, isLoading } = useGetSocietyMembersQuery(
-    {
-      societyId: societyId || "",
-    },
-    {
-      selectFromResult: ({ data, ...reset }) => {
-        if (data && !("error" in data)) {
-          return {
-            data: [
-              ...data.filter(
-                (member) =>
-                  member.interestedRole?.name.toLowerCase() ===
-                  form.getValues("name").toLowerCase()
-              ),
-            ],
-            ...reset,
-          };
-        } else {
-          return { data, ...reset };
-        }
-      },
-    }
-  );
+  const { data: members, isLoading } = useGetSocietyMembersQuery({
+    societyId: societyId || "",
+  });
 
   // Get the current member IDs from the form
   const selectedMemberIds = useMemo(() => form.watch("members") || [], [form]);
@@ -89,7 +69,6 @@ export const RolesFormMembers = ({ form }: RolesFormMembersProps) => {
       <SearchInput placeholder="Search member" />
 
       <div className="min-h-[320px] max-h-[320px] py-4 overflow-y-auto">
-        <p className="b3-regular">Suggested Members</p>
         <DataTable
           columns={rolesMemberColumns}
           data={members || []}

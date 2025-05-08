@@ -10,7 +10,7 @@ import { generateAvatarUrlFromInitials, getLocalPath } from "../utils/helpers";
 import { UserType } from "../types";
 import { uploadOnCloudinary } from "../utils/cloudinary";
 import { generateAccessAndRefreshTokens } from "../utils/authHelpers";
-import { registerAdvisorService } from "../services/advisor.services";
+import { registerAdvisorService } from "../services/advisor.service";
 
 export const listSocietyAdvisors = asyncHandler(
   async (req: Request, res: Response) => {
