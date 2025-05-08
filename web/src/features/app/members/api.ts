@@ -141,12 +141,13 @@ export const MembersApi = api.injectEndpoints({
       {
         societyId: string;
         studentId: string;
+        reason: string;
       }
     >({
-      query: ({ societyId, studentId }) => ({
+      query: ({ societyId, studentId, reason }) => ({
         url: `/society/members/${societyId}`,
         method: "DELETE",
-        body: { studentId },
+        body: { studentId, reason },
       }),
       transformResponse: (response: ApiResponse<null>) => {
         if (response.success) {

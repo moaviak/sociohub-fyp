@@ -184,3 +184,36 @@ export const REJECT_REASONS = [
       "The applicant has a history of disciplinary issues or prior removal from the society or similar organizations.",
   },
 ];
+
+export const REMOVAL_REASONS = [
+  {
+    title: "Lack of Participation",
+    description:
+      "The member consistently failed to attend meetings or participate in society activities despite multiple reminders.",
+  },
+  {
+    title: "Violation of Society Rules",
+    description:
+      "The member breached society policies or engaged in conduct that goes against the values of the society.",
+  },
+  {
+    title: "Misuse of Authority or Resources",
+    description:
+      "The member misused their role, access, or society resources, leading to loss of trust or integrity.",
+  },
+  {
+    title: "Behavioral Misconduct",
+    description:
+      "The member displayed inappropriate behavior, harassment, or disrespect towards other members or organizers.",
+  },
+  {
+    title: "Academic Ineligibility",
+    description:
+      "The member no longer meets the academic requirements for society membership (e.g., due to suspension or poor performance).",
+  },
+  {
+    title: "Voluntary Withdrawal",
+    description:
+      "The member formally requested to leave the society or became inactive by choice.",
+  },
+];

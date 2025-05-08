@@ -15,9 +15,10 @@ export const Avatars = ({ users }: AvatarsProps) => {
       {users.map((user) => (
         <Hint key={user.id} description={`${user.firstName} ${user.lastName}`}>
           <Link to={`/profile/${user.id}`}>
-            <Avatar className="border border-2 border-white h-10 w-10">
+            <Avatar className="border-2 border-white h-10 w-10">
               <AvatarImage
                 src={user.avatar ?? "/assets/images/avatar-placeholder.png"}
+                className="object-cover"
               />
             </Avatar>
           </Link>
