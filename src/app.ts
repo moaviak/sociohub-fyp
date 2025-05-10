@@ -6,12 +6,28 @@ import { createServer } from "http";
 import session from "express-session";
 import cookieParser from "cookie-parser";
 import rateLimit from "express-rate-limit";
+import { Server } from "socket.io";
 
 import { ApiError } from "./utils/ApiError";
 import morganMiddleware from "./logger/morgan.logger";
 
 const app = express();
 const httpServer = createServer(app);
+
+// Socket.IO setup
+const io = new Server(httpServer, {
+  cors: {
+    origin:
+      process.env.CORS_ORIGIN === "*"
+        ? "*"
+        : process.env.CORS_ORIGIN?.split(","),
+    credentials: true,
+  },
+});
+
+// Socket.IO middleware and events
+import { setupSocketIO } from "./socket";
+setupSocketIO(io);
 
 // global middlewares
 app.use(
@@ -45,6 +61,8 @@ const limiter = rateLimit({
   },
 });
 
+app.use(limiter);
+
 app.use(express.json({ limit: "16kb" }));
 app.use(express.urlencoded({ extended: true, limit: "16kb" }));
 app.use(express.static("public")); // configure static file to save images locally
@@ -72,13 +90,15 @@ import authRoutes from "./routes/auth.routes.js";
 import studentRoutes from "./routes/student.routes.js";
 import advisorRoutes from "./routes/advisor.routes.js";
 import societyRoutes from "./routes/society.routes.js";
+import notificationRoutes from "./routes/notification.routes.js";
 
 app.use("/api/auth", authRoutes);
 app.use("/api/student", studentRoutes);
 app.use("/api/advisor", advisorRoutes);
 app.use("/api/society", societyRoutes);
+app.use("/api/notifications", notificationRoutes);
 
 // common error handling middleware
 app.use(errorHandler);
 
-export { httpServer };
+export { httpServer, io };

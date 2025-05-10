@@ -1,24 +1,47 @@
 import { useEffect } from "react";
 import { Outlet } from "react-router";
 
-import { useAppDispatch } from "@/app/hooks";
+import { useAppDispatch, useAppSelector } from "@/app/hooks";
 import { useGetUserQuery } from "@/features/auth/api";
 import { setAuthChecked } from "@/features/auth/slice";
 import { AppSkeleton } from "@/components/skeleton/app-skeleton";
+import { useRefreshAuthMutation } from "@/features/api";
 
 function MainLayout() {
   const dispatch = useAppDispatch();
-  const { isLoading } = useGetUserQuery(null, {
+  const { accessToken, refreshToken } = useAppSelector((state) => state.auth);
+
+  const [refreshAuth, { isLoading: isRefreshing }] = useRefreshAuthMutation();
+  const { isLoading, refetch } = useGetUserQuery(null, {
+    // Only refetch on mount if we already have tokens
+    skip: !accessToken && !refreshToken && !isRefreshing,
     refetchOnMountOrArgChange: true,
   });
 
+  // Try to refresh token if we have a refresh token but no access token
   useEffect(() => {
-    if (!isLoading) {
+    const attemptTokenRefresh = async () => {
+      // Only try to refresh if we have a refresh token but no access token
+      if (!accessToken && refreshToken) {
+        const refreshed = await refreshAuth();
+
+        if (refreshed) {
+          // If refresh successful, trigger the user query
+          refetch();
+        }
+      }
+    };
+
+    attemptTokenRefresh();
+  }, [accessToken, refreshToken, refetch, refreshAuth]);
+
+  useEffect(() => {
+    if (!isLoading && !isRefreshing) {
       dispatch(setAuthChecked(true));
     }
-  }, [isLoading, dispatch]);
+  }, [isLoading, isRefreshing, dispatch]);
 
-  if (isLoading) {
+  if (isLoading || isRefreshing) {
     return <AppSkeleton />;
   }
 

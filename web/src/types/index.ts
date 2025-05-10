@@ -88,3 +88,16 @@ export interface Role {
   createdAt?: string;
   updatedAt?: string;
 }
+
+export interface Notification {
+  id: string;
+  title: string;
+  description?: string;
+  image?: string;
+  redirectUrl?: string;
+  isRead: boolean;
+  isDeleted: boolean;
+  readAt?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}

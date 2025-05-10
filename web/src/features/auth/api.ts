@@ -1,5 +1,6 @@
 import { Society } from "@/types";
 import { api } from "@/features/api";
+import { RootState } from "@/app/store";
 
 import {
   login,
@@ -44,7 +45,12 @@ export const AuthApi = api.injectEndpoints({
       onQueryStarted: (_, { dispatch, queryFulfilled }) => {
         queryFulfilled.then(({ data }) => {
           if (!("error" in data)) {
-            dispatch(login(data));
+            const authData = {
+              ...data,
+              accessToken: data.accessToken || null,
+              refreshToken: data.refreshToken || null,
+            };
+            dispatch(login(authData));
           }
         });
       },
@@ -84,7 +90,12 @@ export const AuthApi = api.injectEndpoints({
       onQueryStarted: (_, { dispatch, queryFulfilled }) => {
         queryFulfilled.then(({ data }) => {
           if (!("error" in data)) {
-            dispatch(login(data));
+            const authData = {
+              ...data,
+              accessToken: data.accessToken || null,
+              refreshToken: data.refreshToken || null,
+            };
+            dispatch(login(authData));
           }
         });
       },
@@ -159,10 +170,19 @@ export const AuthApi = api.injectEndpoints({
         const errorResponse = response.data as ApiErrorResponse;
         return createApiError(errorResponse.message);
       },
-      onQueryStarted: (_, { dispatch, queryFulfilled }) => {
+      onQueryStarted: (_, { dispatch, queryFulfilled, getState }) => {
         queryFulfilled.then(({ data }) => {
           if (!("error" in data)) {
-            dispatch(login(data));
+            const state = getState() as RootState;
+            const { accessToken, refreshToken } = state.auth;
+
+            const authData = {
+              ...data,
+              accessToken: accessToken || data.accessToken,
+              refreshToken: refreshToken || data.refreshToken,
+            };
+
+            dispatch(login(authData));
           } else {
             dispatch(logout());
           }
@@ -193,6 +213,7 @@ export const AuthApi = api.injectEndpoints({
       },
       onQueryStarted: (_, { dispatch, queryFulfilled }) => {
         queryFulfilled.then(() => {
+          // This will clear tokens from localStorage via the reducer
           dispatch(logout());
           dispatch(api.util.resetApiState());
         });
@@ -240,7 +261,12 @@ export const AuthApi = api.injectEndpoints({
       onQueryStarted: (_, { dispatch, queryFulfilled }) => {
         queryFulfilled.then(({ data }) => {
           if (!("error" in data)) {
-            dispatch(login(data));
+            const authData = {
+              ...data,
+              accessToken: data.accessToken || null,
+              refreshToken: data.refreshToken || null,
+            };
+            dispatch(login(authData));
           }
         });
       },

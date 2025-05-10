@@ -9,6 +9,7 @@ import {
   generateAccessAndRefreshTokens,
 } from "../utils/authHelpers";
 import { sendVerificationEmail } from "../utils/mail";
+import { getUserNotifications } from "./notification.service";
 
 export const loginUserService = async ({
   email,
@@ -46,7 +47,12 @@ export const loginUserService = async ({
       ? await formatAdvisorData(user as Advisor, email)
       : await formatStudentData(user as Student);
 
-  return { userData, accessToken, refreshToken, userType };
+  return {
+    userData,
+    accessToken,
+    refreshToken,
+    userType,
+  };
 };
 
 const handleVerificationFlow = async (
@@ -278,9 +284,13 @@ export const resendEmailVerificationService = async (authUser: IUser) => {
 };
 
 export const getCurrentUserService = async (user: IUser) => {
+  let userData;
+
   if (user.userType !== UserType.STUDENT) {
-    return user;
+    userData = user;
+  } else {
+    userData = await formatStudentData(user);
   }
 
-  return formatStudentData(user);
+  return userData;
 };

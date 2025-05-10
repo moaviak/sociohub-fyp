@@ -6,7 +6,17 @@ import { ApiError } from "../utils/ApiError";
 import { processJoinRequestPDF } from "../services/request.service";
 import { ApiResponse } from "../utils/ApiResponse";
 import { deleteFromCloudinary } from "../utils/cloudinary";
-import { sendRequestStatusEmail } from "../services/request-email.service";
+import {
+  sendRequestStatusEmail,
+  sendRequestStatusNotification,
+} from "../services/request-email.service";
+import {
+  createNotification,
+  findSocietyMembersWithPrivilege,
+  getSocietyAdvisor,
+} from "../services/notification.service";
+import { io } from "../app";
+import { sendNotificationToUsers } from "../socket";
 
 export const sendJoinRequest = asyncHandler(
   async (req: Request, res: Response) => {
@@ -109,7 +119,45 @@ export const sendJoinRequest = asyncHandler(
       console.error("Background PDF processing failed:", error);
     });
 
-    // TODO: Send notification to society admins
+    // Send notification to society members with member_management privilege and advisor
+    (async () => {
+      try {
+        // Find recipients
+        const [membersWithPrivilege, advisors] = await Promise.all([
+          findSocietyMembersWithPrivilege(society.id, "member_management"),
+          getSocietyAdvisor(society.id),
+        ]);
+
+        const recipients = [
+          ...advisors.map((advisor) => ({
+            ...advisor,
+            redirectUrl: "/members/requests", // Advisor specific redirectUrl
+          })),
+          ...membersWithPrivilege.map((member) => ({
+            ...member,
+            redirectUrl: `/members/${society.id}/requests`, // Member specific redirectUrl
+          })),
+        ];
+
+        if (recipients.length > 0) {
+          // Create a single notification with all recipients
+          const notification = await createNotification({
+            image: user.avatar,
+            title: "New Society Join Request",
+            description: `${user.firstName} ${user.lastName} has requested to join ${society.name}. Review and respond to the request in Requests Panel.`,
+            recipients,
+          });
+
+          // Send real-time notifications to connected users
+          if (notification) {
+            sendNotificationToUsers(io, recipients, notification);
+          }
+        }
+      } catch (error) {
+        console.error("Failed to send notifications:", error);
+        // Don't fail the request if notification sending fails
+      }
+    })();
 
     return res
       .status(201)
@@ -234,6 +282,14 @@ export const handleRequest = asyncHandler(
         console.error("Background email processing failed:", error);
       });
 
+      sendRequestStatusNotification({
+        studentId: request.studentId,
+        societyId: request.societyId,
+        action: "ACCEPT",
+      }).catch((error) => {
+        console.error("Notification sending failed: ", error);
+      });
+
       return res
         .status(200)
         .json(
@@ -261,6 +317,14 @@ export const handleRequest = asyncHandler(
         rejectionReason: reason,
       }).catch((error) => {
         console.error("Background email processing failed:", error);
+      });
+
+      sendRequestStatusNotification({
+        studentId: request.studentId,
+        societyId: request.societyId,
+        action: "ACCEPT",
+      }).catch((error) => {
+        console.error("Notification sending failed: ", error);
       });
 
       return res

@@ -30,6 +30,7 @@ model Student {
 
   joinRequests JoinRequest[]    @relation
   societies    StudentSociety[] @relation
+  notifications NotificationRecipient[] @relation("StudentNotifications")
 }
 
 model Advisor {
@@ -49,6 +50,7 @@ model Advisor {
   updatedAt               DateTime  @updatedAt
   societyId               String?   @unique
   society                 Society?  @relation(fields: [societyId], references: [id], onDelete: SetNull)
+  notifications           NotificationRecipient[] @relation("AdvisorNotifications")
 
   @@index([societyId])
 }
@@ -164,4 +166,43 @@ model SocietyAdvisor {
   society     String
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+}
+
+model Notification {
+  id           String   @id @default(uuid())
+  title        String
+  description  String
+  image        String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relation to recipients
+  recipients   NotificationRecipient[]
+}
+
+model NotificationRecipient {
+  id             String    @id @default(uuid())
+  notificationId String
+  recipientType  String    // "student" or "advisor"
+  studentId      String?   // ID of the student (null for advisor notifications)
+  advisorId      String?   // ID of the advisor (null for student notifications)
+  redirectUrl    String?   // Moved from Notification model
+  isRead         Boolean   @default(false)
+  isDeleted      Boolean   @default(false)
+  readAt         DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  // Relation to notification
+  notification   Notification @relation(fields: [notificationId], references: [id], onDelete: Cascade)
+  
+  // Relations to recipient types
+  student        Student? @relation("StudentNotifications", fields: [studentId], references: [id], onDelete: Cascade)
+  advisor        Advisor? @relation("AdvisorNotifications", fields: [advisorId], references: [id], onDelete: Cascade)
+
+  @@index([notificationId])
+  @@index([recipientType])
+  @@index([studentId])
+  @@index([advisorId])
+  @@unique([notificationId, studentId, advisorId])
 }

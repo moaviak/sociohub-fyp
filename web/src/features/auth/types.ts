@@ -4,6 +4,7 @@ export type AuthResponse = {
   user: Student | Advisor;
   userType: UserType;
   accessToken?: string;
+  refreshToken?: string;
 };
 
 export type SocietyAdvisor = {

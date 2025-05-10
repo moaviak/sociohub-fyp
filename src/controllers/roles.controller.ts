@@ -4,7 +4,10 @@ import { IUser } from "../types";
 import { ApiError } from "../utils/ApiError";
 import prisma from "../db";
 import { ApiResponse } from "../utils/ApiResponse";
-import { sendRoleAssignmentEmails } from "../services/role-email.service";
+import {
+  sendRoleAssignmentEmails,
+  sendRoleAssignmentNotifications,
+} from "../services/role-email.service";
 
 export const getSocietyRoles = asyncHandler(
   async (req: Request, res: Response) => {
@@ -177,6 +180,14 @@ export const createRole = asyncHandler(async (req: Request, res: Response) => {
     }).catch((error) => {
       console.error("Background email processing failed:", error);
     });
+
+    sendRoleAssignmentNotifications({
+      roleId: role.id,
+      societyId,
+      memberIds: members,
+    }).catch((error) => {
+      console.error("Background notification processing failed: ", error);
+    });
   }
 
   res
@@ -343,6 +354,14 @@ export const updateRole = asyncHandler(async (req: Request, res: Response) => {
       memberIds: newlyAssignedMembers,
     }).catch((error) => {
       console.error("Background email processing failed:", error);
+    });
+
+    sendRoleAssignmentNotifications({
+      roleId,
+      societyId,
+      memberIds: newlyAssignedMembers,
+    }).catch((error) => {
+      console.error("Background notification processing failed: ", error);
     });
   }
 

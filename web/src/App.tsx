@@ -22,63 +22,66 @@ import VerifyEmailPage from "@/pages/verify-email-page";
 import RequestsPage from "@/pages/app/members/requests-page";
 import RequestsHistoryPage from "./pages/app/members/requests-history-page";
 import SocietySettingsPage from "./pages/app/society-settings-page";
+import { NotificationSocketProvider } from "./features/app/notifications/socket-provider";
 
 function App() {
   return (
-    <Routes>
-      <Route element={<MainLayout />}>
-        {/* Public Marketing Routes */}
-        <Route element={<MarketingLayout />}>
-          <Route path="/" element={<LandingPage />} />
-          <Route path="/contact-us" element={<ContactPage />} />
-        </Route>
-
-        {/* Auth Routes */}
-        <Route element={<AuthLayout />}>
-          {/* Public Auth Routes */}
-          <Route path="/sign-in" element={<SignInPage />} />
-          <Route path="/sign-up" element={<SignUpPage />}>
-            <Route path="student" element={<StudentSignUpPage />} />
-            <Route path="advisor" element={<AdvisorSignUpPage />} />
+    <NotificationSocketProvider>
+      <Routes>
+        <Route element={<MainLayout />}>
+          {/* Public Marketing Routes */}
+          <Route element={<MarketingLayout />}>
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/contact-us" element={<ContactPage />} />
           </Route>
 
-          {/* Auth-Required Onboarding Routes */}
-          <Route path="/sign-up/verify-email" element={<VerifyEmailPage />} />
-          <Route path="/sign-up/society-form" element={<SocietyFormPage />} />
-        </Route>
-
-        {/* Private Routes */}
-        <Route element={<AppLayout />}>
-          <Route path="/dashboard" element={<DashboardPage />} />
-
-          {/* Student specific routes */}
-          <Route path="/explore" element={<ExplorePage />} />
-
-          {/* Society specific  routes*/}
-          <Route path="/members" element={<MembersPage />}>
-            <Route path="roles" element={<RolesPage />} />
-            <Route path="requests" element={<RequestsPage />}>
-              <Route path="history" element={<RequestsHistoryPage />} />
+          {/* Auth Routes */}
+          <Route element={<AuthLayout />}>
+            {/* Public Auth Routes */}
+            <Route path="/sign-in" element={<SignInPage />} />
+            <Route path="/sign-up" element={<SignUpPage />}>
+              <Route path="student" element={<StudentSignUpPage />} />
+              <Route path="advisor" element={<AdvisorSignUpPage />} />
             </Route>
 
-            <Route path=":societyId" element={<MembersPage />}>
+            {/* Auth-Required Onboarding Routes */}
+            <Route path="/sign-up/verify-email" element={<VerifyEmailPage />} />
+            <Route path="/sign-up/society-form" element={<SocietyFormPage />} />
+          </Route>
+
+          {/* Private Routes */}
+          <Route element={<AppLayout />}>
+            <Route path="/dashboard" element={<DashboardPage />} />
+
+            {/* Student specific routes */}
+            <Route path="/explore" element={<ExplorePage />} />
+
+            {/* Society specific  routes*/}
+            <Route path="/members" element={<MembersPage />}>
               <Route path="roles" element={<RolesPage />} />
               <Route path="requests" element={<RequestsPage />}>
                 <Route path="history" element={<RequestsHistoryPage />} />
               </Route>
+
+              <Route path=":societyId" element={<MembersPage />}>
+                <Route path="roles" element={<RolesPage />} />
+                <Route path="requests" element={<RequestsPage />}>
+                  <Route path="history" element={<RequestsHistoryPage />} />
+                </Route>
+              </Route>
             </Route>
-          </Route>
-          <Route path="/settings" element={<SocietySettingsPage />}>
-            <Route path=":societyId" element={<SocietySettingsPage />} />
+            <Route path="/settings" element={<SocietySettingsPage />}>
+              <Route path=":societyId" element={<SocietySettingsPage />} />
+            </Route>
+
+            {/* Add other private routes here */}
           </Route>
 
-          {/* Add other private routes here */}
+          {/* 404 Route */}
+          <Route path="*" element={<NotFoundPage />} />
         </Route>
-
-        {/* 404 Route */}
-        <Route path="*" element={<NotFoundPage />} />
-      </Route>
-    </Routes>
+      </Routes>
+    </NotificationSocketProvider>
   );
 }
 export default App;
