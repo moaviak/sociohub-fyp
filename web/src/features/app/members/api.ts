@@ -220,7 +220,7 @@ export const MembersApi = api.injectEndpoints({
               type: "Roles" as const,
               id: `${args.societyId}-${id}`,
             })),
-            { type: "Roles", id: "LIST" },
+            { type: "Roles", id: `${args.societyId}-LIST` },
           ];
         } else {
           return [];
@@ -260,10 +260,10 @@ export const MembersApi = api.injectEndpoints({
               type: "Members" as const,
               id: `${args.societyId}-${id}`,
             })),
-            { type: "Roles", id: "LIST" },
+            { type: "Roles", id: `${args.societyId}-LIST` },
           ];
         } else {
-          return [{ type: "Roles", id: "LIST" }];
+          return [{ type: "Roles", id: `${args.societyId}-LIST` }];
         }
       },
     }),
@@ -290,10 +290,10 @@ export const MembersApi = api.injectEndpoints({
         if (result && !("error" in result)) {
           return [
             { type: "Roles", id: `${args.societyId}-${args.roleId}` },
-            { type: "Members", id: "LIST" },
+            { type: "Members", id: `${args.societyId}-LIST` },
           ];
         } else {
-          return [{ type: "Roles", id: "LIST" }];
+          return [{ type: "Roles", id: `${args.societyId}-LIST` }];
         }
       },
     }),
@@ -328,10 +328,43 @@ export const MembersApi = api.injectEndpoints({
         if (result && !("error" in result)) {
           return [
             { type: "Roles", id: `${arg.societyId}-${result.id}` },
-            { type: "Members", id: "LIST" },
+            { type: "Members", id: `${arg.societyId}-LIST` },
           ];
         } else {
-          return [{ type: "Roles", id: "LIST" }];
+          return [{ type: "Roles", id: `${arg.societyId}-LIST` }];
+        }
+      },
+    }),
+    assignRoles: builder.mutation<
+      Role[] | ApiError,
+      { societyId: string; studentId: string; roleIds: string[] }
+    >({
+      query: ({ societyId, studentId, roleIds }) => ({
+        url: `/society/roles/${societyId}/assign-roles`,
+        method: "POST",
+        body: { studentId, roleIds },
+      }),
+      transformResponse: (response: ApiResponse<Role[]>) => {
+        if (response.success) {
+          return response.data;
+        }
+        return createApiError(response.message);
+      },
+      transformErrorResponse: (response) => {
+        const errorResponse = response.data as ApiErrorResponse;
+        return createApiError(errorResponse.message);
+      },
+      invalidatesTags: (result, _error, args) => {
+        if (result && !("error" in result)) {
+          return [
+            ...result.map(({ id }) => ({
+              type: "Roles" as const,
+              id: `${args.societyId}-${id}`,
+            })),
+            { type: "Members", id: `${args.societyId}-${args.studentId}` },
+          ];
+        } else {
+          return [{ type: "Members", id: `${args.societyId}-LIST` }];
         }
       },
     }),
@@ -349,4 +382,5 @@ export const {
   useDeleteRoleMutation,
   useUpdateRoleMutation,
   useDeleteRequestMutation,
+  useAssignRolesMutation,
 } = MembersApi;

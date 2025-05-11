@@ -217,7 +217,13 @@ export const rolesMemberColumns: ColumnDef<Member>[] = [
     header: "Member",
     cell: ({ row }) => {
       const student = row.original;
-      return <AvatarGroup user={student} userType={UserType.STUDENT} />;
+      return (
+        <AvatarGroup
+          user={student}
+          userType={UserType.STUDENT}
+          redirect={false}
+        />
+      );
     },
   },
   {

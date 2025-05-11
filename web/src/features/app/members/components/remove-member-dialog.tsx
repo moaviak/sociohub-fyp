@@ -39,6 +39,13 @@ export const RemoveMemberDialog = ({
     useRemoveMemberMutation();
   const societyId = useGetSocietyId();
 
+  // Force dialog to be open when component mounts if it's being controlled externally
+  useEffect(() => {
+    if (onClose) {
+      setIsOpen(true);
+    }
+  }, [onClose]);
+
   useEffect(() => {
     if (selectedValue === "Other") {
       setSelectedReason(otherReason);
@@ -58,12 +65,34 @@ export const RemoveMemberDialog = ({
     }
   }, [isError, error]);
 
-  if (!societyId) return;
+  // Reset form when dialog opens
+  useEffect(() => {
+    if (isOpen) {
+      setSelectedReason("");
+      setSelectedValue("");
+      setOtherReason("");
+      setFormError("");
+    }
+  }, [isOpen]);
+
+  if (!societyId) return null;
 
   const handleOpenChange = (open: boolean) => {
     setIsOpen(open);
-    if (!open && onClose) {
-      onClose();
+    if (!open) {
+      // Reset form state on close
+      setSelectedReason("");
+      setSelectedValue("");
+      setOtherReason("");
+      setFormError("");
+
+      // Notify parent component
+      if (onClose) {
+        // Use requestAnimationFrame to ensure the state is updated before unmounting
+        requestAnimationFrame(() => {
+          onClose();
+        });
+      }
     }
   };
 
@@ -94,7 +123,7 @@ export const RemoveMemberDialog = ({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
+    <Dialog open={isOpen} onOpenChange={handleOpenChange} modal={true}>
       {!onClose && (
         <DialogTrigger asChild>
           <Button variant="ghost" size="inline" className="text-red-600">
@@ -106,6 +135,10 @@ export const RemoveMemberDialog = ({
         className="sm:max-w-2xl flex flex-col min-h-0 max-h-[90vh] overflow-hidden"
         onClick={(e) => e.stopPropagation()}
         onPointerDownCapture={(e) => e.stopPropagation()}
+        onInteractOutside={(e) => {
+          e.preventDefault();
+          handleOpenChange(false);
+        }}
       >
         <DialogHeader className="px-4">
           <DialogTitle className="text-primary-600 h5-semibold">

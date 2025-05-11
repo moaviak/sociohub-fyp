@@ -8,6 +8,15 @@ import {
   sendRoleAssignmentEmails,
   sendRoleAssignmentNotifications,
 } from "../services/role-email.service";
+import {
+  findMemberRole,
+  getCurrentStudentRoles,
+  getResponseMessage,
+  processRoleChangeNotifications,
+  updateStudentRoleAssignments,
+  validateRolesInSociety,
+  validateStudentSocietyMembership,
+} from "../services/role-assignment.service";
 
 export const getSocietyRoles = asyncHandler(
   async (req: Request, res: Response) => {
@@ -369,3 +378,168 @@ export const updateRole = asyncHandler(async (req: Request, res: Response) => {
     .status(200)
     .json(new ApiResponse(200, updatedRole, "Role updated successfully."));
 });
+
+export const assignRolesToStudent = asyncHandler(
+  async (req: Request, res: Response) => {
+    const startTime = Date.now(); // Track performance
+    const { societyId } = req.params;
+    const { studentId, roleIds } = req.body;
+
+    if (!societyId) {
+      throw new ApiError(400, "Society ID is required.");
+    }
+
+    // Check if student is a member of the society
+    const isMember = await validateStudentSocietyMembership(
+      studentId,
+      societyId
+    );
+    if (!isMember) {
+      throw new ApiError(404, "Student is not a member of this society.");
+    }
+
+    // Empty roleIds array is allowed - means remove all roles except the Member role
+    const roleIdsToProcess = Array.isArray(roleIds) ? roleIds : [];
+
+    // Special handling for empty roleIds array - this means remove all roles except Member
+    const isRemoveAllRoles = Array.isArray(roleIds) && roleIds.length === 0;
+
+    // Execute the following queries in parallel for better performance
+    const [memberRole, currentRolesResult] = await Promise.all([
+      // Find Member role to ensure it's preserved
+      findMemberRole(societyId),
+
+      // Get current roles of the student in the society
+      getCurrentStudentRoles(studentId, societyId),
+    ]);
+
+    // Add Member role to the list if it exists but isn't included
+    let updatedRoleIdsToProcess = [...roleIdsToProcess];
+    if (memberRole && !updatedRoleIdsToProcess.includes(memberRole.id)) {
+      updatedRoleIdsToProcess.push(memberRole.id);
+    }
+
+    // If we have roles to process (excluding the Member role), validate them
+    const nonMemberRolesToProcess = memberRole
+      ? updatedRoleIdsToProcess.filter((id) => id !== memberRole.id)
+      : updatedRoleIdsToProcess;
+
+    if (nonMemberRolesToProcess.length > 0) {
+      const { valid } = await validateRolesInSociety(
+        nonMemberRolesToProcess,
+        societyId
+      );
+      if (!valid) {
+        throw new ApiError(
+          400,
+          "One or more role IDs are invalid or do not belong to this society."
+        );
+      }
+    }
+
+    const currentRoleIds = currentRolesResult.map((r) => r.roleId);
+
+    // Identify roles to add and remove
+    const rolesToAdd = updatedRoleIdsToProcess.filter(
+      (id: string) => !currentRoleIds.includes(id)
+    );
+
+    // Filter out Member role from removal
+    const rolesToRemove = currentRoleIds.filter(
+      (id: string) =>
+        !updatedRoleIdsToProcess.includes(id) &&
+        (!memberRole || id !== memberRole.id)
+    );
+
+    // Skip processing if no changes and not removing all roles
+    if (
+      rolesToAdd.length === 0 &&
+      rolesToRemove.length === 0 &&
+      !isRemoveAllRoles
+    ) {
+      const currentFormattedRoles = await prisma.studentSocietyRole.findMany({
+        where: {
+          studentId,
+          societyId,
+        },
+        select: {
+          role: {
+            select: {
+              id: true,
+              name: true,
+              description: true,
+            },
+          },
+        },
+      });
+
+      return res.status(200).json(
+        new ApiResponse(
+          200,
+          currentFormattedRoles.map((r) => r.role),
+          "No changes to student roles."
+        )
+      );
+    }
+
+    // Execute the role updates - use a higher timeout value for the transaction if needed
+    await updateStudentRoleAssignments(
+      studentId,
+      societyId,
+      rolesToAdd,
+      rolesToRemove
+    );
+
+    // Performance tracking
+    const afterUpdateTime = Date.now();
+
+    // Start notification process in the background without awaiting it
+    // This ensures we don't block the response waiting for email/notification processing
+    setImmediate(() => {
+      processRoleChangeNotifications(
+        studentId,
+        societyId,
+        rolesToAdd,
+        rolesToRemove
+      ).catch((error) => {
+        console.error("Error processing role change notifications:", error);
+      });
+    });
+
+    // Get updated roles for the response
+    const updatedRoles = await prisma.studentSocietyRole.findMany({
+      where: {
+        studentId,
+        societyId,
+      },
+      select: {
+        role: {
+          select: {
+            id: true,
+            name: true,
+            description: true,
+          },
+        },
+      },
+    });
+
+    const formattedRoles = updatedRoles.map((r) => r.role);
+    const responseMessage = getResponseMessage(rolesToAdd, rolesToRemove);
+
+    // Log performance metrics
+    const totalTime = Date.now() - startTime;
+    const updateTime = afterUpdateTime - startTime;
+    const responseTime = Date.now() - afterUpdateTime;
+
+    console.log(`Role assignment performance: 
+      Total: ${totalTime}ms, 
+      Update: ${updateTime}ms, 
+      Response: ${responseTime}ms,
+      Roles added: ${rolesToAdd.length}, 
+      Roles removed: ${rolesToRemove.length}`);
+
+    return res
+      .status(200)
+      .json(new ApiResponse(200, formattedRoles, responseMessage));
+  }
+);

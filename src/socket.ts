@@ -83,22 +83,42 @@ export const setupSocketIO = (io: Server) => {
         "mark-notification-read",
         async (data: { notificationId: string }) => {
           try {
-            const whereClause: any = {
+            // Find the notification recipient first to ensure it exists and belongs to this user
+            const recipientWhere: any = {
               id: data.notificationId,
               recipientType: userType,
+              isRead: false, // Only update if it hasn't been read yet
             };
 
-            // Set the ID field based on user type
+            // Set the user ID field based on user type
             if (userType === "student") {
-              whereClause.studentId = userId;
+              recipientWhere.studentId = userId;
             } else if (userType === "advisor") {
-              whereClause.advisorId = userId;
+              recipientWhere.advisorId = userId;
+            }
+
+            // First check if the record exists
+            const existingRecipient =
+              await prisma.notificationRecipient.findFirst({
+                where: recipientWhere,
+                include: {
+                  notification: true,
+                },
+              });
+
+            if (!existingRecipient) {
+              console.log(
+                `Notification recipient not found: ${data.notificationId} for ${userType}-${userId}`
+              );
+              return; // Exit early if no matching record
             }
 
             // Update the notification status
             const updatedNotification =
               await prisma.notificationRecipient.update({
-                where: whereClause,
+                where: {
+                  id: data.notificationId, // This is actually the recipient ID
+                },
                 data: {
                   isRead: true,
                   readAt: new Date(),
@@ -149,6 +169,11 @@ export const setupSocketIO = (io: Server) => {
             }
           } catch (error) {
             console.error("Error marking notification as read:", error);
+            // Send an error response to the client
+            socket.emit("notification-error", {
+              message: "Could not mark notification as read",
+              notificationId: data.notificationId,
+            });
           }
         }
       );

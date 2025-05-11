@@ -8,16 +8,18 @@ interface AvatarGroupProps {
   user: Student | Advisor;
   userType: UserType;
   className?: string;
+  redirect?: boolean;
 }
 
 export const AvatarGroup = ({
   user,
   userType,
   className,
+  redirect = true,
 }: AvatarGroupProps) => {
   return (
     <Link
-      to={`/profile/${user.id}`}
+      to={redirect ? `/profile/${user.id}` : ""}
       className={cn("flex gap-x-3 items-center", className)}
     >
       <Avatar className="h-10 w-10 cursor-pointer">

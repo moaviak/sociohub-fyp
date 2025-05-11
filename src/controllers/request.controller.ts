@@ -214,15 +214,38 @@ export const handleRequest = asyncHandler(
     const { studentId, action, reason } = req.body;
 
     // Fetch join request
-    const request = await prisma.joinRequest.findFirst({
-      where: { societyId, studentId, status: "PENDING" },
-    });
+    const [society, request] = await prisma.$transaction([
+      prisma.society.findUnique({
+        where: { id: societyId },
+        select: {
+          id: true,
+          name: true,
+          acceptingNewMembers: true,
+          membersLimit: true,
+          _count: { select: { members: true } },
+        },
+      }),
+      prisma.joinRequest.findFirst({
+        where: { societyId, studentId, status: "PENDING" },
+      }),
+    ]);
+
+    if (!society) {
+      throw new ApiError(400, "Invalid society id.");
+    }
 
     if (!request) {
       throw new ApiError(400, "No pending join request found.");
     }
 
     if (action === RequestAction.ACCEPT) {
+      if (
+        !society.acceptingNewMembers ||
+        society.membersLimit === society._count.members
+      ) {
+        throw new ApiError(400, "Society members limit reached.");
+      }
+
       // Check if already a member (to prevent duplicates)
       const isAlreadyMember = await prisma.studentSociety.findUnique({
         where: {
@@ -271,6 +294,13 @@ export const handleRequest = asyncHandler(
           },
         }),
       ]);
+
+      if (society._count.members + 1 === society.membersLimit) {
+        prisma.society.update({
+          where: { id: society.id },
+          data: { acceptingNewMembers: false },
+        });
+      }
 
       // Send approval email in the background (don't await)
       sendRequestStatusEmail({

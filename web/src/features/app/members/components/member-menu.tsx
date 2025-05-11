@@ -17,6 +17,7 @@ import { haveMembersPrivilege } from "@/lib/utils";
 
 import { RemoveMemberDialog } from "./remove-member-dialog";
 import { useState } from "react";
+import { ManageRoles } from "./manage-roles";
 
 interface MemberMenuProps {
   member: Member;
@@ -25,6 +26,7 @@ interface MemberMenuProps {
 export const MemberMenu = ({ member }: MemberMenuProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [showRemoveDialog, setShowRemoveDialog] = useState(false);
+  const [showRolesDialog, setShowRolesDialog] = useState(false);
 
   const { user } = useAppSelector((state) => state.auth);
   const societyId = useGetSocietyId();
@@ -38,12 +40,51 @@ export const MemberMenu = ({ member }: MemberMenuProps) => {
     e.preventDefault();
     e.stopPropagation();
     setIsOpen(false);
-    setShowRemoveDialog(true);
+    // Small delay before showing the dialog to avoid UI glitches
+    setTimeout(() => {
+      setShowRemoveDialog(true);
+    }, 50);
+  };
+
+  const handleManageRoles = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsOpen(false);
+    // Small delay before showing the dialog to avoid UI glitches
+    setTimeout(() => {
+      setShowRolesDialog(true);
+    }, 50);
+  };
+
+  // Always reset dialog states when the dropdown closes
+  const handleDropdownOpenChange = (open: boolean) => {
+    setIsOpen(open);
+    if (!open) {
+      // Small delay to prevent UI conflicts
+      setTimeout(() => {
+        if (!showRemoveDialog && !showRolesDialog) {
+          document.body.click(); // Clear any potential stuck states
+        }
+      }, 100);
+    } else {
+      // When opening the dropdown, ensure dialogs are closed
+      setShowRemoveDialog(false);
+      setShowRolesDialog(false);
+    }
+  };
+
+  // This ensures the dialogs will be reopened next time
+  const handleRemoveDialogClose = () => {
+    setShowRemoveDialog(false);
+  };
+
+  const handleRolesDialogClose = () => {
+    setShowRolesDialog(false);
   };
 
   return (
     <>
-      <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
+      <DropdownMenu open={isOpen} onOpenChange={handleDropdownOpenChange}>
         <DropdownMenuTrigger asChild>
           <Button variant="ghost" className="h-8 w-8 p-0">
             <MoreHorizontal className="h-4 w-4" />
@@ -54,8 +95,16 @@ export const MemberMenu = ({ member }: MemberMenuProps) => {
             <Link to={`/profile/${member.id}`}>View Profile</Link>
           </DropdownMenuItem>
           {havePrivilege && member.id !== user?.id && (
-            <DropdownMenuItem className="b3-regular">
-              Edit Role
+            <DropdownMenuItem
+              className="b3-regular"
+              onSelect={(e) => e.preventDefault()}
+            >
+              <p
+                className="cursor-pointer b3-regular"
+                onClick={handleManageRoles}
+              >
+                Manage Roles
+              </p>
             </DropdownMenuItem>
           )}
           {member.id !== user?.id && (
@@ -83,8 +132,17 @@ export const MemberMenu = ({ member }: MemberMenuProps) => {
 
       {showRemoveDialog && (
         <RemoveMemberDialog
+          key={`remove-${member.id}`}
           member={member}
-          onClose={() => setShowRemoveDialog(false)}
+          onClose={handleRemoveDialogClose}
+        />
+      )}
+
+      {showRolesDialog && (
+        <ManageRoles
+          key={`roles-${member.id}`}
+          member={member}
+          onClose={handleRolesDialogClose}
         />
       )}
     </>
