@@ -133,6 +133,7 @@ export const sendRequestStatusNotification = async ({
       select: {
         id: true,
         name: true,
+        logo: true,
       },
     });
 
@@ -151,6 +152,7 @@ export const sendRequestStatusNotification = async ({
             redirectUrl: `/society/${society.id}`,
           },
         ],
+        image: society.logo,
       });
 
       if (notification) {
@@ -176,6 +178,7 @@ export const sendRequestStatusNotification = async ({
             redirectUrl: `/society/${society.id}`,
           },
         ],
+        image: society.logo,
       });
 
       if (notification) {

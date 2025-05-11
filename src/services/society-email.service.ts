@@ -95,6 +95,7 @@ export const sendMemberRemovalStatusNotification = async ({
       select: {
         id: true,
         name: true,
+        logo: true,
       },
     });
 
@@ -112,6 +113,7 @@ export const sendMemberRemovalStatusNotification = async ({
           redirectUrl: `/society/${society.name}`,
         },
       ],
+      image: society.logo,
     });
 
     if (notification) {

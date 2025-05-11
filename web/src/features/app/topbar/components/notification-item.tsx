@@ -17,6 +17,7 @@ import { toast } from "sonner";
 import React, { useEffect, useState } from "react";
 import ApiError from "@/features/api-error";
 import { markNotificationRead } from "@/features/app/notifications/socket-provider";
+import { Hint } from "@/components/hint";
 
 interface NotificationItemProps {
   notification: Notification;
@@ -77,12 +78,18 @@ export const NotificationItem = ({
             className="w-10 h-10 rounded-full object-cover"
           />
         )}
-        <div className="flex-1">
+        <div className="flex-1 max-h-20 overflow-hidden flex flex-col justify-between">
           <p className="b3-medium text-gray-900">{notification.title}</p>
           {notification.description && (
-            <p className="b4-regular text-neutral-600 mt-1">
-              {notification.description}
-            </p>
+            <Hint
+              description={notification.description}
+              side="bottom"
+              sideOffset={5}
+            >
+              <p className="b4-regular text-neutral-600 mt-1 overflow-ellipsis line-clamp-2 flex-1">
+                {notification.description}
+              </p>
+            </Hint>
           )}
           {notification.createdAt && (
             <p className="b5-regular text-neutral-500 mt-1">

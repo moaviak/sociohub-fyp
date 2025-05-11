@@ -151,6 +151,7 @@ export const sendRoleAssignmentNotifications = async ({
       select: {
         id: true,
         name: true,
+        logo: true,
       },
     });
 
@@ -184,8 +185,9 @@ export const sendRoleAssignmentNotifications = async ({
     if (recipients.length > 0) {
       const notification = await createNotification({
         title: `New Role Assigned in ${society.name}`,
-        description: `You have been assigned the role of \"{roleName}\" in the \"${society.name}\". You can now access the features and responsibilities linked to this role.`,
+        description: `You have been assigned the role of \"${role.name}\" in the \"${society.name}\". You can now access the features and responsibilities linked to this role.`,
         recipients,
+        image: society.logo,
       });
 
       if (notification) {
