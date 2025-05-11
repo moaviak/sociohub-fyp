@@ -177,7 +177,7 @@ export const cancelJoinRequest = asyncHandler(
     const { id: studentId } = req.user as IUser;
 
     if (!societyId) {
-      throw new ApiError(400, "Role ID is required.");
+      throw new ApiError(400, "Society ID is required.");
     }
 
     // Use transaction to check and delete in one go
@@ -472,6 +472,35 @@ export const getRequestsHistory = asyncHandler(
       .status(200)
       .json(
         new ApiResponse(200, requests, "Society requests successfully fetched.")
+      );
+  }
+);
+
+export const deleteRequest = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { requestId } = req.body;
+
+    const [request] = await prisma.$transaction([
+      prisma.joinRequest.findUnique({ where: { id: requestId } }),
+      prisma.joinRequest.delete({ where: { id: requestId } }),
+    ]);
+
+    if (!request) {
+      throw new ApiError(400, "Invalid request ID.");
+    }
+
+    if (request.pdf) {
+      deleteFromCloudinary(request.pdf);
+    }
+
+    return res
+      .status(200)
+      .json(
+        new ApiResponse(
+          200,
+          request,
+          "Join request has been successfully deleted."
+        )
       );
   }
 );

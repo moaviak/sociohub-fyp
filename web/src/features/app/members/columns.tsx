@@ -18,6 +18,7 @@ import { RequestForm } from "./components/request-form";
 import { RolesBadges } from "./components/roles-badges";
 import { RoleActions } from "./components/role-actions";
 import { Badge } from "@/components/ui/badge";
+import { DeleteRequest } from "./components/delete-request";
 
 export const requestsColumns: ColumnDef<JoinRequest>[] = [
   {
@@ -108,8 +109,9 @@ export const requestsHistoryColumns: ColumnDef<JoinRequest>[] = [
       const request = row.original;
 
       return (
-        <div className="text-right">
+        <div className="text-right space-x-2">
           <RequestForm request={request} />
+          <DeleteRequest request={request} />
         </div>
       );
     },

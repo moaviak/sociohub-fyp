@@ -316,8 +316,8 @@ const RejectRequestContent = ({
                 value={otherReason}
                 onChange={(e) => setOtherReason(e.target.value)}
                 placeholder="Please specify your reason"
-                className={`min-h-20 resize-none ${
-                  formError ? "border-red-500" : "outline-neutral-400 outline"
+                className={`min-h-20 resize-none outline ${
+                  formError ? "outline-red-500" : "outline-neutral-400 outline"
                 }`}
               />
               {formError && (

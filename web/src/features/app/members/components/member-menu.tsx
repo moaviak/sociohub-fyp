@@ -16,12 +16,16 @@ import useGetSocietyId from "@/hooks/useGetSocietyId";
 import { haveMembersPrivilege } from "@/lib/utils";
 
 import { RemoveMemberDialog } from "./remove-member-dialog";
+import { useState } from "react";
 
 interface MemberMenuProps {
   member: Member;
 }
 
 export const MemberMenu = ({ member }: MemberMenuProps) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [showRemoveDialog, setShowRemoveDialog] = useState(false);
+
   const { user } = useAppSelector((state) => state.auth);
   const societyId = useGetSocietyId();
 
@@ -30,34 +34,59 @@ export const MemberMenu = ({ member }: MemberMenuProps) => {
     ? haveMembersPrivilege(user.societies || [], societyId || "")
     : true;
 
+  const handleRemoveMember = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsOpen(false);
+    setShowRemoveDialog(true);
+  };
+
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="h-8 w-8 p-0">
-          <MoreHorizontal className="h-4 w-4" />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        <DropdownMenuItem className="b3-regular">
-          <Link to={`/profile/${member.id}`}>View Profile</Link>
-        </DropdownMenuItem>
-        {havePrivilege && member.id !== user?.id && (
-          <DropdownMenuItem className="b3-regular">Edit Role</DropdownMenuItem>
-        )}
-        {member.id !== user?.id && (
+    <>
+      <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" className="h-8 w-8 p-0">
+            <MoreHorizontal className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
           <DropdownMenuItem className="b3-regular">
-            Send Message
+            <Link to={`/profile/${member.id}`}>View Profile</Link>
           </DropdownMenuItem>
-        )}
-        {havePrivilege && (
-          <>
-            <DropdownMenuSeparator className="bg-neutral-300" />
-            <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-              <RemoveMemberDialog member={member} />
+          {havePrivilege && member.id !== user?.id && (
+            <DropdownMenuItem className="b3-regular">
+              Edit Role
             </DropdownMenuItem>
-          </>
-        )}
-      </DropdownMenuContent>
-    </DropdownMenu>
+          )}
+          {member.id !== user?.id && (
+            <DropdownMenuItem className="b3-regular">
+              Send Message
+            </DropdownMenuItem>
+          )}
+          {havePrivilege && (
+            <>
+              <DropdownMenuSeparator className="bg-neutral-300" />
+              <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                <Button
+                  variant="ghost"
+                  size="inline"
+                  className="text-red-600"
+                  onClick={handleRemoveMember}
+                >
+                  Remove Member
+                </Button>
+              </DropdownMenuItem>
+            </>
+          )}
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      {showRemoveDialog && (
+        <RemoveMemberDialog
+          member={member}
+          onClose={() => setShowRemoveDialog(false)}
+        />
+      )}
+    </>
   );
 };

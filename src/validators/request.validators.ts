@@ -13,3 +13,9 @@ export const handleRequestValidator = () => {
       .withMessage("Reason is required when rejecting a request."),
   ];
 };
+
+export const deleteRequestValidator = () => {
+  return [
+    body("requestId").trim().notEmpty().withMessage("Request ID is required."),
+  ];
+};

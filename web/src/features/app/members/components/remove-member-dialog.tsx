@@ -20,8 +20,16 @@ import ApiError from "@/features/api-error";
 import useGetSocietyId from "@/hooks/useGetSocietyId";
 import { Member } from "@/types";
 
-export const RemoveMemberDialog = ({ member }: { member: Member }) => {
-  const [isOpen, setIsOpen] = useState(false);
+interface RemoveMemberDialogProps {
+  member: Member;
+  onClose?: () => void;
+}
+
+export const RemoveMemberDialog = ({
+  member,
+  onClose,
+}: RemoveMemberDialogProps) => {
+  const [isOpen, setIsOpen] = useState(onClose ? true : false);
   const [selectedReason, setSelectedReason] = useState("");
   const [selectedValue, setSelectedValue] = useState("");
   const [otherReason, setOtherReason] = useState("");
@@ -52,6 +60,13 @@ export const RemoveMemberDialog = ({ member }: { member: Member }) => {
 
   if (!societyId) return;
 
+  const handleOpenChange = (open: boolean) => {
+    setIsOpen(open);
+    if (!open && onClose) {
+      onClose();
+    }
+  };
+
   const handleSubmit = async () => {
     setFormError("");
 
@@ -71,6 +86,7 @@ export const RemoveMemberDialog = ({ member }: { member: Member }) => {
       if (!("error" in response)) {
         toast.success("Student has been removed from the society");
         setIsOpen(false);
+        if (onClose) onClose();
       }
     } catch (error) {
       console.error("Error rejecting request:", error);
@@ -78,13 +94,19 @@ export const RemoveMemberDialog = ({ member }: { member: Member }) => {
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
-        <Button variant="ghost" size="inline" className="text-red-600">
-          Remove Member
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-2xl flex flex-col min-h-0 max-h-[90vh] overflow-hidden">
+    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
+      {!onClose && (
+        <DialogTrigger asChild>
+          <Button variant="ghost" size="inline" className="text-red-600">
+            Remove Member
+          </Button>
+        </DialogTrigger>
+      )}
+      <DialogContent
+        className="sm:max-w-2xl flex flex-col min-h-0 max-h-[90vh] overflow-hidden"
+        onClick={(e) => e.stopPropagation()}
+        onPointerDownCapture={(e) => e.stopPropagation()}
+      >
         <DialogHeader className="px-4">
           <DialogTitle className="text-primary-600 h5-semibold">
             Are you sure you want to remove this member?
@@ -123,17 +145,21 @@ export const RemoveMemberDialog = ({ member }: { member: Member }) => {
                 <Label htmlFor="reject-reason-other" className="b2-medium">
                   Other
                 </Label>
-              </div>
+              </div>{" "}
               {selectedValue === "Other" && (
-                <div className="mt-2">
+                <div className="mt-2" onClick={(e) => e.stopPropagation()}>
                   <Textarea
                     value={otherReason}
-                    onChange={(e) => setOtherReason(e.target.value)}
+                    onChange={(e) => {
+                      setOtherReason(e.target.value);
+                    }}
+                    onClick={(e) => e.stopPropagation()}
+                    onKeyDown={(e) => e.stopPropagation()}
+                    onPointerDown={(e) => e.stopPropagation()}
+                    onFocus={(e) => e.stopPropagation()}
                     placeholder="Please specify your reason"
-                    className={`min-h-20 resize-none ${
-                      formError
-                        ? "border-red-500"
-                        : "outline-neutral-400 outline"
+                    className={`min-h-20 resize-none outline ${
+                      formError ? "outline-red-500" : "outline-neutral-400"
                     }`}
                   />
                   {formError && (

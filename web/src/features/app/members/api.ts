@@ -25,17 +25,17 @@ export const MembersApi = api.injectEndpoints({
         const errorResponse = response.data as ApiErrorResponse;
         return createApiError(errorResponse.message);
       },
-      providesTags: (result) => {
+      providesTags: (result, _error, args) => {
         if (result && !("error" in result)) {
           return [
             ...result.map(({ id }) => ({
               type: "Requests" as const,
               id,
             })),
-            { type: "Requests", id: "LIST" },
+            { type: "Requests", id: `${args.societyId}-LIST` },
           ];
         } else {
-          return [{ type: "Requests", id: "LIST" }];
+          return [];
         }
       },
     }),
@@ -56,17 +56,17 @@ export const MembersApi = api.injectEndpoints({
         const errorResponse = response.data as ApiErrorResponse;
         return createApiError(errorResponse.message);
       },
-      providesTags: (result) => {
+      providesTags: (result, _error, args) => {
         if (result && !("error" in result)) {
           return [
             ...result.map(({ id }) => ({
               type: "Requests" as const,
-              id,
+              id: `${args.societyId}-${id}`,
             })),
-            { type: "Requests", id: "LIST" },
+            { type: "Requests", id: `${args.societyId}-LIST` },
           ];
         } else {
-          return [{ type: "Requests", id: "LIST" }];
+          return [];
         }
       },
     }),
@@ -94,14 +94,44 @@ export const MembersApi = api.injectEndpoints({
         const errorResponse = response.data as ApiErrorResponse;
         return createApiError(errorResponse.message);
       },
-      invalidatesTags: (result) => {
+      invalidatesTags: (result, _error, args) => {
         if (result && !("error" in result)) {
           return [
             { type: "Requests", id: result.id },
-            { type: "Members", id: "LIST" },
+            ...(args.action === RequestAction.ACCEPT
+              ? [{ type: "Members" as const, id: `${args.societyId}-LIST` }]
+              : []),
           ];
         } else {
-          return [{ type: "Requests", id: "LIST" }];
+          return [{ type: "Requests", id: `${args.societyId}-LIST` }];
+        }
+      },
+    }),
+    deleteRequest: builder.mutation<
+      JoinRequest | ApiError,
+      { societyId: string; requestId: string }
+    >({
+      query: ({ societyId, requestId }) => ({
+        url: `/society/requests/${societyId}`,
+        method: "DELETE",
+        body: { requestId },
+      }),
+      transformResponse: (response: ApiResponse<JoinRequest>) => {
+        if (response.success) {
+          return response.data;
+        }
+        return createApiError(response.message);
+      },
+      transformErrorResponse: (response) => {
+        const errorResponse = response.data as ApiErrorResponse;
+        return createApiError(errorResponse.message);
+      },
+      invalidatesTags(result, _error, arg) {
+        console.log({ result, arg });
+        if (result && !("error" in result)) {
+          return [{ type: "Requests", id: `${arg.societyId}-${result.id}` }];
+        } else {
+          return [{ type: "Requests", id: `${arg.societyId}-LIST` }];
         }
       },
     }),
@@ -122,17 +152,17 @@ export const MembersApi = api.injectEndpoints({
         const errorResponse = response.data as ApiErrorResponse;
         return createApiError(errorResponse.message);
       },
-      providesTags: (result, _error, arg) => {
+      providesTags: (result, _error, args) => {
         if (result && !("error" in result)) {
           return [
             ...result.map(({ id }) => ({
               type: "Members" as const,
-              id: `${arg.societyId},${id}`,
+              id: `${args.societyId}-${id}`,
             })),
-            { type: "Members", id: "LIST" },
+            { type: "Members", id: `${args.societyId}-LIST` },
           ];
         } else {
-          return [{ type: "Members", id: "LIST" }];
+          return [];
         }
       },
     }),
@@ -159,9 +189,15 @@ export const MembersApi = api.injectEndpoints({
         const errorResponse = response.data as ApiErrorResponse;
         return createApiError(errorResponse.message);
       },
-      invalidatesTags: (_result, _error, arg) => [
-        { type: "Members", id: `${arg.societyId},${arg.studentId}` },
-      ],
+      invalidatesTags: (result, _error, args) => {
+        if (result && !("error" in result)) {
+          return [
+            { type: "Members", id: `${args.societyId}-${args.studentId}` },
+          ];
+        } else {
+          return [{ type: "Members", id: `${args.societyId}-LIST` }];
+        }
+      },
     }),
     getSocietyRoles: builder.query<Role[] | ApiError, { societyId: string }>({
       query: ({ societyId }) => ({
@@ -177,17 +213,17 @@ export const MembersApi = api.injectEndpoints({
         const errorResponse = response.data as ApiErrorResponse;
         return createApiError(errorResponse.message);
       },
-      providesTags: (result, _error, arg) => {
+      providesTags: (result, _error, args) => {
         if (result && !("error" in result)) {
           return [
             ...result.map(({ id }) => ({
               type: "Roles" as const,
-              id: `${arg.societyId},${id}`,
+              id: `${args.societyId}-${id}`,
             })),
             { type: "Roles", id: "LIST" },
           ];
         } else {
-          return [{ type: "Roles", id: "LIST" }];
+          return [];
         }
       },
     }),
@@ -220,7 +256,10 @@ export const MembersApi = api.injectEndpoints({
       invalidatesTags: (result, _error, args) => {
         if (result && !("error" in result) && args.members) {
           return [
-            ...args.members.map((id) => ({ type: "Members" as const, id })),
+            ...args.members.map((id) => ({
+              type: "Members" as const,
+              id: `${args.societyId}-${id}`,
+            })),
             { type: "Roles", id: "LIST" },
           ];
         } else {
@@ -247,10 +286,16 @@ export const MembersApi = api.injectEndpoints({
         const errorResponse = response.data as ApiErrorResponse;
         return createApiError(errorResponse.message);
       },
-      invalidatesTags: [
-        { type: "Roles", id: "LIST" },
-        { type: "Members", id: "LIST" },
-      ],
+      invalidatesTags: (result, _error, args) => {
+        if (result && !("error" in result)) {
+          return [
+            { type: "Roles", id: `${args.societyId}-${args.roleId}` },
+            { type: "Members", id: "LIST" },
+          ];
+        } else {
+          return [{ type: "Roles", id: "LIST" }];
+        }
+      },
     }),
     updateRole: builder.mutation<
       Role | ApiError,
@@ -282,14 +327,11 @@ export const MembersApi = api.injectEndpoints({
       invalidatesTags: (result, _error, arg) => {
         if (result && !("error" in result)) {
           return [
-            { type: "Roles", id: `${arg.societyId},${result.id}` },
+            { type: "Roles", id: `${arg.societyId}-${result.id}` },
             { type: "Members", id: "LIST" },
           ];
         } else {
-          return [
-            { type: "Roles", id: "LIST" },
-            { type: "Members", id: "LIST" },
-          ];
+          return [{ type: "Roles", id: "LIST" }];
         }
       },
     }),
@@ -306,4 +348,5 @@ export const {
   useCreateRoleMutation,
   useDeleteRoleMutation,
   useUpdateRoleMutation,
+  useDeleteRequestMutation,
 } = MembersApi;
