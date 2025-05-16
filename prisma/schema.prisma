@@ -186,7 +186,8 @@ model NotificationRecipient {
   recipientType  String    // "student" or "advisor"
   studentId      String?   // ID of the student (null for advisor notifications)
   advisorId      String?   // ID of the advisor (null for student notifications)
-  redirectUrl    String?   // Moved from Notification model
+  webRedirectUrl    String?
+  mobileRedirectUrl    String?
   isRead         Boolean   @default(false)
   isDeleted      Boolean   @default(false)
   readAt         DateTime?

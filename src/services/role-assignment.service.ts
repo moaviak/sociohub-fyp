@@ -348,7 +348,8 @@ export const processRoleChangeNotifications = async (
             {
               recipientType: "student",
               student: { connect: { id: student.id } },
-              redirectUrl: `/society/${society.id}`,
+              webRedirectUrl: `/society/${society.id}`,
+              mobileRedirectUrl: `/(student-tabs)/society/${society.id}`,
               isRead: false,
               isDeleted: false,
             },
@@ -366,7 +367,8 @@ export const processRoleChangeNotifications = async (
         {
           recipientId: student.id,
           recipientType: "student" as const,
-          redirectUrl: `/society/${society.id}`,
+          webRedirectUrl: `/society/${society.id}`,
+          mobileRedirectUrl: `/(student-tabs)/society/${society.id}`,
         },
       ];
 

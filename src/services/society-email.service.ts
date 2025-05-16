@@ -110,7 +110,8 @@ export const sendMemberRemovalStatusNotification = async ({
         {
           recipientId: student.id,
           recipientType: "student",
-          redirectUrl: `/society/${society.name}`,
+          webRedirectUrl: `/society/${society.name}`,
+          mobileRedirectUrl: `/(student-tabs)/society/${society.name}`,
         },
       ],
       image: society.logo,

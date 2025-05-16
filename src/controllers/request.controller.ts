@@ -131,11 +131,13 @@ export const sendJoinRequest = asyncHandler(
         const recipients = [
           ...advisors.map((advisor) => ({
             ...advisor,
-            redirectUrl: "/members/requests", // Advisor specific redirectUrl
+            webRedirectUrl: "/members/requests", // Advisor specific redirectUrl
+            mobileRedirectUrl: "/(advisor-tabs)/members/requests", // Advisor specific redirectUrl
           })),
           ...membersWithPrivilege.map((member) => ({
             ...member,
-            redirectUrl: `/members/${society.id}/requests`, // Member specific redirectUrl
+            webRedirectUrl: `/members/${society.id}/requests`, // Member specific redirectUrl
+            mobileRedirectUrl: `/(student-tabs)/members/${society.id}/requests`, // Member specific redirectUrl
           })),
         ];
 

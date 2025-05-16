@@ -149,7 +149,8 @@ export const sendRequestStatusNotification = async ({
           {
             recipientId: student.id,
             recipientType: "student",
-            redirectUrl: `/society/${society.id}`,
+            webRedirectUrl: `/society/${society.id}`,
+            mobileRedirectUrl: `/(student-tabs)/society/${society.id}`,
           },
         ],
         image: society.logo,
@@ -175,7 +176,8 @@ export const sendRequestStatusNotification = async ({
           {
             recipientId: student.id,
             recipientType: "student",
-            redirectUrl: `/society/${society.id}`,
+            webRedirectUrl: `/society/${society.id}`,
+            mobileRedirectUrl: `/(student-tabs)/society/${society.id}`,
           },
         ],
         image: society.logo,

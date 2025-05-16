@@ -94,7 +94,8 @@ export interface Notification {
   title: string;
   description?: string;
   image?: string;
-  redirectUrl?: string;
+  webRedirectUrl?: string;
+  mobileRedirectUrl?: string;
   isRead: boolean;
   isDeleted: boolean;
   readAt?: string;

@@ -9,7 +9,8 @@ export interface Notification {
   title: string;
   description?: string;
   image?: string;
-  redirectUrl?: string;
+  webRedirectUrl?: string;
+  mobileRedirectUrl?: string;
   isRead: boolean;
   isDeleted: boolean;
   readAt?: string;
@@ -26,7 +27,8 @@ const formatNotification = (recipient: any): Notification => {
     title: recipient.notification.title,
     description: recipient.notification.description,
     image: recipient.notification.image,
-    redirectUrl: recipient.redirectUrl,
+    webRedirectUrl: recipient.webRedirectUrl,
+    mobileRedirectUrl: recipient.mobileRedirectUrl,
     isRead: recipient.isRead,
     isDeleted: recipient.isDeleted,
     readAt: recipient.readAt ? recipient.readAt.toISOString() : undefined,
@@ -42,17 +44,20 @@ export const createNotification = async ({
   title,
   description,
   image = null,
-  redirectUrl = null,
+  webRedirectUrl = null,
+  mobileRedirectUrl = null,
   recipients,
 }: {
   title: string;
   description: string;
   image?: string | null;
-  redirectUrl?: string | null;
+  webRedirectUrl?: string | null;
+  mobileRedirectUrl?: string | null;
   recipients: Array<{
     recipientType: "student" | "advisor";
     recipientId: string;
-    redirectUrl?: string | null;
+    webRedirectUrl?: string | null;
+    mobileRedirectUrl?: string | null;
   }>;
 }) => {
   try {
@@ -78,7 +83,8 @@ export const createNotification = async ({
               notification: { connect: { id: notification.id } },
               recipientType: "student",
               student: { connect: { id: recipient.recipientId } },
-              redirectUrl: recipient.redirectUrl || redirectUrl,
+              webRedirectUrl: recipient.webRedirectUrl || webRedirectUrl,
+              mobileRedirectUrl: recipient.mobileRedirectUrl || webRedirectUrl,
               isRead: false,
               isDeleted: false,
             },
@@ -92,7 +98,8 @@ export const createNotification = async ({
               notification: { connect: { id: notification.id } },
               recipientType: "advisor",
               advisor: { connect: { id: recipient.recipientId } },
-              redirectUrl: recipient.redirectUrl || redirectUrl,
+              webRedirectUrl: recipient.webRedirectUrl || webRedirectUrl,
+              mobileRedirectUrl: recipient.mobileRedirectUrl || webRedirectUrl,
               isRead: false,
               isDeleted: false,
             },

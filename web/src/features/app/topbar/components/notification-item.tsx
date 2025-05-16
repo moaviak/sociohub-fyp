@@ -45,7 +45,7 @@ export const NotificationItem = ({
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (onClick) onClick();
-    if (notification.redirectUrl) navigate(notification.redirectUrl);
+    if (notification.webRedirectUrl) navigate(notification.webRedirectUrl);
   };
 
   const handleDelete = async (e: React.MouseEvent<HTMLButtonElement>) => {

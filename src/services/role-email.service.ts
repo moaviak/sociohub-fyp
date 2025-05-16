@@ -178,7 +178,8 @@ export const sendRoleAssignmentNotifications = async ({
       ...members.map((member) => ({
         recipientId: member.id,
         recipientType: "student" as const,
-        redirectUrl: `/society/${society.id}`,
+        webRedirectUrl: `/society/${society.id}`,
+        mobileRedirectUrl: `/(student-tabs)/society/${society.id}`,
       })),
     ];
 

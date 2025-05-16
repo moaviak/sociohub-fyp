@@ -1,6 +1,9 @@
 import { Notification } from "@/types";
 import { useNavigate } from "react-router";
 import { toast as sonnerToast } from "sonner";
+import { markNotificationRead } from "../socket-provider";
+import { markNotificationAsRead } from "../../topbar/slice";
+import { useAppDispatch } from "@/app/hooks";
 
 // Custom toast function that abstracts sonner toast API
 export function toast(notification: Notification) {
@@ -24,13 +27,22 @@ export function NotificationToast({
   id,
   notification,
 }: NotificationToastProps) {
-  const { title, description, image, redirectUrl } = notification;
+  const {
+    id: notificationId,
+    title,
+    description,
+    image,
+    webRedirectUrl,
+  } = notification;
   const navigate = useNavigate();
+  const dispatch = useAppDispatch();
 
   // Handle click on toast to redirect user
   const handleClick = () => {
-    if (redirectUrl) {
-      navigate(redirectUrl);
+    markNotificationRead(notificationId);
+    dispatch(markNotificationAsRead(notificationId));
+    if (webRedirectUrl) {
+      navigate(webRedirectUrl);
     }
     sonnerToast.dismiss(id);
   };

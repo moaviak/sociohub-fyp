@@ -156,7 +156,9 @@ export const setupSocketIO = (io: Server) => {
                 description:
                   updatedNotification.notification.description || undefined,
                 image: updatedNotification.notification.image || undefined,
-                redirectUrl: updatedNotification.redirectUrl || undefined,
+                webRedirectUrl: updatedNotification.webRedirectUrl || undefined,
+                mobileRedirectUrl:
+                  updatedNotification.mobileRedirectUrl || undefined,
                 isRead: updatedNotification.isRead,
                 isDeleted: updatedNotification.isDeleted,
                 readAt: updatedNotification.readAt
