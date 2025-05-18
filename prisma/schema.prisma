@@ -28,28 +28,28 @@ model Student {
   createdAt               DateTime  @default(now())
   updatedAt               DateTime  @updatedAt
 
-  joinRequests JoinRequest[]    @relation
-  societies    StudentSociety[] @relation
+  joinRequests  JoinRequest[]           @relation
+  societies     StudentSociety[]        @relation
   notifications NotificationRecipient[] @relation("StudentNotifications")
 }
 
 model Advisor {
-  id                      String    @id @default(uuid())
+  id                      String                  @id @default(uuid())
   firstName               String
   lastName                String
   displayName             String
-  email                   String    @unique
+  email                   String                  @unique
   password                String
   avatar                  String?
-  phone                   String?   @unique
+  phone                   String?                 @unique
   refreshToken            String?
-  isEmailVerified         Boolean   @default(false)
+  isEmailVerified         Boolean                 @default(false)
   emailVerificationCode   String?
   emailVerificationExpiry DateTime?
-  createdAt               DateTime  @default(now())
-  updatedAt               DateTime  @updatedAt
-  societyId               String?   @unique
-  society                 Society?  @relation(fields: [societyId], references: [id], onDelete: SetNull)
+  createdAt               DateTime                @default(now())
+  updatedAt               DateTime                @updatedAt
+  societyId               String?                 @unique
+  society                 Society?                @relation(fields: [societyId], references: [id], onDelete: SetNull)
   notifications           NotificationRecipient[] @relation("AdvisorNotifications")
 
   @@index([societyId])
@@ -70,6 +70,7 @@ model Society {
   roles        Role[]
   joinRequests JoinRequest[]    @relation
   members      StudentSociety[] @relation
+  events       Event[]          @relation
 }
 
 enum JoinRequestStatus {
@@ -169,41 +170,112 @@ model SocietyAdvisor {
 }
 
 model Notification {
-  id           String   @id @default(uuid())
-  title        String
-  description  String
-  image        String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id          String   @id @default(uuid())
+  title       String
+  description String
+  image       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   // Relation to recipients
-  recipients   NotificationRecipient[]
+  recipients NotificationRecipient[]
 }
 
 model NotificationRecipient {
-  id             String    @id @default(uuid())
-  notificationId String
-  recipientType  String    // "student" or "advisor"
-  studentId      String?   // ID of the student (null for advisor notifications)
-  advisorId      String?   // ID of the advisor (null for student notifications)
+  id                String    @id @default(uuid())
+  notificationId    String
+  recipientType     String // "student" or "advisor"
+  studentId         String? // ID of the student (null for advisor notifications)
+  advisorId         String? // ID of the advisor (null for student notifications)
   webRedirectUrl    String?
-  mobileRedirectUrl    String?
-  isRead         Boolean   @default(false)
-  isDeleted      Boolean   @default(false)
-  readAt         DateTime?
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+  mobileRedirectUrl String?
+  isRead            Boolean   @default(false)
+  isDeleted         Boolean   @default(false)
+  readAt            DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
 
   // Relation to notification
-  notification   Notification @relation(fields: [notificationId], references: [id], onDelete: Cascade)
-  
-  // Relations to recipient types
-  student        Student? @relation("StudentNotifications", fields: [studentId], references: [id], onDelete: Cascade)
-  advisor        Advisor? @relation("AdvisorNotifications", fields: [advisorId], references: [id], onDelete: Cascade)
+  notification Notification @relation(fields: [notificationId], references: [id], onDelete: Cascade)
 
+  // Relations to recipient types
+  student Student? @relation("StudentNotifications", fields: [studentId], references: [id], onDelete: Cascade)
+  advisor Advisor? @relation("AdvisorNotifications", fields: [advisorId], references: [id], onDelete: Cascade)
+
+  @@unique([notificationId, studentId, advisorId])
   @@index([notificationId])
   @@index([recipientType])
   @@index([studentId])
   @@index([advisorId])
-  @@unique([notificationId, studentId, advisorId])
+}
+
+enum EventCategories {
+  Workshop
+  Seminar
+  SocialGathering
+  Competition
+  CulturalEvent
+  SportsEvent
+  Meeting
+  Other
+}
+
+enum EventType {
+  Physical
+  Online
+}
+
+enum EventAudience {
+  Open
+  Members
+  Invite
+}
+
+enum EventVisibility {
+  Publish
+  Draft
+  Schedule
+}
+
+enum PaymentMethods {
+  CreditCard
+  Easypaisa
+}
+
+model Event {
+  id                   String            @id @default(uuid())
+  title                String
+  tagline              String?
+  description          String?
+  categories           EventCategories[]
+  banner               String?
+  startDate            DateTime
+  endDate              DateTime
+  startTime            DateTime
+  endTime              DateTime
+  eventType            EventType
+  venueName            String?
+  venueAddress         String?
+  platform             String?
+  meetingLink          String?
+  accessInstructions   String?
+  audience             EventAudience
+  visibility           EventVisibility
+  publishDateTime      DateTime?
+  registrationRequired Boolean           @default(false)
+  registrationDeadline DateTime?
+  maxParticipants      Int?
+  paidEvent            Boolean           @default(false)
+  ticketPrice          Int?
+  paymentMethods       PaymentMethods[]
+  announcementEnabled  Boolean           @default(false)
+  announcement         String?
+  isDraft              Boolean           @default(false)
+  formStep             Int?
+
+  societyId String
+  society   Society @relation(fields: [societyId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

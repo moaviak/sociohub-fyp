@@ -91,12 +91,14 @@ import studentRoutes from "./routes/student.routes.js";
 import advisorRoutes from "./routes/advisor.routes.js";
 import societyRoutes from "./routes/society.routes.js";
 import notificationRoutes from "./routes/notification.routes.js";
+import eventRoutes from "./routes/events.routes.js";
 
 app.use("/api/auth", authRoutes);
 app.use("/api/student", studentRoutes);
 app.use("/api/advisor", advisorRoutes);
 app.use("/api/society", societyRoutes);
 app.use("/api/notifications", notificationRoutes);
+app.use("/api/events", eventRoutes);
 
 // common error handling middleware
 app.use(errorHandler);
