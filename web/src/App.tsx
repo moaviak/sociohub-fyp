@@ -23,6 +23,8 @@ import RequestsPage from "@/pages/app/members/requests-page";
 import RequestsHistoryPage from "./pages/app/members/requests-history-page";
 import SocietySettingsPage from "./pages/app/society-settings-page";
 import { NotificationSocketProvider } from "./features/app/notifications/socket-provider";
+import EventsPage from "./pages/app/events";
+import CreateEventPage from "./pages/app/events/create-event-page";
 
 function App() {
   return (
@@ -62,7 +64,6 @@ function App() {
               <Route path="requests" element={<RequestsPage />}>
                 <Route path="history" element={<RequestsHistoryPage />} />
               </Route>
-
               <Route path=":societyId" element={<MembersPage />}>
                 <Route path="roles" element={<RolesPage />} />
                 <Route path="requests" element={<RequestsPage />}>
@@ -70,6 +71,14 @@ function App() {
                 </Route>
               </Route>
             </Route>
+
+            <Route path="/events" element={<EventsPage />}>
+              <Route path="create-event" element={<CreateEventPage />} />
+              <Route path=":societyId" element={<EventsPage />}>
+                <Route path="create-event" element={<CreateEventPage />} />
+              </Route>
+            </Route>
+
             <Route path="/settings" element={<SocietySettingsPage />}>
               <Route path=":societyId" element={<SocietySettingsPage />} />
             </Route>

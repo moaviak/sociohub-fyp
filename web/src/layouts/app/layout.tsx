@@ -50,7 +50,7 @@ function AppLayout() {
       <Sidebar />
       <div className="flex-1 flex flex-col">
         <TopBar />
-        <div className="flex-1 px-6 py-2 max-h-full overflow-hidden">
+        <div className="flex-1 px-6 py-2 max-h-full overflow-y-auto">
           <Outlet />
         </div>
       </div>

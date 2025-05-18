@@ -78,3 +78,12 @@ export const haveMembersPrivilege = (
 
   return society && society.privileges.includes(PRIVILEGES.MEMBER_MANAGEMENT);
 };
+
+export const haveEventsPrivilege = (
+  societies: (Society & { privileges: string[] })[],
+  societyId: string
+) => {
+  const society = societies.find((society) => society.id === societyId);
+
+  return society && society.privileges.includes(PRIVILEGES.EVENT_MANAGEMENT);
+};

@@ -1,0 +1,9 @@
+.ql-editor {
+  min-height: 320px;
+  max-height: 320px;
+}
+
+.ql-toolbar,
+.ql-container {
+  border-color: oklch(0.708 0 0) !important;
+}

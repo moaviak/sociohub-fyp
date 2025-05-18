@@ -102,3 +102,14 @@ export interface Notification {
   createdAt?: string;
   updatedAt?: string;
 }
+
+export enum EventCategory {
+  Workshop = "Workshop",
+  Seminar = "Seminar",
+  SocialGathering = "Social Gathering",
+  Competition = "Competition",
+  CulturalEvent = "Cultural Event",
+  SportsEvent = "Sports Event",
+  Meeting = "Meeting",
+  Other = "Other",
+}

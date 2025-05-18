@@ -5,6 +5,10 @@
 @custom-variant dark (&:is(.dark *));
 @import "tailwindcss";
 
+html {
+  @apply overflow-hidden;
+}
+
 @theme {
   --color-primary-100: #d3e8ff;
   --color-primary-200: #a6d1ff;

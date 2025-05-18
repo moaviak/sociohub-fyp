@@ -1,3 +1,5 @@
+import { EventCategory } from "@/types";
+
 export const DEGREES = [
   { value: "BAF" },
   { value: "BAI" },
@@ -216,4 +218,15 @@ export const REMOVAL_REASONS = [
     description:
       "The member formally requested to leave the society or became inactive by choice.",
   },
+];
+
+export const EventCategories: EventCategory[] = [
+  EventCategory.Workshop,
+  EventCategory.Seminar,
+  EventCategory.SocialGathering,
+  EventCategory.Competition,
+  EventCategory.CulturalEvent,
+  EventCategory.SportsEvent,
+  EventCategory.Meeting,
+  EventCategory.Other,
 ];
