@@ -13,6 +13,13 @@ import { EventFormData, eventFormSchema } from "./schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Form } from "@/components/ui/form";
 import { format } from "date-fns";
+import { useCreateEventMutation } from "./api";
+import { useEffect } from "react";
+import { toast } from "sonner";
+import ApiError from "@/features/api-error";
+import useGetSocietyId from "@/hooks/useGetSocietyId";
+import useLoadingOverlay from "@/components/loading-overlay";
+import { useNavigate } from "react-router";
 
 // Step indicator component
 const StepIndicator = ({
@@ -64,6 +71,9 @@ const StepIndicator = ({
 };
 
 export const CreateEvent = () => {
+  const societyId = useGetSocietyId();
+  const navigate = useNavigate();
+
   const now = new Date();
   const oneHourLater = new Date(now.getTime() + 60 * 60 * 1000);
 
@@ -89,9 +99,87 @@ export const CreateEvent = () => {
     },
   });
 
+  const [createEvent, { isError, error, isLoading }] = useCreateEventMutation();
+
+  const { LoadingScreen, showLoading, hideLoading } =
+    useLoadingOverlay(isLoading);
+
+  useEffect(() => {
+    if (isError) {
+      toast.error(
+        (error as ApiError)?.errorMessage ||
+          "An error occurred while creating the event."
+      );
+    }
+  }, [isError, error]);
+
+  useEffect(() => {
+    if (isLoading) {
+      showLoading("Creating event...");
+    } else {
+      hideLoading();
+    }
+  }, [isLoading, showLoading, hideLoading]);
+
   const onSubmit = async (data: EventFormData) => {
     if (data.formStep === totalSteps) {
       console.log("Final form data:", data);
+      const formData = new FormData();
+      formData.append("societyId", societyId || "");
+
+      formData.append("title", data.eventTitle);
+      formData.append("tagline", data.eventTagline || "");
+      formData.append("description", data.detailedDescription || "");
+      formData.append("categories", JSON.stringify(data.eventCategories || []));
+      formData.append("banner", data.eventImage || "");
+
+      formData.append("startDate", format(data.startDate, "yyyy-MM-dd"));
+      formData.append("endDate", format(data.endDate, "yyyy-MM-dd"));
+      formData.append("startTime", data.startTime);
+      formData.append("endTime", data.endTime);
+
+      formData.append("eventType", data.eventType);
+      formData.append("venueName", data.venueName || "");
+      formData.append("venueAddress", data.address || "");
+      formData.append("platform", data.platform || "");
+      formData.append("otherPlatform", data.otherPlatform || "");
+      formData.append("meetingLink", data.meetingLink || "");
+      formData.append("accessInstructions", data.accessInstructions || "");
+
+      formData.append("audience", data.audience);
+      formData.append("visibility", data.visibility);
+      formData.append(
+        "publishDateTime",
+        data.publishDateTime?.toISOString() || ""
+      );
+
+      formData.append(
+        "registrationRequired",
+        data.isRegistrationRequired.toString()
+      );
+      formData.append(
+        "registrationDeadline",
+        data.registrationDeadline?.toISOString() || ""
+      );
+      formData.append("paidEvent", data.isPaidEvent?.toString() || "");
+      formData.append("ticketPrice", data.ticketPrice?.toString() || "");
+      formData.append(
+        "paymentMethods",
+        JSON.stringify(data.paymentGateways || [])
+      );
+
+      formData.append(
+        "announcementEnabled",
+        data.isAnnouncementEnabled.toString()
+      );
+      formData.append("announcement", data.announcement || "");
+
+      const response = await createEvent(formData);
+
+      if (!("error" in response)) {
+        toast.success("Event created.");
+        navigate(-1);
+      }
     } else {
       form.setValue("formStep", data.formStep + 1);
     }
@@ -160,16 +248,19 @@ export const CreateEvent = () => {
                 type="button"
                 variant="outline"
                 onClick={() => console.log("Save as draft")}
+                disabled={isLoading}
               >
                 Save as Draft
               </Button>
-              <Button type="submit">
+              <Button type="submit" disabled={isLoading}>
                 {step === totalSteps ? "Publish Event" : "Next"}
               </Button>
             </div>
           </div>
         </form>
       </Form>
+
+      <LoadingScreen />
     </div>
   );
 };

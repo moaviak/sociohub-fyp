@@ -11,7 +11,7 @@ router
   .route("/")
   .post(
     verifyJWT,
-    upload.single("eventImage"),
+    upload.single("banner"),
     createEventValidator(),
     validate,
     createEvent

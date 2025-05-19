@@ -66,8 +66,29 @@ export const removeLocalFile = (localPath: string) => {
  * @param {string} fileName
  * @description returns the file's local path in the file system to assist future removal
  */
-export const getLocalPath = (fileName: string) => {
-  return `public/temp/${fileName}`;
+export const getLocalPath = (filename: string) => {
+  return `/public/temp/${filename}`;
+};
+
+/**
+ * Deletes a file from the file system
+ * @param filePath - The relative path of the file to delete
+ */
+export const deleteFile = async (filePath: string): Promise<void> => {
+  try {
+    // Remove the leading slash and construct absolute path
+    const relativePath = filePath.startsWith("/")
+      ? filePath.slice(1)
+      : filePath;
+    const absolutePath = path.join(process.cwd(), "public", relativePath);
+
+    if (fs.existsSync(absolutePath)) {
+      await fs.promises.unlink(absolutePath);
+    }
+  } catch (error) {
+    console.error("Error deleting file:", error);
+    // Don't throw the error as this is a cleanup operation
+  }
 };
 
 /**

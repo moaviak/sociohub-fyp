@@ -1,38 +1,62 @@
 import { body, check } from "express-validator";
 
 export const createEventValidator = () => [
+  body("societyId").notEmpty().withMessage("Society ID is required"),
+
   // Section 1: Basic Event Information
-  body("eventTitle").notEmpty().withMessage("Event title is required"),
-  body("eventTagline")
+  body("title").notEmpty().withMessage("Event title is required"),
+  body("tagline")
     .optional()
-    .isString()
+    .custom((value) => {
+      if (value === "") return true;
+      return typeof value === "string";
+    })
     .withMessage("Tagline must be a string")
     .isLength({ max: 150 })
     .withMessage("Tagline must be 150 characters or less"),
-  body("detailedDescription")
+  body("description")
     .optional()
-    .isString()
+    .custom((value) => {
+      if (value === "") return true;
+      return typeof value === "string";
+    })
     .withMessage("Detailed description must be a string"),
-  body("eventCategories")
-    .isArray()
-    .withMessage("Event categories must be an array")
-    .notEmpty()
-    .withMessage("Please select at least one category"),
+  body("categories")
+    .custom((value, { req }) => {
+      if (typeof value === "string") {
+        try {
+          const parsedValue = JSON.parse(value);
+          if (Array.isArray(parsedValue) && parsedValue.length > 0) {
+            req.body.categories = parsedValue;
+            return true;
+          } else {
+            throw new Error("Event categories must be a non-empty array");
+          }
+        } catch (e: any) {
+          throw new Error(
+            e.message || "Event categories must be a valid JSON array"
+          );
+        }
+      }
+      // If not a string, let express-validator's default handling take over (should fail isArray if not an array)
+      return Array.isArray(value) && value.length > 0;
+    })
+    .withMessage("Event categories must be a non-empty array"),
   // Note: File validation is typically handled by middleware like Multer, not express-validator body checks.
   // body('eventImage').optional(), // Placeholder, actual file validation needed elsewhere
 
   // Section 2: Date & Time
   body("startDate")
-    .isISO8601()
+    .matches(/^\d{4}-\d{2}-\d{2}$/)
     .toDate()
-    .withMessage("Start date is required and must be a valid date"),
+    .withMessage("Start date is required and must be in YYYY-MM-DD format"),
   body("startTime")
     .matches(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/)
     .withMessage("Invalid time format (HH:MM)"),
   body("endDate")
-    .isISO8601()
+    .matches(/^\d{4}-\d{2}-\d{2}$/)
     .toDate()
-    .withMessage("End date is required and must be a valid date"),
+    .withMessage("End date is required and must be in YYYY-MM-DD format"),
   body("endTime")
     .matches(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/)
     .withMessage("Invalid time format (HH:MM)"),
@@ -56,24 +80,52 @@ export const createEventValidator = () => [
     .withMessage("Invalid event type"),
   body("venueName")
     .optional()
-    .isString()
+    .custom((value) => {
+      if (value === "") return true;
+      return typeof value === "string";
+    })
     .withMessage("Venue name must be a string"),
-  body("address").optional().isString().withMessage("Address must be a string"),
+  body("venueAddress")
+    .optional()
+    .custom((value) => {
+      if (value === "") return true;
+      return typeof value === "string";
+    })
+    .withMessage("Address must be a string"),
   body("platform")
     .optional()
-    .isIn(["Zoom", "Google Meet", "Microsoft Teams", "Other"])
+    .custom((value) => {
+      if (value === "") return true;
+      return ["Zoom", "Google Meet", "Microsoft Teams", "Other"].includes(
+        value
+      );
+    })
     .withMessage("Invalid online platform"),
   body("otherPlatform")
     .optional()
-    .isString()
+    .custom((value) => {
+      if (value === "") return true;
+      return typeof value === "string";
+    })
     .withMessage("Other platform must be a string"),
   body("meetingLink")
     .optional()
-    .isURL()
+    .custom((value) => {
+      if (value === "") return true;
+      try {
+        new URL(value);
+        return true;
+      } catch {
+        return false;
+      }
+    })
     .withMessage("Please enter a valid URL"),
   body("accessInstructions")
     .optional()
-    .isString()
+    .custom((value) => {
+      if (value === "") return true;
+      return typeof value === "string";
+    })
     .withMessage("Access instructions must be a string"),
 
   // Conditional validation for location (requires custom logic or later middleware)
@@ -124,30 +176,84 @@ export const createEventValidator = () => [
   // }),
 
   // Section 5: Registration
-  body("isRegistrationRequired")
+  body("registrationRequired")
+    .custom((value, { req }) => {
+      if (typeof value === "string") {
+        if (value === "true") {
+          req.body.registrationRequired = true;
+        } else if (value === "false") {
+          req.body.registrationRequired = false;
+        }
+      }
+      return true; // Let isBoolean handle non-string or other string values
+    })
     .isBoolean()
-    .withMessage("isRegistrationRequired must be a boolean"),
+    .withMessage("registrationRequired must be a boolean"),
   body("registrationDeadline")
     .optional()
-    .isISO8601()
-    .toDate()
+    .custom((value) => {
+      if (value === "") return true;
+      return !isNaN(Date.parse(value));
+    })
     .withMessage("Registration deadline must be a valid date"),
-  body("maximumParticipants")
+  body("maxParticipants")
     .optional()
-    .isInt({ gt: 0 })
+    .custom((value) => {
+      if (value === "") return true;
+      const num = parseInt(value);
+      return !isNaN(num) && num > 0;
+    })
     .withMessage("Maximum participants must be a positive integer"),
-  body("isPaidEvent")
+  body("paidEvent")
     .optional()
-    .isBoolean()
+    .custom((value) => {
+      if (value === "") return true;
+      if (typeof value === "string") {
+        return value === "true" || value === "false";
+      }
+      return typeof value === "boolean";
+    })
     .withMessage("isPaidEvent must be a boolean"),
   body("ticketPrice")
     .optional()
-    .isFloat({ gt: 0 })
-    .withMessage("Ticket price must be a positive number"),
-  body("paymentGateways")
-    .optional()
-    .isArray()
-    .withMessage("Payment gateways must be an array"),
+    .custom((value) => {
+      if (value === "") return true;
+      if (typeof value === "string") {
+        const num = parseInt(value, 10);
+        return !isNaN(num) && num > 0;
+      }
+      return typeof value === "number" && value > 0;
+    })
+    .withMessage("Ticket price must be a positive integer"),
+  body("paymentMethods")
+    .custom((value, { req }) => {
+      // If the field is not present or is empty string, skip validation
+      if (value === undefined || value === null || value === "") {
+        req.body.paymentMethods = []; // Set empty array as default value
+        return true;
+      }
+
+      if (typeof value === "string") {
+        try {
+          const parsedValue = JSON.parse(value);
+          if (Array.isArray(parsedValue)) {
+            req.body.paymentMethods = parsedValue;
+            return true;
+          }
+        } catch (e) {
+          // Invalid JSON string
+        }
+        return false;
+      }
+
+      // If it's already an array, keep it as is
+      if (Array.isArray(value)) {
+        return true;
+      }
+
+      return false;
+    })
+    .withMessage("Payment methods must be an array"),
   // Note: Further validation of paymentGateways array elements can be added if needed.
 
   // Conditional validation for registration/paid event (requires custom logic or later middleware)
@@ -174,7 +280,17 @@ export const createEventValidator = () => [
   // }),
 
   // Section 6: Announcement
-  body("isAnnouncementEnabled")
+  body("announcementEnabled")
+    .custom((value, { req }) => {
+      if (typeof value === "string") {
+        if (value === "true") {
+          req.body.announcementEnabled = true;
+        } else if (value === "false") {
+          req.body.announcementEnabled = false;
+        }
+      }
+      return true; // Let isBoolean handle non-string or other string values
+    })
     .isBoolean()
     .withMessage("isAnnouncementEnabled must be a boolean"),
   body("announcement")
@@ -193,9 +309,20 @@ export const createEventValidator = () => [
   // Additional fields
   body("isDraft")
     .optional() // Optional as it has a default in Zod, but good to validate if provided
+    .custom((value, { req }) => {
+      if (typeof value === "string") {
+        if (value === "true") {
+          req.body.isDraft = true;
+        } else if (value === "false") {
+          req.body.isDraft = false;
+        }
+      }
+      return true; // Let isBoolean handle non-string or other string values
+    })
     .isBoolean()
     .withMessage("isDraft must be a boolean"),
   body("formStep")
+    .optional()
     .isInt({ min: 1, max: 6 })
     .withMessage("Form step must be an integer between 1 and 6"),
   // createdAt and updatedAt are typically set on the backend, not validated from the body.

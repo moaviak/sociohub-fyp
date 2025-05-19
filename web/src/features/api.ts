@@ -74,6 +74,7 @@ export const api = createApi({
     "Members",
     "Roles",
     "Notifications",
+    "Events",
   ],
   endpoints: (builder) => ({
     refreshAuth: builder.mutation<RefreshTokenResponse | ApiError, void>({

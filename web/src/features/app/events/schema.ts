@@ -172,10 +172,11 @@ export const eventFormSchema = z
     createdAt: z.date().default(() => new Date()),
     updatedAt: z.date().default(() => new Date()),
   })
-  .refine(
+  .superRefine(
     // Combined date/time validation - Apply from step 2
-    (data) => {
-      if (data.formStep < 2) return true; // Skip validation before step 2
+    (data, ctx) => {
+      // Changed to superRefine with context
+      if (data.formStep < 2) return; // Skip validation before step 2
 
       if (
         !data.startDate ||
@@ -183,7 +184,7 @@ export const eventFormSchema = z
         !data.endDate ||
         !data.endTime
       ) {
-        return true; // Individual field validations should catch missing required fields
+        return; // Individual field validations should catch missing required fields
       }
       const startDateTime = new Date(data.startDate);
       const [startHours, startMinutes] = data.startTime.split(":").map(Number);
@@ -194,13 +195,24 @@ export const eventFormSchema = z
       endDateTime.setHours(endHours, endMinutes, 0, 0);
 
       if (isNaN(startDateTime.getTime()) || isNaN(endDateTime.getTime())) {
-        return false; // Invalid date constructed
+        // Handle invalid date construction if necessary, though individual date/time validations should cover this
+        return;
       }
-      return endDateTime > startDateTime;
-    },
-    {
-      message: "End date/time must be after start date/time",
-      path: ["endTime"],
+
+      if (endDateTime <= startDateTime) {
+        ctx.addIssue({
+          // Add issue for endDate
+          code: z.ZodIssueCode.custom,
+          message: "End date/time must be after start date/time",
+          path: ["endDate"],
+        });
+        ctx.addIssue({
+          // Add issue for endTime
+          code: z.ZodIssueCode.custom,
+          message: "End date/time must be after start date/time",
+          path: ["endTime"],
+        });
+      }
     }
   )
   .refine(
@@ -289,23 +301,32 @@ export const eventFormSchema = z
       path: ["registrationDeadline"],
     }
   )
-  .refine(
+  .superRefine(
     // Validate paid event fields - Apply from step 5
-    (data) => {
-      if (data.formStep < 5) return true; // Skip validation before step 5
+    (data, ctx) => {
+      if (data.formStep < 5) return; // Skip validation before step 5
 
       if (data.isRegistrationRequired && data.isPaidEvent === true) {
         const hasPrice = !!data.ticketPrice && data.ticketPrice > 0;
         const hasGateways =
           !!data.paymentGateways && data.paymentGateways.length > 0;
-        return hasPrice && hasGateways;
+
+        if (!hasPrice) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: "Ticket price is required for paid events.",
+            path: ["ticketPrice"],
+          });
+        }
+
+        if (!hasGateways) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: "At least one payment method is required for paid events.",
+            path: ["paymentGateways"],
+          });
+        }
       }
-      return true;
-    },
-    {
-      message:
-        "Ticket price and at least one payment gateway are required for paid events.",
-      path: ["ticketPrice"], // Or ["paymentGateways"]
     }
   )
   .refine(
