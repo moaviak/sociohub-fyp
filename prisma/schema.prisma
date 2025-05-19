@@ -242,6 +242,13 @@ enum PaymentMethods {
   Easypaisa
 }
 
+enum EventStatus {
+  Upcoming
+  Ongoing
+  Completed
+  Cancelled
+}
+
 model Event {
   id                   String            @id @default(uuid())
   title                String
@@ -270,6 +277,7 @@ model Event {
   paymentMethods       PaymentMethods[]
   announcementEnabled  Boolean           @default(false)
   announcement         String?
+  status               EventStatus
   isDraft              Boolean           @default(false)
   formStep             Int?
 

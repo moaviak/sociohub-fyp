@@ -461,10 +461,16 @@ export const getRequestsHistory = asyncHandler(
     }
 
     // Fetch join requests
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
     const requests = await prisma.joinRequest.findMany({
       where: {
         societyId: society.id,
         OR: [{ status: "APPROVED" }, { status: "REJECTED" }],
+        createdAt: {
+          gte: thirtyDaysAgo,
+        },
       },
       orderBy: { createdAt: "desc" },
       select: {
