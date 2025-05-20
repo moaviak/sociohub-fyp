@@ -11,7 +11,7 @@ import { Provider } from "react-redux";
 import { store } from "@/store";
 import { useGetUserQuery } from "@/store/auth/api";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { setAuthChecked } from "@/store/auth/slice";
+import { setAuthChecked, initializeAuth } from "@/store/auth/slice";
 import { useRefreshAuthMutation } from "@/store/api";
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
@@ -24,7 +24,14 @@ interface AuthProviderProps {
 
 const AuthProvider = ({ children }: AuthProviderProps) => {
   const dispatch = useAppDispatch();
-  const { accessToken, refreshToken } = useAppSelector((state) => state.auth);
+  const { accessToken, refreshToken, isTokenLoading } = useAppSelector(
+    (state) => state.auth
+  );
+
+  useEffect(() => {
+    // Initialize tokens on mount
+    dispatch(initializeAuth());
+  }, [dispatch]);
 
   const [refreshAuth, { isLoading: isRefreshing }] = useRefreshAuthMutation();
   const { isLoading, refetch } = useGetUserQuery(null, {
@@ -50,10 +57,10 @@ const AuthProvider = ({ children }: AuthProviderProps) => {
   }, [accessToken, refreshToken, refetch, refreshAuth]);
 
   useEffect(() => {
-    if (!isLoading && !isRefreshing) {
+    if (!isLoading && !isRefreshing && !isTokenLoading) {
       dispatch(setAuthChecked(true));
     }
-  }, [isLoading, isRefreshing, dispatch]);
+  }, [isLoading, isRefreshing, isTokenLoading, dispatch]);
 
   return children;
 };

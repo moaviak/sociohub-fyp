@@ -48,14 +48,29 @@ export const saveTokens = async (accessToken: string, refreshToken: string) => {
  * Retrieves tokens from AsyncStorage
  */
 export const getTokens = async () => {
-  const accessToken: string | null = await storage.load({
-    key: ACCESS_TOKEN_KEY,
-    autoSync: false,
-  });
-  const refreshToken: string | null = await storage.load({
-    key: REFRESH_TOKEN_KEY,
-    autoSync: false,
-  });
+  let accessToken: string | null = null;
+  let refreshToken: string | null = null;
+
+  try {
+    accessToken = await storage.load({
+      key: ACCESS_TOKEN_KEY,
+      autoSync: false,
+    });
+  } catch (error) {
+    console.log("Failed to load access token:", error);
+    accessToken = null;
+  }
+
+  try {
+    refreshToken = await storage.load({
+      key: REFRESH_TOKEN_KEY,
+      autoSync: false,
+    });
+  } catch (error) {
+    console.log("Failed to load refresh token:", error);
+    refreshToken = null;
+  }
+
   return { accessToken, refreshToken };
 };
 

@@ -9,6 +9,7 @@ interface AuthState {
   isAuthChecked: boolean;
   accessToken: string | null;
   refreshToken: string | null;
+  isTokenLoading: boolean;
 }
 
 const initialState: AuthState = {
@@ -18,30 +19,12 @@ const initialState: AuthState = {
   isAuthChecked: false,
   accessToken: null,
   refreshToken: null,
-};
-
-// To initialize your state with tokens from storage, you should do it before creating the slice.
-// You can't call reducers directly to mutate the initialState outside of Redux's flow.
-// Instead, fetch tokens before creating the slice and set them in initialState.
-
-let tokens: { accessToken: string | null; refreshToken: string | null } = {
-  accessToken: null,
-  refreshToken: null,
-};
-
-(async () => {
-  tokens = await getTokens();
-})();
-
-const hydratedInitialState: AuthState = {
-  ...initialState,
-  accessToken: tokens.accessToken,
-  refreshToken: tokens.refreshToken,
+  isTokenLoading: true,
 };
 
 const AuthSlice = createSlice({
   name: "authSlice",
-  initialState: hydratedInitialState,
+  initialState,
   reducers: {
     login: (state, action) => {
       state.user = action.payload.user;
@@ -82,6 +65,13 @@ const AuthSlice = createSlice({
         saveTokens(action.payload.accessToken, action.payload.refreshToken);
       }
     },
+    initializeTokens: (state, action) => {
+      state.accessToken = action.payload.accessToken;
+      state.refreshToken = action.payload.refreshToken;
+    },
+    setTokenLoading: (state, action) => {
+      state.isTokenLoading = action.payload;
+    },
   },
 });
 
@@ -92,6 +82,26 @@ export const {
   setSociety,
   verifyEmail,
   setCredentials,
+  initializeTokens,
+  setTokenLoading,
 } = AuthSlice.actions;
+
+export const initializeAuth = () => async (dispatch: any) => {
+  try {
+    const tokens = await getTokens();
+    if (!tokens.accessToken && !tokens.refreshToken) {
+      // If both tokens are null, clear the auth state
+      dispatch(logout());
+    } else {
+      dispatch(initializeTokens(tokens));
+    }
+  } catch (error) {
+    console.log("Failed to initialize auth:", error);
+    // In case of any error, clear the auth state
+    dispatch(logout());
+  } finally {
+    dispatch(setTokenLoading(false));
+  }
+};
 
 export default AuthSlice.reducer;
