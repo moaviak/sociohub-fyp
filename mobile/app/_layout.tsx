@@ -10,8 +10,9 @@ import "@/global.css";
 import { Provider } from "react-redux";
 import { store } from "@/store";
 import { useGetUserQuery } from "@/store/auth/api";
-import { useAppDispatch } from "@/store/hooks";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { setAuthChecked } from "@/store/auth/slice";
+import { useRefreshAuthMutation } from "@/store/api";
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -23,15 +24,36 @@ interface AuthProviderProps {
 
 const AuthProvider = ({ children }: AuthProviderProps) => {
   const dispatch = useAppDispatch();
-  const { data, isLoading, error } = useGetUserQuery(null, {
+  const { accessToken, refreshToken } = useAppSelector((state) => state.auth);
+
+  const [refreshAuth, { isLoading: isRefreshing }] = useRefreshAuthMutation();
+  const { isLoading, refetch } = useGetUserQuery(null, {
+    skip: !accessToken && !refreshToken && !isRefreshing,
     refetchOnMountOrArgChange: true,
   });
 
+  // Try to refresh token if we have a refresh token but no access token
   useEffect(() => {
-    if (!isLoading) {
+    const attemptTokenRefresh = async () => {
+      // Only try to refresh if we have a refresh token but no access token
+      if (!accessToken && refreshToken) {
+        const refreshed = await refreshAuth();
+
+        if (refreshed) {
+          // If refresh successful, trigger the user query
+          refetch();
+        }
+      }
+    };
+
+    attemptTokenRefresh();
+  }, [accessToken, refreshToken, refetch, refreshAuth]);
+
+  useEffect(() => {
+    if (!isLoading && !isRefreshing) {
       dispatch(setAuthChecked(true));
     }
-  }, [isLoading, dispatch]);
+  }, [isLoading, isRefreshing, dispatch]);
 
   return children;
 };
