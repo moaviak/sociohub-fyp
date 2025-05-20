@@ -25,8 +25,8 @@ const storage = new Storage({
 });
 
 // LocalStorage keys
-const ACCESS_TOKEN_KEY = "sociohub_access_token";
-const REFRESH_TOKEN_KEY = "sociohub_refresh_token";
+const ACCESS_TOKEN_KEY = "SociohubAccessToken";
+const REFRESH_TOKEN_KEY = "SociohubRefreshToken";
 
 /**
  * Saves auth tokens to AsyncStorage.
