@@ -14,6 +14,16 @@ export interface FileWithPreview extends File {
 }
 
 /**
+ * Interface for remote image URLs
+ */
+export interface RemoteImage {
+  url: string;
+  name?: string;
+  id?: string;
+  size?: number;
+}
+
+/**
  * Props for the FileUploadDropzone component
  */
 export interface FileUploaderProps {
@@ -35,7 +45,7 @@ export interface FileUploaderProps {
   showRemoveButton?: boolean;
   /** Optional custom preview renderer */
   renderPreview?: (
-    file: FileWithPreview,
+    file: FileWithPreview | RemoteImage,
     onRemove: () => void
   ) => React.ReactNode;
   /** Custom validation function */
@@ -54,10 +64,15 @@ export interface FileUploaderProps {
   initialFiles?: File[];
   /** Whether to show file details (name, size) */
   showFileDetails?: boolean;
+  /** Remote image URLs (for edit/update forms) */
+  existingImages?: RemoteImage[];
+  /** Callback when a remote image is removed */
+  onRemoteImageRemove?: (image: RemoteImage, index: number) => void;
 }
 
 /**
  * A flexible file upload component with drag and drop support
+ * that can also display existing remote images (for edit forms)
  */
 const FileUploader: React.FC<FileUploaderProps> = ({
   maxSize = 5 * 1024 * 1024, // 5MB default
@@ -81,9 +96,19 @@ const FileUploader: React.FC<FileUploaderProps> = ({
   },
   initialFiles = [],
   showFileDetails = true,
+  existingImages = [],
+  onRemoteImageRemove,
 }) => {
   const [files, setFiles] = useState<FileWithPreview[]>([]);
+  const [remoteImages, setRemoteImages] = useState<RemoteImage[]>([]);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  // Process existing remote images if provided
+  useEffect(() => {
+    if (existingImages && existingImages.length > 0) {
+      setRemoteImages(existingImages);
+    }
+  }, [existingImages]);
 
   // Process initial files if provided
   useEffect(() => {
@@ -113,6 +138,11 @@ const FileUploader: React.FC<FileUploaderProps> = ({
     };
   }, [files, initialFiles, multiple, onFileChange, onFilesChange]);
 
+  // Calculate how many files can still be uploaded
+  const getRemainingSlots = useCallback(() => {
+    return maxFiles - (files.length + remoteImages.length);
+  }, [files.length, maxFiles, remoteImages.length]);
+
   const onDrop = useCallback(
     (acceptedFiles: File[], fileRejections: FileRejection[]) => {
       // Clear any previous errors
@@ -137,6 +167,16 @@ const FileUploader: React.FC<FileUploaderProps> = ({
         return;
       }
 
+      // Calculate remaining slots, considering both files and remote images
+      const remainingSlots = getRemainingSlots();
+
+      if (remainingSlots <= 0) {
+        setErrorMessage(
+          `Maximum ${maxFiles} file${maxFiles > 1 ? "s" : ""} allowed`
+        );
+        return;
+      }
+
       // Custom validation
       if (validateFile && acceptedFiles.length > 0) {
         for (const file of acceptedFiles) {
@@ -157,10 +197,21 @@ const FileUploader: React.FC<FileUploaderProps> = ({
           return fileWithPreview;
         });
 
+        // Calculate how many files we can add based on max and existing remote images
+        const canAdd = Math.min(remainingSlots, newFiles.length);
+
         // Either replace or append based on multiple mode
-        const updatedFiles = multiple
-          ? [...files, ...newFiles].slice(0, maxFiles)
-          : newFiles.slice(0, 1); // Only keep the first file in single mode
+        let updatedFiles: FileWithPreview[];
+
+        if (multiple) {
+          updatedFiles = [...files, ...newFiles.slice(0, canAdd)];
+        } else {
+          // In single mode, remove remote images when a new file is added
+          if (remoteImages.length > 0) {
+            setRemoteImages([]);
+          }
+          updatedFiles = newFiles.slice(0, 1); // Only keep the first file in single mode
+        }
 
         setFiles(updatedFiles);
 
@@ -175,13 +226,15 @@ const FileUploader: React.FC<FileUploaderProps> = ({
       }
     },
     [
-      files,
-      maxFiles,
-      maxSize,
-      multiple,
-      onFileChange,
-      onFilesChange,
+      getRemainingSlots,
       validateFile,
+      maxSize,
+      maxFiles,
+      multiple,
+      onFilesChange,
+      onFileChange,
+      files,
+      remoteImages.length,
     ]
   );
 
@@ -209,23 +262,44 @@ const FileUploader: React.FC<FileUploaderProps> = ({
     [files, multiple, onFileChange, onFilesChange]
   );
 
+  const removeRemoteImage = useCallback(
+    (indexToRemove: number) => {
+      const imageToRemove = remoteImages[indexToRemove];
+      const updatedRemoteImages = remoteImages.filter(
+        (_, index) => index !== indexToRemove
+      );
+
+      setRemoteImages(updatedRemoteImages);
+
+      // Invoke callback if provided
+      if (onRemoteImageRemove && imageToRemove) {
+        onRemoteImageRemove(imageToRemove, indexToRemove);
+      }
+    },
+    [remoteImages, onRemoteImageRemove]
+  );
+
   const dropzoneOptions: DropzoneOptions = {
     onDrop,
     maxSize,
-    maxFiles,
-    multiple,
+    maxFiles: getRemainingSlots() > 0 ? getRemainingSlots() : 1, // Adjust max files based on existing images
+    multiple: multiple && getRemainingSlots() > 1,
     accept,
+    disabled: getRemainingSlots() <= 0 && !multiple, // Disable dropzone if no slots available in single mode
   };
 
   const { getRootProps, getInputProps, isDragActive } =
     useDropzone(dropzoneOptions);
 
-  // Default preview renderer
-  const defaultRenderPreview = (file: FileWithPreview, index: number) => {
+  // Default preview renderer for local files
+  const defaultRenderLocalPreview = (file: FileWithPreview, index: number) => {
     const isImage = file.type.startsWith("image/");
 
     return (
-      <div key={`${file.name}-${index}`} className="relative inline-block m-2">
+      <div
+        key={`file-${file.name}-${index}`}
+        className="relative inline-block m-2"
+      >
         <div className="relative w-24 h-24 border rounded overflow-hidden bg-gray-100">
           {isImage ? (
             <img
@@ -279,6 +353,61 @@ const FileUploader: React.FC<FileUploaderProps> = ({
     );
   };
 
+  // Default preview renderer for remote images
+  const defaultRenderRemotePreview = (image: RemoteImage, index: number) => {
+    return (
+      <div
+        key={`remote-${image.id || index}`}
+        className="relative inline-block m-2"
+      >
+        <div className="relative w-24 h-24 border rounded overflow-hidden bg-gray-100">
+          <img
+            src={image.url}
+            alt={image.name || "Existing image"}
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute bottom-0 right-0 bg-blue-500 text-white text-xs px-1">
+            Existing
+          </div>
+        </div>
+
+        {showRemoveButton && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              removeRemoteImage(index);
+            }}
+            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs"
+            type="button"
+            aria-label="Remove image"
+          >
+            ✕
+          </button>
+        )}
+
+        {showFileDetails && (
+          <div className="mt-1 text-center">
+            <p
+              className="text-xs text-gray-700 truncate max-w-24"
+              title={image.name || "Existing image"}
+            >
+              {image.name && image.name.length > 15
+                ? `${image.name.substring(0, 12)}...`
+                : image.name || "Image"}
+            </p>
+            {image.size && (
+              <p className="text-xs text-gray-500">
+                {(image.size / 1024).toFixed(1)} KB
+              </p>
+            )}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const totalItemsCount = files.length + remoteImages.length;
+
   return (
     <div className={`w-full ${className}`}>
       <div
@@ -288,7 +417,7 @@ const FileUploader: React.FC<FileUploaderProps> = ({
             ? dragActiveClassName
             : errorMessage
             ? "border-red-300"
-            : files.length > 0
+            : totalItemsCount > 0
             ? "border-green-500"
             : "border-neutral-400"
         }`}
@@ -296,7 +425,7 @@ const FileUploader: React.FC<FileUploaderProps> = ({
       >
         <input {...getInputProps()} />
 
-        {files.length === 0 ? (
+        {totalItemsCount === 0 ? (
           <>
             <div className="mb-4">
               <svg
@@ -333,26 +462,38 @@ const FileUploader: React.FC<FileUploaderProps> = ({
                 multiple ? "flex-wrap justify-center" : "justify-center"
               }`}
             >
+              {/* Render remote images first */}
+              {remoteImages.map((image, index) =>
+                renderPreview
+                  ? renderPreview(image, () => removeRemoteImage(index))
+                  : defaultRenderRemotePreview(image, index)
+              )}
+
+              {/* Then render local files */}
               {files.map((file, index) =>
                 renderPreview
                   ? renderPreview(file, () => removeFile(index))
-                  : defaultRenderPreview(file, index)
+                  : defaultRenderLocalPreview(file, index)
               )}
             </div>
             <p className="text-sm text-gray-500 mt-3">
               {multiple
-                ? `${files.length} of ${maxFiles} files selected`
+                ? `${totalItemsCount} of ${maxFiles} ${
+                    totalItemsCount === 1 ? "file" : "files"
+                  } selected`
                 : "File selected"}{" "}
-              - Drop a new file to {multiple ? "add more" : "replace"}
+              - Drop a new file to{" "}
+              {multiple && getRemainingSlots() > 0 ? "add more" : "replace"}
             </p>
           </div>
         ) : (
           <div className="w-full text-center">
             <p className="text-green-600 font-medium">
-              {multiple ? `${files.length} files selected` : "File selected"}
+              {multiple ? `${totalItemsCount} files selected` : "File selected"}
             </p>
             <p className="text-sm text-gray-500 mt-1">
-              Drop a new file to {multiple ? "add more" : "replace"}
+              Drop a new file to{" "}
+              {multiple && getRemainingSlots() > 0 ? "add more" : "replace"}
             </p>
           </div>
         )}

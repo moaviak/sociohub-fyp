@@ -84,7 +84,8 @@ export const createNotification = async ({
               recipientType: "student",
               student: { connect: { id: recipient.recipientId } },
               webRedirectUrl: recipient.webRedirectUrl || webRedirectUrl,
-              mobileRedirectUrl: recipient.mobileRedirectUrl || webRedirectUrl,
+              mobileRedirectUrl:
+                recipient.mobileRedirectUrl || mobileRedirectUrl,
               isRead: false,
               isDeleted: false,
             },
@@ -99,7 +100,8 @@ export const createNotification = async ({
               recipientType: "advisor",
               advisor: { connect: { id: recipient.recipientId } },
               webRedirectUrl: recipient.webRedirectUrl || webRedirectUrl,
-              mobileRedirectUrl: recipient.mobileRedirectUrl || webRedirectUrl,
+              mobileRedirectUrl:
+                recipient.mobileRedirectUrl || mobileRedirectUrl,
               isRead: false,
               isDeleted: false,
             },

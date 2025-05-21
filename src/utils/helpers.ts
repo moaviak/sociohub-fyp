@@ -67,7 +67,7 @@ export const removeLocalFile = (localPath: string) => {
  * @description returns the file's local path in the file system to assist future removal
  */
 export const getLocalPath = (filename: string) => {
-  return `/public/temp/${filename}`;
+  return `public/temp/${filename}`;
 };
 
 /**

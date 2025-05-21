@@ -10,7 +10,7 @@ import { Server } from "socket.io";
 
 import { ApiError } from "./utils/ApiError";
 import morganMiddleware from "./logger/morgan.logger";
-import { scheduleJoinRequestCleanup } from "./services/cleanup.service.js";
+import { initializeCleanupJobs } from "./services/cleanup.service.js";
 
 const app = express();
 const httpServer = createServer(app);
@@ -104,7 +104,7 @@ app.use("/api/events", eventRoutes);
 // common error handling middleware
 app.use(errorHandler);
 
-// Initialize the cleanup service
-scheduleJoinRequestCleanup();
+// Initialize the cleanup services
+initializeCleanupJobs();
 
 export { httpServer, io };

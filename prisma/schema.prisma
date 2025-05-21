@@ -256,28 +256,28 @@ model Event {
   description          String?
   categories           EventCategories[]
   banner               String?
-  startDate            DateTime
-  endDate              DateTime
-  startTime            DateTime
-  endTime              DateTime
-  eventType            EventType
+  startDate            DateTime?
+  endDate              DateTime?
+  startTime            DateTime?
+  endTime              DateTime?
+  eventType            EventType?
   venueName            String?
   venueAddress         String?
   platform             String?
   meetingLink          String?
   accessInstructions   String?
-  audience             EventAudience
-  visibility           EventVisibility
+  audience             EventAudience?
+  visibility           EventVisibility?
   publishDateTime      DateTime?
-  registrationRequired Boolean           @default(false)
+  registrationRequired Boolean?          @default(false)
   registrationDeadline DateTime?
   maxParticipants      Int?
-  paidEvent            Boolean           @default(false)
+  paidEvent            Boolean?          @default(false)
   ticketPrice          Int?
   paymentMethods       PaymentMethods[]
-  announcementEnabled  Boolean           @default(false)
+  announcementEnabled  Boolean?          @default(false)
   announcement         String?
-  status               EventStatus
+  status               EventStatus?
   isDraft              Boolean           @default(false)
   formStep             Int?
 
@@ -286,4 +286,6 @@ model Event {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([societyId])
 }

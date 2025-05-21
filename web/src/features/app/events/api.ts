@@ -32,7 +32,34 @@ export const eventApi = api.injectEndpoints({
         }
       },
     }),
+    draftEvent: builder.mutation<Event | ApiError, FormData>({
+      query: (formData) => ({
+        url: "/events/drafts",
+        method: "POST",
+        body: formData,
+      }),
+      transformResponse: (response: ApiResponse<Event>) => {
+        if (response.success) {
+          return response.data;
+        }
+        return createApiError(response.message);
+      },
+      transformErrorResponse: (response) => {
+        const errorResponse = response.data as ApiErrorResponse;
+        return createApiError(errorResponse.message);
+      },
+      invalidatesTags: (result) => {
+        if (result && !("error" in result)) {
+          return [
+            { type: "Events" as const, id: "LIST" },
+            { type: "Events", id: result.id },
+          ];
+        } else {
+          return [];
+        }
+      },
+    }),
   }),
 });
 
-export const { useCreateEventMutation } = eventApi;
+export const { useCreateEventMutation, useDraftEventMutation } = eventApi;

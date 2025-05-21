@@ -13,7 +13,7 @@ import { EventFormData, eventFormSchema } from "./schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Form } from "@/components/ui/form";
 import { format } from "date-fns";
-import { useCreateEventMutation } from "./api";
+import { useCreateEventMutation, useDraftEventMutation } from "./api";
 import { useEffect } from "react";
 import { toast } from "sonner";
 import ApiError from "@/features/api-error";
@@ -100,18 +100,24 @@ export const CreateEvent = () => {
   });
 
   const [createEvent, { isError, error, isLoading }] = useCreateEventMutation();
+  const [
+    draftEvent,
+    { isError: isDraftError, error: draftError, isLoading: isDrafting },
+  ] = useDraftEventMutation();
 
-  const { LoadingScreen, showLoading, hideLoading } =
-    useLoadingOverlay(isLoading);
+  const { LoadingScreen, showLoading, hideLoading } = useLoadingOverlay(
+    isLoading || isDrafting
+  );
 
   useEffect(() => {
-    if (isError) {
+    if (isError || isDraftError) {
       toast.error(
         (error as ApiError)?.errorMessage ||
+          (draftError as ApiError)?.errorMessage ||
           "An error occurred while creating the event."
       );
     }
-  }, [isError, error]);
+  }, [isError, error, isDraftError, draftError]);
 
   useEffect(() => {
     if (isLoading) {
@@ -185,6 +191,116 @@ export const CreateEvent = () => {
     }
   };
 
+  const saveDraft = async () => {
+    const step = form.getValues("formStep");
+    const values = form.getValues();
+    let partialSchema;
+
+    switch (step) {
+      case 1:
+        partialSchema = (await import("./schema")).basicInfoSchemaPartial;
+        break;
+      case 2:
+        partialSchema = (await import("./schema")).dateTimeSchemaPartial;
+        break;
+      case 3:
+        partialSchema = (await import("./schema")).locationSchemaPartial;
+        break;
+      case 4:
+        partialSchema = (await import("./schema"))
+          .audienceVisibilitySchemaPartial;
+        break;
+      case 5:
+        partialSchema = (await import("./schema")).registrationSchemaPartial;
+        break;
+      case 6:
+        partialSchema = (await import("./schema")).announcementSchemaPartial;
+        break;
+      default:
+        partialSchema = (await import("./schema")).basicInfoSchemaPartial;
+    }
+
+    const result = partialSchema.safeParse(values);
+    if (!result.success) {
+      toast.error(
+        "Please fill in the required fields for this step before saving as draft."
+      );
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("societyId", societyId || "");
+    formData.append("isDraft", "true");
+    formData.append("formStep", String(step));
+
+    const fieldMap = {
+      eventTitle: "title",
+      eventTagline: "tagline",
+      detailedDescription: "description",
+      eventCategories: "categories",
+      eventImage: "banner",
+      startDate: "startDate",
+      endDate: "endDate",
+      startTime: "startTime",
+      endTime: "endTime",
+      eventType: "eventType",
+      venueName: "venueName",
+      address: "venueAddress",
+      platform: "platform",
+      otherPlatform: "otherPlatform",
+      meetingLink: "meetingLink",
+      accessInstructions: "accessInstructions",
+      audience: "audience",
+      visibility: "visibility",
+      publishDateTime: "publishDateTime",
+      isRegistrationRequired: "registrationRequired",
+      registrationDeadline: "registrationDeadline",
+      maximumParticipants: "maximumParticipants",
+      isPaidEvent: "paidEvent",
+      ticketPrice: "ticketPrice",
+      paymentGateways: "paymentMethods",
+      isAnnouncementEnabled: "announcementEnabled",
+      announcement: "announcement",
+    } as const;
+
+    const data = result.data as Record<string, unknown>;
+    for (const key of Object.keys(data)) {
+      if (data[key] !== undefined && data[key] !== null && key in fieldMap) {
+        const apiKey = fieldMap[key as keyof typeof fieldMap];
+        if (key === "eventCategories" || key === "paymentGateways") {
+          formData.append(apiKey, JSON.stringify(data[key]));
+        } else if (key === "eventImage") {
+          formData.append(apiKey, data[key] as Blob);
+        } else if (key === "startDate" || key === "endDate") {
+          formData.append(
+            apiKey,
+            data[key] instanceof Date
+              ? format(data[key] as Date, "yyyy-MM-dd")
+              : String(data[key])
+          );
+        } else if (
+          key === "publishDateTime" ||
+          key === "registrationDeadline"
+        ) {
+          formData.append(
+            apiKey,
+            data[key] instanceof Date
+              ? (data[key] as Date).toISOString()
+              : String(data[key])
+          );
+        } else {
+          formData.append(apiKey, String(data[key]));
+        }
+      }
+    }
+
+    const response = await draftEvent(formData);
+    if (!("error" in response)) {
+      toast.success("Draft saved.");
+      navigate(-1);
+    }
+  };
+
   const step = form.watch("formStep");
   const totalSteps = 6;
 
@@ -247,12 +363,12 @@ export const CreateEvent = () => {
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => console.log("Save as draft")}
-                disabled={isLoading}
+                onClick={saveDraft}
+                disabled={isLoading || isDrafting}
               >
                 Save as Draft
               </Button>
-              <Button type="submit" disabled={isLoading}>
+              <Button type="submit" disabled={isLoading || isDrafting}>
                 {step === totalSteps ? "Publish Event" : "Next"}
               </Button>
             </div>

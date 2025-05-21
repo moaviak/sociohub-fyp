@@ -9,11 +9,14 @@ import {
   PaymentMethods,
 } from "@prisma/client";
 import { ApiError } from "../utils/ApiError";
-import { uploadOnCloudinary } from "../utils/cloudinary";
+import { uploadOnCloudinary, deleteFromCloudinary } from "../utils/cloudinary";
+import { createNotification } from "./notification.service";
+import { io } from "../app";
+import { sendNotificationToUsers } from "../socket";
 
 const prisma = new PrismaClient();
 
-interface CreateEventInput {
+export interface CreateEventInput {
   societyId: string;
   title: string;
   tagline?: string;
@@ -43,6 +46,11 @@ interface CreateEventInput {
   announcement?: string;
   isDraft?: boolean;
   formStep?: number;
+}
+
+export interface DraftEventInput
+  extends Partial<Omit<CreateEventInput, "societyId">> {
+  societyId: string;
 }
 
 export class EventService {
@@ -162,7 +170,15 @@ export class EventService {
           isDraft: input.isDraft ?? false,
           formStep: input.formStep,
         },
+        include: {
+          society: true, // Include society details for notification
+        },
       });
+
+      // Send notification if event is not a draft
+      if (event.visibility !== "Draft") {
+        sendEventNotification(event);
+      }
 
       (async () => {
         // Handle banner upload to Cloudinary if provided
@@ -187,4 +203,222 @@ export class EventService {
       throw error;
     }
   }
+  static async saveDraft(
+    input: DraftEventInput,
+    societyId: string,
+    formStep: number,
+    eventId?: string
+  ) {
+    try {
+      const defaultData = {
+        title: "",
+        categories: [],
+        startDate: new Date(),
+        endDate: new Date(),
+        startTime: new Date(),
+        endTime: new Date(),
+        eventType: EventType.Physical,
+        audience: EventAudience.Open,
+        visibility: EventVisibility.Draft,
+      };
+
+      const data = {
+        ...defaultData,
+        ...input,
+        societyId,
+        formStep,
+        isDraft: true,
+      };
+
+      let updatedDraft;
+      if (eventId) {
+        // Update existing draft
+        updatedDraft = await prisma.event.update({
+          where: { id: eventId },
+          data,
+        });
+
+        // Handle banner replacement in background
+        if (input.banner) {
+          (async () => {
+            // Fetch previous draft to get old banner
+            const prevDraft = await prisma.event.findUnique({
+              where: { id: eventId },
+            });
+            if (
+              prevDraft &&
+              prevDraft.banner &&
+              prevDraft.banner !== input.banner
+            ) {
+              try {
+                await deleteFromCloudinary(prevDraft.banner);
+              } catch (e) {
+                // Log error but do not block
+              }
+            }
+            // Upload new banner
+            try {
+              const society = await prisma.society.findUnique({
+                where: { id: societyId },
+              });
+              if (society) {
+                const uploadResult = await uploadOnCloudinary(
+                  input.banner!,
+                  `${society.name}/events`
+                );
+                if (uploadResult?.secure_url) {
+                  await prisma.event.update({
+                    where: { id: eventId },
+                    data: { banner: uploadResult.secure_url },
+                  });
+                }
+              }
+            } catch (e) {
+              // Log error but do not block
+            }
+          })();
+        }
+        return updatedDraft;
+      } else {
+        // Create new draft
+        const createdDraft = await prisma.event.create({
+          data,
+        });
+        // Handle banner upload in background
+        if (input.banner) {
+          (async () => {
+            try {
+              const society = await prisma.society.findUnique({
+                where: { id: societyId },
+              });
+              if (society) {
+                const uploadResult = await uploadOnCloudinary(
+                  input.banner!,
+                  `${society.name}/events`
+                );
+                if (uploadResult?.secure_url) {
+                  await prisma.event.update({
+                    where: { id: createdDraft.id },
+                    data: { banner: uploadResult.secure_url },
+                  });
+                }
+              }
+            } catch (e) {
+              // Log error but do not block
+            }
+          })();
+        }
+        return createdDraft;
+      }
+    } catch (error: any) {
+      throw new ApiError(500, "Error saving draft: " + error.message);
+    }
+  }
+
+  static async getDraft(eventId: string, societyId: string) {
+    try {
+      const event = await prisma.event.findFirst({
+        where: {
+          id: eventId,
+          societyId,
+          isDraft: true,
+        },
+      });
+
+      if (!event) {
+        throw new ApiError(404, "Draft not found");
+      }
+
+      return event;
+    } catch (error: any) {
+      if (error instanceof ApiError) throw error;
+      throw new ApiError(500, "Error fetching draft: " + error.message);
+    }
+  }
+
+  static async getDrafts(societyId: string) {
+    try {
+      return await prisma.event.findMany({
+        where: {
+          societyId,
+          isDraft: true,
+        },
+        orderBy: {
+          updatedAt: "desc",
+        },
+      });
+    } catch (error: any) {
+      throw new ApiError(500, "Error fetching drafts: " + error.message);
+    }
+  }
 }
+
+/**
+ * Send notifications to all students when an event is published
+ */
+export const sendEventNotification = async (event: Event) => {
+  try {
+    // Only send notifications for non-draft events
+    if (event.visibility === "Draft") {
+      return;
+    }
+
+    // Get society details
+    const society = await prisma.society.findUnique({
+      where: { id: event.societyId },
+      select: { name: true },
+    });
+
+    // Get all students
+    const students = await prisma.student.findMany({
+      select: {
+        id: true,
+      },
+    });
+
+    // Format notification data based on event visibility
+    const isScheduled = event.visibility === "Schedule";
+    const notificationTitle = isScheduled
+      ? `New Event Scheduled: ${event.title}`
+      : `New Event: ${event.title}`;
+
+    const notificationDescription = isScheduled
+      ? `${society?.name || "A society"} has scheduled a new event "${
+          event.title
+        }" that will be published on ${event.publishDateTime?.toLocaleDateString()}`
+      : `${society?.name || "A society"} has published a new event "${
+          event.title
+        }"${event.tagline ? `: ${event.tagline}` : ""}`;
+
+    // Create notification for all students
+    const notification = await createNotification({
+      title: notificationTitle,
+      description: notificationDescription,
+      image: event.banner || undefined,
+      webRedirectUrl: `/events/${event.id}`,
+      mobileRedirectUrl: `event/${event.id}`,
+      recipients: students.map((student) => ({
+        recipientType: "student" as const,
+        recipientId: student.id,
+      })),
+    });
+
+    // If notification was created successfully and we have socket.io instance
+    if (notification && io) {
+      sendNotificationToUsers(
+        io,
+        students.map((student) => ({
+          recipientType: "student" as const,
+          recipientId: student.id,
+        })),
+        notification
+      );
+    }
+
+    return notification;
+  } catch (error) {
+    console.error("Error sending event notification:", error);
+    // Don't throw error as this is a non-critical operation
+    return null;
+  }
+};
