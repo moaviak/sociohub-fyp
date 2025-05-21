@@ -35,7 +35,7 @@ const AuthProvider = ({ children }: AuthProviderProps) => {
 
   const [refreshAuth, { isLoading: isRefreshing }] = useRefreshAuthMutation();
   const { isLoading, refetch } = useGetUserQuery(null, {
-    skip: !accessToken && !refreshToken && !isRefreshing,
+    skip: (!accessToken && !refreshToken && !isRefreshing) || isTokenLoading,
     refetchOnMountOrArgChange: true,
   });
 
