@@ -5,6 +5,7 @@ import ApiError, {
 } from "@/features/api-error";
 import { ApiResponse } from "@/features/api-response";
 import { Event } from "@/types";
+import { EventAnnouncementInput } from "./types";
 
 export const eventApi = api.injectEndpoints({
   endpoints: (builder) => ({
@@ -59,7 +60,31 @@ export const eventApi = api.injectEndpoints({
         }
       },
     }),
+    generateAnnouncement: builder.mutation<
+      string | ApiError,
+      EventAnnouncementInput
+    >({
+      query: (input) => ({
+        url: "/events/generate-announcement",
+        method: "PUT",
+        body: input,
+      }),
+      transformResponse: (response: ApiResponse<string>) => {
+        if (response.success) {
+          return response.data;
+        }
+        return createApiError(response.message);
+      },
+      transformErrorResponse: (response) => {
+        const errorResponse = response.data as ApiErrorResponse;
+        return createApiError(errorResponse.message);
+      },
+    }),
   }),
 });
 
-export const { useCreateEventMutation, useDraftEventMutation } = eventApi;
+export const {
+  useCreateEventMutation,
+  useDraftEventMutation,
+  useGenerateAnnouncementMutation,
+} = eventApi;

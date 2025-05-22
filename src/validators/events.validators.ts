@@ -119,11 +119,13 @@ export const createEventValidator = () => [
   body("visibility")
     .isIn(["Publish", "Draft", "Schedule"])
     .withMessage("Invalid visibility type"),
-  body("publishDateTime")
+  body("registrationDeadline")
     .optional()
-    .isISO8601()
-    .toDate()
-    .withMessage("Publish date and time must be a valid date"),
+    .custom((value) => {
+      if (value === "") return true;
+      return !isNaN(Date.parse(value));
+    })
+    .withMessage("Registration deadline must be a valid date"),
 
   // Section 5: Registration
   body("registrationRequired")
@@ -241,4 +243,147 @@ export const createEventValidator = () => [
     .optional()
     .isInt({ min: 1, max: 6 })
     .withMessage("Form step must be an integer between 1 and 6"),
+];
+
+export const generateAnnouncementValidator = () => [
+  body("title").notEmpty().withMessage("Event title is required"),
+  body("tagline")
+    .optional()
+    .custom((value) => {
+      if (value === "") return true;
+      return typeof value === "string";
+    })
+    .withMessage("Tagline must be a string")
+    .isLength({ max: 150 })
+    .withMessage("Tagline must be 150 characters or less"),
+  body("description")
+    .optional()
+    .custom((value) => {
+      if (value === "") return true;
+      return typeof value === "string";
+    })
+    .withMessage("Detailed description must be a string"),
+  body("categories")
+    .custom((value, { req }) => {
+      if (typeof value === "string") {
+        try {
+          const parsedValue = JSON.parse(value);
+          if (Array.isArray(parsedValue) && parsedValue.length > 0) {
+            req.body.categories = parsedValue;
+            return true;
+          } else {
+            throw new Error("Event categories must be a non-empty array");
+          }
+        } catch (e: any) {
+          throw new Error(
+            e.message || "Event categories must be a valid JSON array"
+          );
+        }
+      }
+      return Array.isArray(value) && value.length > 0;
+    })
+    .withMessage("Event categories must be a non-empty array"),
+
+  // Section 2: Date & Time
+  body("startDate")
+    .matches(/^\d{4}-\d{2}-\d{2}$/)
+    .toDate()
+    .withMessage("Start date is required and must be in YYYY-MM-DD format"),
+  body("startTime")
+    .matches(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/)
+    .withMessage("Invalid time format (HH:MM)"),
+  body("endDate")
+    .matches(/^\d{4}-\d{2}-\d{2}$/)
+    .toDate()
+    .withMessage("End date is required and must be in YYYY-MM-DD format"),
+  body("endTime")
+    .matches(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/)
+    .withMessage("Invalid time format (HH:MM)"),
+
+  // Section 3: Location
+  body("eventType")
+    .isIn(["Physical", "Online"])
+    .withMessage("Invalid event type"),
+  body("venueName")
+    .optional()
+    .custom((value) => {
+      if (value === "") return true;
+      return typeof value === "string";
+    })
+    .withMessage("Venue name must be a string"),
+  body("venueAddress")
+    .optional()
+    .custom((value) => {
+      if (value === "") return true;
+      return typeof value === "string";
+    })
+    .withMessage("Address must be a string"),
+  body("platform")
+    .optional()
+    .custom((value) => {
+      if (value === "") return true;
+      return ["Zoom", "Google Meet", "Microsoft Teams", "Other"].includes(
+        value
+      );
+    })
+    .withMessage("Invalid online platform"),
+  body("otherPlatform")
+    .optional()
+    .custom((value) => {
+      if (value === "") return true;
+      return typeof value === "string";
+    })
+    .withMessage("Other platform must be a string"),
+  body("audience")
+    .isIn(["Open", "Members", "Invite"])
+    .withMessage("Invalid audience type"),
+  body("registrationRequired")
+    .custom((value, { req }) => {
+      if (typeof value === "string") {
+        if (value === "true") {
+          req.body.registrationRequired = true;
+        } else if (value === "false") {
+          req.body.registrationRequired = false;
+        }
+      }
+      return true;
+    })
+    .isBoolean()
+    .withMessage("registrationRequired must be a boolean"),
+  body("registrationDeadline")
+    .optional()
+    .custom((value) => {
+      if (value === "") return true;
+      return !isNaN(Date.parse(value));
+    })
+    .withMessage("Registration deadline must be a valid date"),
+  body("maxParticipants")
+    .optional()
+    .custom((value) => {
+      if (value === "") return true;
+      const num = parseInt(value);
+      return !isNaN(num) && num > 0;
+    })
+    .withMessage("Maximum participants must be a positive integer"),
+  body("paidEvent")
+    .optional()
+    .custom((value) => {
+      if (value === "") return true;
+      if (typeof value === "string") {
+        return value === "true" || value === "false";
+      }
+      return typeof value === "boolean";
+    })
+    .withMessage("isPaidEvent must be a boolean"),
+  body("ticketPrice")
+    .optional()
+    .custom((value) => {
+      if (value === "") return true;
+      if (typeof value === "string") {
+        const num = parseInt(value, 10);
+        return !isNaN(num) && num > 0;
+      }
+      return typeof value === "number" && value > 0;
+    })
+    .withMessage("Ticket price must be a positive integer"),
 ];

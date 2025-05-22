@@ -13,6 +13,10 @@ import {
   PaymentMethods,
   Event,
 } from "@prisma/client";
+import {
+  EventAnnouncementInput,
+  EventAnnouncementService,
+} from "../services/event-announcement.service";
 
 export const createEvent = asyncHandler(async (req: Request, res: Response) => {
   // Get the local path for the uploaded banner if it exists
@@ -214,3 +218,34 @@ export const getDrafts = asyncHandler(async (req: Request, res: Response) => {
     throw new ApiError(500, "Error retrieving drafts: " + error.message);
   }
 });
+
+export const generateAnnouncement = asyncHandler(
+  async (req: Request, res: Response) => {
+    const eventInput: EventAnnouncementInput = req.body;
+
+    const announcementService = new EventAnnouncementService();
+
+    try {
+      // Generate the announcement
+      const announcement = await announcementService.generateAnnouncement(
+        eventInput
+      );
+      console.log("Generated Announcement:");
+      console.log(announcement);
+
+      // You can then use this announcement when creating your event
+      return res
+        .status(200)
+        .json(
+          new ApiResponse(
+            200,
+            announcement,
+            "Announcement generated successfully"
+          )
+        );
+    } catch (error) {
+      console.error("Error generating announcement:", error);
+      new ApiError(500, "Error generating announcement");
+    }
+  }
+);

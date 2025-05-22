@@ -86,7 +86,14 @@ export const Registration = ({ form }: RegistrationProps) => {
                   <FormLabel>Maximum Participants</FormLabel>
                   <FormControl>
                     <Input
-                      {...field}
+                      value={field.value}
+                      onChange={(e) => {
+                        if (e.target.value === "") {
+                          field.onChange(undefined);
+                        } else {
+                          field.onChange(parseInt(e.target.value));
+                        }
+                      }}
                       className="outline outline-neutral-400"
                       placeholder="Leave blank for unlimited participants"
                       type="number"

@@ -1,7 +1,10 @@
 import { Router } from "express";
 import { verifyJWT } from "../middlewares/auth.middlewares";
 import { upload } from "../middlewares/multer.middlewares";
-import { createEventValidator } from "../validators/events.validators";
+import {
+  createEventValidator,
+  generateAnnouncementValidator,
+} from "../validators/events.validators";
 import { draftEventValidator } from "../validators/events.draft.validators";
 import { validate } from "../validators/validate";
 import {
@@ -9,7 +12,9 @@ import {
   saveDraft,
   getDraft,
   getDrafts,
+  generateAnnouncement,
 } from "../controllers/event.controller";
+import { verifyEventsPrivilege } from "../middlewares/privilege.middlewares";
 
 const router = Router();
 
@@ -18,6 +23,7 @@ router
   .post(
     verifyJWT,
     upload.single("banner"),
+    verifyEventsPrivilege,
     createEventValidator(),
     validate,
     createEvent
@@ -29,6 +35,7 @@ router
   .post(
     verifyJWT,
     upload.single("banner"),
+    verifyEventsPrivilege,
     draftEventValidator(),
     validate,
     saveDraft
@@ -52,5 +59,14 @@ router.route("/drafts/:eventId").get(
   },
   getDraft
 );
+
+router
+  .route("/generate-announcement")
+  .put(
+    verifyJWT,
+    generateAnnouncementValidator(),
+    validate,
+    generateAnnouncement
+  );
 
 export default router;

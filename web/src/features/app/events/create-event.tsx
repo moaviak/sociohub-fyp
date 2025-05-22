@@ -105,9 +105,8 @@ export const CreateEvent = () => {
     { isError: isDraftError, error: draftError, isLoading: isDrafting },
   ] = useDraftEventMutation();
 
-  const { LoadingScreen, showLoading, hideLoading } = useLoadingOverlay(
-    isLoading || isDrafting
-  );
+  const { LoadingScreen, showLoading, hideLoading } =
+    useLoadingOverlay(isLoading);
 
   useEffect(() => {
     if (isError || isDraftError) {

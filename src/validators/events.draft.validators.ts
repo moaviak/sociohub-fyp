@@ -109,11 +109,13 @@ const stepValidators = {
     body("visibility")
       .isIn(["Publish", "Draft", "Schedule"])
       .withMessage("Invalid visibility type"),
-    body("publishDateTime")
+    body("registrationDeadline")
       .optional()
-      .isISO8601()
-      .toDate()
-      .withMessage("Publish date and time must be a valid date"),
+      .custom((value) => {
+        if (value === "") return true;
+        return !isNaN(Date.parse(value));
+      })
+      .withMessage("Registration deadline must be a valid date"),
   ],
   5: [
     body("registrationRequired")
