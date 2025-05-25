@@ -46,6 +46,44 @@ export function formatEventDateTime(
   )} | ${formattedEndTime}`;
 }
 
+/**
+ * Determine the registration status. i.e. '"Not required" | "Registration Open" | "Registration Closed" | "Paid Event"'
+ * @param isRegistrationRequired - boolean
+ * @param registrationDeadline - Datetime string
+ * @param isPaidEvent - boolean
+ * @returns registration status string
+ */
+export function getRegistrationStatus(
+  isRegistrationRequired: boolean,
+  registrationDeadline?: string,
+  isPaidEvent?: boolean
+) {
+  if (!isRegistrationRequired) {
+    return "Not required";
+  }
+
+  // If deadline is not provided, assume registration is open unless it's a paid event
+  if (!registrationDeadline) {
+    if (isPaidEvent) {
+      return "Paid Event";
+    }
+    return "Registration Open";
+  }
+
+  const now = new Date();
+  const deadline = new Date(registrationDeadline);
+
+  if (now > deadline) {
+    return "Registration Closed";
+  }
+
+  if (isPaidEvent) {
+    return "Paid Event";
+  }
+
+  return "Registration Open";
+}
+
 export const getYearOptions = () => {
   const currentYear = new Date().getFullYear();
   const startYear = currentYear - 4; // Get last 5 years including current year

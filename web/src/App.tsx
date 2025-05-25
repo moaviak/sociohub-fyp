@@ -26,6 +26,7 @@ import { NotificationSocketProvider } from "./features/app/notifications/socket-
 import EventsPage from "./pages/app/events";
 import CreateEventPage from "./pages/app/events/create-event-page";
 import UpdateEventPage from "./pages/app/events/update-event-page";
+import EventDetailPage from "./pages/app/events/event-detail-page";
 
 function App() {
   return (
@@ -57,7 +58,12 @@ function App() {
             <Route path="/dashboard" element={<DashboardPage />} />
 
             {/* Student specific routes */}
-            <Route path="/explore" element={<ExplorePage />} />
+            <Route path="/explore" element={<ExplorePage />}>
+              <Route
+                path="event-detail/:eventId"
+                element={<EventDetailPage />}
+              />
+            </Route>
 
             {/* Society specific  routes*/}
             <Route path="/members" element={<MembersPage />}>
@@ -85,6 +91,10 @@ function App() {
                   path="update-event/:eventId"
                   element={<UpdateEventPage />}
                 />
+                <Route
+                  path="event-detail/:eventId"
+                  element={<EventDetailPage />}
+                />
               </Route>
             </Route>
 
@@ -93,6 +103,7 @@ function App() {
             </Route>
 
             {/* Add other private routes here */}
+            <Route path="/event/:id" element={<EventDetailPage />} />
           </Route>
 
           {/* 404 Route */}

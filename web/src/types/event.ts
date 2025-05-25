@@ -1,3 +1,5 @@
+import { Society } from ".";
+
 export enum PaymentMethods {
   CreditCard = "CreditCard",
   Easypaisa = "Easypaisa",
@@ -68,6 +70,7 @@ export interface Event {
   announcement?: string;
   status?: EventStatus;
   societyId?: string;
+  society?: Society;
 
   formStep?: number;
   isDraft?: boolean;

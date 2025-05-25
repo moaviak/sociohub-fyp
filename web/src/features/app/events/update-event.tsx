@@ -21,7 +21,8 @@ export const UpdateEvent = () => {
   const event = eventFromState || eventFromQuery;
 
   if (!isLoading && (!event || "error" in event)) {
-    return navigate(-1);
+    navigate(-1);
+    return null;
   }
 
   return (

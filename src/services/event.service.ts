@@ -472,6 +472,47 @@ export class EventService {
     try {
       const event = await prisma.event.findUnique({
         where: { id: eventId },
+        select: {
+          id: true,
+          title: true,
+          tagline: true,
+          description: true,
+          banner: true,
+          accessInstructions: true,
+          audience: true,
+          categories: true,
+          createdAt: true,
+          endDate: true,
+          endTime: true,
+          eventType: true,
+          announcement: true,
+          announcementEnabled: true,
+          formStep: true,
+          isDraft: true,
+          maxParticipants: true,
+          meetingLink: true,
+          paidEvent: true,
+          paymentMethods: true,
+          platform: true,
+          publishDateTime: true,
+          registrationDeadline: true,
+          registrationRequired: true,
+          society: {
+            select: {
+              id: true,
+              name: true,
+              logo: true,
+            },
+          },
+          startDate: true,
+          startTime: true,
+          status: true,
+          ticketPrice: true,
+          updatedAt: true,
+          venueAddress: true,
+          venueName: true,
+          visibility: true,
+        },
       });
       return event;
     } catch (error: any) {

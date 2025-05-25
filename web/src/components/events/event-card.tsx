@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils";
 import { Skeleton } from "../ui/skeleton";
 import { useAppSelector } from "@/app/hooks";
 import { EventOptions } from "./event-options";
+import { Link, useLocation } from "react-router";
 
 interface EventCardProps {
   event: Event;
@@ -26,6 +27,8 @@ export const EventCard = ({
   onRegister,
   onViewDetails,
 }: EventCardProps) => {
+  const { pathname } = useLocation();
+
   const { userType, user } = useAppSelector((state) => state.auth);
 
   const deadlineDate = new Date(event.registrationDeadline || "");
@@ -166,8 +169,13 @@ export const EventCard = ({
             Register Now
           </Button>
         )}
-        <Button onClick={onViewDetails} className="w-full" variant="outline">
-          View Details
+        <Button
+          onClick={onViewDetails}
+          className="w-full"
+          variant="outline"
+          asChild
+        >
+          <Link to={`${pathname}/event-detail/${event.id}`}>View Details</Link>
         </Button>
       </CardFooter>
     </Card>
