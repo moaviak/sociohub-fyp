@@ -11,6 +11,8 @@ export const initializeCleanupJobs = () => {
   scheduleJoinRequestCleanup();
   // Schedule event publishing
   scheduleEventPublishing();
+  // Schedule event status updates
+  scheduleEventStatusUpdates();
 
   logger.info("All cleanup jobs scheduled");
 };
@@ -104,6 +106,52 @@ const scheduleEventPublishing = () => {
       logger.error("Error during scheduled event publishing:", error);
     }
   });
-
   logger.info("Event publishing job scheduled");
+};
+
+/**
+ * Scheduled job that runs every 5 minutes to update event statuses
+ * - Updates events to "Ongoing" if start date/time has passed but not end date/time
+ * - Updates events to "Completed" if end date/time has passed
+ */
+const scheduleEventStatusUpdates = () => {
+  // Schedule to run every 5 minutes
+  cron.schedule("*/5 * * * *", async () => {
+    try {
+      const now = new Date();
+
+      // Update events to Ongoing where start time has passed but not end time
+      const updatedToOngoing = await prisma.event.updateMany({
+        where: {
+          status: "Upcoming",
+          startDate: { lte: now },
+          endDate: { gt: now },
+        },
+        data: {
+          status: "Ongoing",
+        },
+      });
+
+      // Update events to Completed where end time has passed
+      const updatedToCompleted = await prisma.event.updateMany({
+        where: {
+          status: { in: ["Upcoming", "Ongoing"] },
+          endDate: { lte: now },
+        },
+        data: {
+          status: "Completed",
+        },
+      });
+
+      if (updatedToOngoing.count > 0 || updatedToCompleted.count > 0) {
+        logger.info(
+          `Event status updates: ${updatedToOngoing.count} set to Ongoing, ${updatedToCompleted.count} set to Completed`
+        );
+      }
+    } catch (error) {
+      logger.error("Error during event status updates:", error);
+    }
+  });
+
+  logger.info("Event status update job scheduled");
 };

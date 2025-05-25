@@ -2,9 +2,48 @@ import { PRIVILEGES } from "@/data";
 import { Society } from "@/types";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
+import { format } from "date-fns";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
+}
+
+export function formatEventDateTime(
+  startDate: string,
+  endDate: string,
+  startTime: string,
+  endTime: string
+): string {
+  if (!startDate || !endDate || !startTime || !endTime) return "";
+
+  // Convert 24-hour format to 12-hour format
+  const formatTime = (time: string) => {
+    const [hours, minutes] = time.split(":");
+    const hour = parseInt(hours);
+    const ampm = hour >= 12 ? "PM" : "AM";
+    const hour12 = hour % 12 || 12;
+    return `${hour12}:${minutes} ${ampm}`;
+  };
+
+  const formattedStartTime = formatTime(startTime);
+  const formattedEndTime = formatTime(endTime);
+
+  // Check if it's a same-day event
+  if (startDate === endDate) {
+    return `${format(
+      new Date(startDate),
+      "EEE, MMM d"
+    )} | ${formattedStartTime} - ${formattedEndTime}`;
+  }
+
+  // Multi-day event
+  return `${format(
+    new Date(startDate),
+    "EEE, MMM d"
+  )} | ${formattedStartTime} - ${format(
+    new Date(endDate),
+    "EEE, MMM d"
+  )} | ${formattedEndTime}`;
 }
 
 export const getYearOptions = () => {

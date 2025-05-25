@@ -17,9 +17,10 @@ import FileUploader from "@/components/file-uploader";
 
 interface BasicInfoProps {
   form: UseFormReturn<EventFormData>;
+  banner?: string;
 }
 
-export const BasicInfo = ({ form }: BasicInfoProps) => {
+export const BasicInfo = ({ form, banner }: BasicInfoProps) => {
   return (
     <div className="space-y-4">
       <h3 className="h6-semibold">Basic Event Information</h3>
@@ -131,14 +132,19 @@ export const BasicInfo = ({ form }: BasicInfoProps) => {
             <FormItem>
               <FormLabel>Event Image</FormLabel>
               <FormControl>
-                <FileUploader
-                  onFileChange={field.onChange}
-                  placeholderText={{
-                    main: "Drag your image or",
-                    browse: "browse",
-                    sizeLimit: "Max size: 5 MB",
-                  }}
-                />
+                {(() => {
+                  return (
+                    <FileUploader
+                      onFileChange={field.onChange}
+                      placeholderText={{
+                        main: "Drag your image or",
+                        browse: "browse",
+                        sizeLimit: "Max size: 5 MB",
+                      }}
+                      existingImages={banner ? [{ url: banner }] : []}
+                    />
+                  );
+                })()}
               </FormControl>
               <FormMessage />
             </FormItem>

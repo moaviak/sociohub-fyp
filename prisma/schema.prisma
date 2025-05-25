@@ -258,8 +258,8 @@ model Event {
   banner               String?
   startDate            DateTime?
   endDate              DateTime?
-  startTime            DateTime?
-  endTime              DateTime?
+  startTime            String? // HH:MM (24-Hour Format)
+  endTime              String? // HH:MM (24-Hour Format)
   eventType            EventType?
   venueName            String?
   venueAddress         String?

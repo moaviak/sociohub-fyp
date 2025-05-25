@@ -132,7 +132,7 @@ export enum EventVisibility {
 }
 
 export enum PaymentMethods {
-  CreditCard = "Credit Card",
+  CreditCard = "CreditCard",
   Easypaisa = "Easypaisa",
 }
 
@@ -171,4 +171,14 @@ export interface Event {
   paymentMethods?: PaymentMethods[];
   announcementEnabled?: boolean;
   announcement?: string;
+  status?: EventStatus;
+
+  societyId?: string;
+
+  formStep?: number;
+  isDraft?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
 }
+
+export * from "./event";

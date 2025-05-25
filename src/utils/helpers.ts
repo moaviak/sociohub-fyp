@@ -356,6 +356,20 @@ export const haveEventsPrivilege = async (
   return !!studentWithPrivilege;
 };
 
+/**
+ * Checks if the user is member of society
+ * @param userId - User id
+ * @param societyId - id of the society
+ * @returns A URL string for the avatar
+ */
+export const isSocietyMember = async (userId: string, societyId: string) => {
+  const isMember = await prisma.studentSociety.findFirst({
+    where: { studentId: userId, societyId },
+  });
+
+  return !!isMember;
+};
+
 export const extractRegistrationNo = (registrationNo: string) => {
   const session = registrationNo.substring(0, 2);
   const year = registrationNo.substring(2, 4);

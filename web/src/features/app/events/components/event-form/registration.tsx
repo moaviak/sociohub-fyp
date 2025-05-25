@@ -24,6 +24,8 @@ export const Registration = ({ form }: RegistrationProps) => {
   const isRegistrationRequired = form.watch("isRegistrationRequired");
   const isPaidEvent = form.watch("isPaidEvent");
 
+  console.log(form.formState.errors);
+
   return (
     <div className="space-y-4">
       <h3 className="h6-semibold">Registration & Tickets</h3>
@@ -170,28 +172,28 @@ export const Registration = ({ form }: RegistrationProps) => {
                         <div className="flex flex-wrap flex-1 p-2 gap-4">
                           <div className="flex items-center justify-center gap-2">
                             <Checkbox
-                              checked={field.value?.includes("Credit Card")}
+                              checked={field.value?.includes("CreditCard")}
                               onCheckedChange={(checked) => {
                                 const currentValue = field.value || [];
                                 if (checked) {
                                   field.onChange([
                                     ...currentValue,
-                                    "Credit Card",
+                                    "CreditCard",
                                   ]);
                                 } else {
                                   field.onChange(
                                     currentValue.filter(
-                                      (value) => value !== "Credit Card"
+                                      (value) => value !== "CreditCard"
                                     )
                                   );
                                 }
                               }}
                               className="data-[state=checked]:bg-primary-600 data-[state=checked]:border-primary-600"
-                              id={"Credit Card"}
+                              id={"CreditCard"}
                             />
                             <Label
                               className="b3-medium leading-none"
-                              htmlFor={"Credit Card"}
+                              htmlFor={"CreditCard"}
                             >
                               Credit Card
                             </Label>

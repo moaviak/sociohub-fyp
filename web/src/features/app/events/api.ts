@@ -80,6 +80,91 @@ export const eventApi = api.injectEndpoints({
         return createApiError(errorResponse.message);
       },
     }),
+    getSocietyEvents: builder.query<
+      Event[] | ApiError,
+      {
+        societyId: string;
+        status?: string;
+        categories?: string;
+        search?: string;
+      }
+    >({
+      query: ({ societyId, status = "", categories = "", search = "" }) => ({
+        url: `/events?societyId=${societyId}&status=${status}&categories=${categories}&search=${search}`,
+      }),
+      transformResponse: (response: ApiResponse<Event[]>) => {
+        if (response.success) {
+          return response.data;
+        }
+        return createApiError(response.message);
+      },
+      transformErrorResponse: (response) => {
+        const errorResponse = response.data as ApiErrorResponse;
+        return createApiError(errorResponse.message);
+      },
+      providesTags: (result) => {
+        if (result && !("error" in result)) {
+          return [
+            ...result.map((event) => ({
+              type: "Events" as const,
+              id: event.id,
+            })),
+            { type: "Events", id: "LIST" },
+          ];
+        } else {
+          return [];
+        }
+      },
+    }),
+    getEventById: builder.query<Event | ApiError, string>({
+      query: (id) => ({
+        url: `/events/${id}`,
+      }),
+      transformResponse: (response: ApiResponse<Event>) => {
+        if (response.success) {
+          return response.data;
+        }
+        return createApiError(response.message);
+      },
+      transformErrorResponse: (response) => {
+        const errorResponse = response.data as ApiErrorResponse;
+        return createApiError(errorResponse.message);
+      },
+      providesTags: (result) => {
+        if (result && !("error" in result)) {
+          return [{ type: "Events", id: result.id }];
+        } else {
+          return [];
+        }
+      },
+    }),
+    updateEvent: builder.mutation<
+      Event | ApiError,
+      { id: string; data: FormData }
+    >({
+      query: ({ id, data }) => ({
+        url: `/events/${id}`,
+        method: "PUT",
+        body: data,
+      }),
+      transformResponse: (response: ApiResponse<Event>) => {
+        if (response.success) {
+          return response.data;
+        }
+        return createApiError(response.message);
+      },
+      transformErrorResponse: (response) => {
+        const errorResponse = response.data as ApiErrorResponse;
+        return createApiError(errorResponse.message);
+      },
+      invalidatesTags: (result) => {
+        if (result && !("error" in result)) {
+          return [{ type: "Events", id: result.id }];
+        } else {
+          return [];
+        }
+      },
+    }),
   }),
 });
 
@@ -87,4 +172,7 @@ export const {
   useCreateEventMutation,
   useDraftEventMutation,
   useGenerateAnnouncementMutation,
+  useGetSocietyEventsQuery,
+  useGetEventByIdQuery,
+  useUpdateEventMutation,
 } = eventApi;

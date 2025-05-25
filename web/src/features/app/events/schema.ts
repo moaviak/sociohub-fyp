@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 // Define event categories as an enum for type safety
-const EventCategories = z.enum([
+export const EventCategories = z.enum([
   "Workshop",
   "Seminar",
   "Social Gathering",
@@ -30,7 +30,7 @@ const OnlinePlatform = z.enum([
 ]);
 
 // Define payment gateway options as an enum
-const PaymentGateway = z.enum(["Credit Card", "Easypaisa"]);
+const PaymentGateway = z.enum(["CreditCard", "Easypaisa"]);
 
 // Section 1: Basic Event Information Schema
 const basicInfoSchema = z.object({
@@ -366,7 +366,27 @@ export const eventFormSchema = z
       message: "Announcement text is required when announcements are enabled.",
       path: ["announcement"],
     }
-  );
+  )
+  .superRefine((data, ctx) => {
+    if (data.formStep < 2) return; // Only validate from step 2 onward
+
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
+    if (data.startDate && data.startDate < now) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Start date cannot be in the past.",
+        path: ["startDate"],
+      });
+    }
+    if (data.endDate && data.endDate < now) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "End date cannot be in the past.",
+        path: ["endDate"],
+      });
+    }
+  });
 
 // Create a type from the schema
 export type EventFormData = z.infer<typeof eventFormSchema>;

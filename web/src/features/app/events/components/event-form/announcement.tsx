@@ -17,6 +17,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { SpinnerLoader } from "@/components/spinner-loader";
 import { format } from "date-fns";
+import { ReviewSection } from "./review-section";
 
 interface AnnouncementProps {
   form: UseFormReturn<EventFormData>;
@@ -80,8 +81,8 @@ export const Announcement = ({ form }: AnnouncementProps) => {
 
   return (
     <div className="space-y-4">
-      <h3 className="h6-semibold">Announcement</h3>
-
+      <h3 className="h6-semibold">Review & Announcement</h3>
+      <ReviewSection form={form} />
       <div className="space-y-4">
         <FormField
           control={form.control}

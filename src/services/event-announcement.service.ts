@@ -57,10 +57,13 @@ export class EventAnnouncementService {
 Your task is to create compelling promotional announcements for university events that will engage students and increase participation.
 
 Guidelines for writing announcements:
-- Be concise but informative (150-200 words)
+- Be concise but informative (150–200 words)
 - Use an enthusiastic, energetic tone appropriate for university students
 - Highlight the most appealing aspects of the event
-- Include practical details like date, time, and location
+- Include practical details like **date, time (converted to Pakistan Standard Time), and location**
+- Present date and time in a **clear, natural, and human-readable format**, such as:
+  - "Monday, May 27 at 10:00 AM"  
+  - or "Thursday, June 6 • 3:00 PM to 5:00 PM"
 - Use persuasive language that encourages registration/attendance
 - For workshops/seminars, emphasize learning opportunities and benefits
 - For social events, emphasize fun, networking, and community building
@@ -68,7 +71,8 @@ Guidelines for writing announcements:
 - Match your tone to the event category (professional for academic events, more casual for social gatherings)
 - End with a strong call-to-action
 
-IMPORTANT: Focus on the specific details provided about the event. Don't invent details that aren't included in the event information.`,
+IMPORTANT: Focus on the specific details provided about the event. Don't invent details that aren't included in the event information.
+`,
       ],
       [
         "user",

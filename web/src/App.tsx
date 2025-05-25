@@ -25,6 +25,7 @@ import SocietySettingsPage from "./pages/app/society-settings-page";
 import { NotificationSocketProvider } from "./features/app/notifications/socket-provider";
 import EventsPage from "./pages/app/events";
 import CreateEventPage from "./pages/app/events/create-event-page";
+import UpdateEventPage from "./pages/app/events/update-event-page";
 
 function App() {
   return (
@@ -74,8 +75,16 @@ function App() {
 
             <Route path="/events" element={<EventsPage />}>
               <Route path="create-event" element={<CreateEventPage />} />
+              <Route
+                path="update-event/:eventid"
+                element={<UpdateEventPage />}
+              />
               <Route path=":societyId" element={<EventsPage />}>
                 <Route path="create-event" element={<CreateEventPage />} />
+                <Route
+                  path="update-event/:eventId"
+                  element={<UpdateEventPage />}
+                />
               </Route>
             </Route>
 

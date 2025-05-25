@@ -25,8 +25,8 @@ export interface CreateEventInput {
   banner?: string;
   startDate: Date;
   endDate: Date;
-  startTime: Date;
-  endTime: Date;
+  startTime: string;
+  endTime: string;
   eventType: EventType;
   venueName?: string;
   venueAddress?: string;
@@ -63,20 +63,15 @@ export class EventService {
 
       if (!society) {
         throw new ApiError(404, "Society not found");
-      }
+      } // Convert date strings and time strings to complete DateTime
+      const [startHours, startMinutes] = input.startTime.split(":").map(Number);
+      const [endHours, endMinutes] = input.endTime.split(":").map(Number);
 
-      // Convert date strings to Date objects
       const startDateTime = new Date(input.startDate);
-      startDateTime.setHours(
-        new Date(input.startTime).getHours(),
-        new Date(input.startTime).getMinutes()
-      );
+      startDateTime.setHours(startHours, startMinutes);
 
       const endDateTime = new Date(input.endDate);
-      endDateTime.setHours(
-        new Date(input.endTime).getHours(),
-        new Date(input.endTime).getMinutes()
-      );
+      endDateTime.setHours(endHours, endMinutes);
 
       // Validate dates
       const now = new Date();
@@ -147,8 +142,8 @@ export class EventService {
           categories: input.categories,
           startDate: input.startDate,
           endDate: input.endDate,
-          startTime: startDateTime,
-          endTime: endDateTime,
+          startTime: input.startTime,
+          endTime: input.endTime,
           eventType: input.eventType,
           venueName: input.venueName,
           venueAddress: input.venueAddress,
@@ -167,7 +162,7 @@ export class EventService {
           announcementEnabled: input.announcementEnabled ?? false,
           announcement: input.announcement,
           status,
-          isDraft: input.isDraft ?? false,
+          isDraft: false,
           formStep: input.formStep,
         },
         include: {
@@ -215,8 +210,8 @@ export class EventService {
         categories: [],
         startDate: new Date(),
         endDate: new Date(),
-        startTime: new Date(),
-        endTime: new Date(),
+        startTime: "00:00",
+        endTime: "00:00",
         eventType: EventType.Physical,
         audience: EventAudience.Open,
         visibility: EventVisibility.Draft,
@@ -349,6 +344,196 @@ export class EventService {
       });
     } catch (error: any) {
       throw new ApiError(500, "Error fetching drafts: " + error.message);
+    }
+  }
+
+  static async getEvents(
+    societyId: string | undefined,
+    filters?: {
+      status?: "Upcoming" | "Past" | "Draft";
+      categories?: EventCategories[];
+      search?: string;
+    },
+    user?: {
+      id: string;
+      isMember?: boolean;
+      hasEventsPrivilege?: boolean;
+    }
+  ) {
+    try {
+      const now = new Date();
+      const whereClause: any = {};
+
+      // Only add societyId filter if provided
+      if (societyId) {
+        whereClause.societyId = societyId;
+      }
+
+      // Apply user context globally (not just per society)
+      if (!user || user.isMember === false) {
+        // Non-members can only see published/scheduled events, never drafts
+        whereClause.visibility = { in: ["Publish", "Schedule"] };
+        whereClause.isDraft = false;
+        whereClause.OR = [
+          { publishDateTime: null },
+          { publishDateTime: { lte: now } },
+        ];
+      } else if (user.hasEventsPrivilege === false) {
+        // Members without events privilege can't see drafts
+        whereClause.isDraft = false;
+      }
+      // Members with events privilege can see everything, so no extra conditions needed
+
+      // Only apply filters if they are provided
+      if (filters && Object.keys(filters).length > 0) {
+        // Add status filter if provided
+        if (filters.status) {
+          switch (filters.status) {
+            case "Upcoming":
+              whereClause.OR = [
+                {
+                  AND: [
+                    { startDate: { gte: now } },
+                    { status: EventStatus.Upcoming },
+                  ],
+                },
+                { status: EventStatus.Ongoing },
+              ];
+              whereClause.isDraft = false; // Never show drafts for Upcoming
+              break;
+            case "Past":
+              whereClause.AND = [
+                {
+                  status: {
+                    in: [EventStatus.Completed, EventStatus.Cancelled],
+                  },
+                },
+                { isDraft: false }, // Past events should never be drafts
+              ];
+              break;
+            case "Draft":
+              if (user?.hasEventsPrivilege) {
+                whereClause.isDraft = true;
+              } else {
+                // If user doesn't have events privilege, return nothing for draft filter
+                return [];
+              }
+              break;
+          }
+        }
+
+        // Add categories filter if provided
+        if (filters.categories && filters.categories.length > 0) {
+          whereClause.categories = { hasSome: filters.categories };
+        }
+
+        // Add search filter if provided
+        if (filters.search) {
+          const searchCondition = {
+            OR: [
+              { title: { contains: filters.search, mode: "insensitive" } },
+              {
+                description: { contains: filters.search, mode: "insensitive" },
+              },
+              { tagline: { contains: filters.search, mode: "insensitive" } },
+            ],
+          };
+
+          // Combine search with existing conditions
+          whereClause.AND = whereClause.AND || [];
+          whereClause.AND.push(searchCondition);
+        }
+      }
+
+      // Debug log
+      console.log("User context:", user);
+      console.log("Filters:", filters);
+      console.log("Where clause:", JSON.stringify(whereClause, null, 2));
+
+      const events = await prisma.event.findMany({
+        where: whereClause,
+        orderBy: [
+          { isDraft: "asc" },
+          { startDate: "asc" },
+          { startTime: "asc" },
+        ],
+      });
+
+      // Debug log
+      console.log("Found events count:", events.length);
+
+      return events;
+    } catch (error: any) {
+      throw new ApiError(500, "Error fetching events: " + error.message);
+    }
+  }
+
+  static async getEventById(eventId: string) {
+    try {
+      const event = await prisma.event.findUnique({
+        where: { id: eventId },
+      });
+      return event;
+    } catch (error: any) {
+      throw new ApiError(500, "Error fetching event: " + error.message);
+    }
+  }
+
+  static async updateEvent(
+    eventId: string,
+    update: Partial<CreateEventInput & { banner?: string }>
+  ) {
+    try {
+      const event = await prisma.event.findUnique({ where: { id: eventId } });
+      if (!event) {
+        throw new ApiError(404, "Event not found");
+      }
+
+      // Handle banner upload if provided and is a local path
+      let bannerUrl = update.banner;
+      if (update.banner && update.banner !== event.banner) {
+        // Optionally upload to Cloudinary (reuse logic from createEvent)
+        const society = await prisma.society.findUnique({
+          where: { id: event.societyId },
+        });
+        if (society) {
+          const uploadResult = await uploadOnCloudinary(
+            update.banner,
+            `${society.name}/events`
+          );
+          if (uploadResult?.secure_url) {
+            bannerUrl = uploadResult.secure_url;
+          }
+        }
+      }
+
+      // Determine new status if not a draft and if enough info is present
+      let newStatus = event.status;
+      const prevVisibility = event.visibility;
+      const newVisibility = update.visibility ?? event.visibility;
+      if (newVisibility === "Publish" || newVisibility === "Schedule") {
+        newStatus = "Upcoming";
+      }
+
+      const updatedEvent = await prisma.event.update({
+        where: { id: eventId },
+        data: {
+          ...update,
+          ...(bannerUrl ? { banner: bannerUrl } : {}),
+          status: newStatus,
+        },
+      });
+
+      if (
+        prevVisibility === "Draft" &&
+        (newVisibility === "Publish" || newVisibility === "Schedule")
+      ) {
+        sendEventNotification(event);
+      }
+      return updatedEvent;
+    } catch (error: any) {
+      if (error instanceof ApiError) throw error;
+      throw new ApiError(500, "Error updating event: " + error.message);
     }
   }
 }

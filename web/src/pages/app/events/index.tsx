@@ -29,7 +29,7 @@ const EventsPage = () => {
   }
 
   return (
-    <div className="flex flex-col px-4 py-2 max-h-full overflow-hidden">
+    <div className="flex flex-col px-4 py-2">
       <div className="flex items-center justify-between">
         <div>
           <h3 className="h3-semibold">Events</h3>
@@ -52,7 +52,7 @@ const EventsPage = () => {
           </div>
         )}
       </div>
-      <div className="flex-1 flex min-h-0 overflow-hidden">
+      <div className="flex-1 flex">
         <Events />
       </div>
     </div>

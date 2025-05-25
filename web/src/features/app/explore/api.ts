@@ -6,6 +6,7 @@ import ApiError, {
   createApiError,
 } from "@/features/api-error";
 import { Societies } from "./types";
+import { Event } from "@/types/event";
 
 export const ExploreApi = api.injectEndpoints({
   endpoints: (builder) => ({
@@ -97,6 +98,34 @@ export const ExploreApi = api.injectEndpoints({
         }
       },
     }),
+    getEvents: builder.query<
+      Event[] | ApiError,
+      { status?: string; categories?: string; search?: string }
+    >({
+      query: ({ status = "", categories = "", search = "" }) => ({
+        url: `/events?status=${status}&categories=${categories}&search=${search}`,
+      }),
+      transformResponse: (response: ApiResponse<Event[]>) => {
+        if (response.success) {
+          return response.data;
+        }
+        return createApiError(response.message);
+      },
+      transformErrorResponse: (response) => {
+        const errorResponse = response.data as ApiErrorResponse;
+        return createApiError(errorResponse.message);
+      },
+      providesTags: (result) => {
+        if (result && !("error" in result)) {
+          return [
+            ...result.map(({ id }) => ({ type: "Events" as const, id })),
+            { type: "Events", id: "LIST" },
+          ];
+        } else {
+          return [];
+        }
+      },
+    }),
   }),
 });
 
@@ -104,4 +133,5 @@ export const {
   useGetSocietiesQuery,
   useSendJoinRequestMutation,
   useCancelJoinRequestMutation,
+  useGetEventsQuery,
 } = ExploreApi;

@@ -4,6 +4,7 @@ import { upload } from "../middlewares/multer.middlewares";
 import {
   createEventValidator,
   generateAnnouncementValidator,
+  updateEventValidator,
 } from "../validators/events.validators";
 import { draftEventValidator } from "../validators/events.draft.validators";
 import { validate } from "../validators/validate";
@@ -13,6 +14,9 @@ import {
   getDraft,
   getDrafts,
   generateAnnouncement,
+  getEvents,
+  getEventById,
+  updateEvent,
 } from "../controllers/event.controller";
 import { verifyEventsPrivilege } from "../middlewares/privilege.middlewares";
 
@@ -20,6 +24,7 @@ const router = Router();
 
 router
   .route("/")
+  .get(verifyJWT, getEvents)
   .post(
     verifyJWT,
     upload.single("banner"),
@@ -67,6 +72,21 @@ router
     generateAnnouncementValidator(),
     validate,
     generateAnnouncement
+  );
+
+// Get event by ID
+router.route("/:eventId").get(verifyJWT, getEventById);
+
+// Update event by ID
+router
+  .route("/:eventId")
+  .put(
+    verifyJWT,
+    upload.single("banner"),
+    verifyEventsPrivilege,
+    updateEventValidator(),
+    validate,
+    updateEvent
   );
 
 export default router;

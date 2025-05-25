@@ -18,6 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useEffect } from "react";
 
 interface LocationProps {
   form: UseFormReturn<EventFormData>;
@@ -26,6 +27,27 @@ interface LocationProps {
 export const Location = ({ form }: LocationProps) => {
   const eventType = form.watch("eventType");
   const platform = form.watch("platform");
+
+  useEffect(() => {
+    if (eventType === "Physical") {
+      // Clear online fields
+      form.resetField("platform");
+      form.resetField("otherPlatform");
+      form.resetField("meetingLink");
+      form.resetField("accessInstructions");
+      form.clearErrors([
+        "platform",
+        "otherPlatform",
+        "meetingLink",
+        "accessInstructions",
+      ]);
+    } else {
+      // Clear physical fields
+      form.resetField("venueName");
+      form.resetField("address");
+      form.clearErrors(["venueName", "address"]);
+    }
+  }, [eventType, form]);
 
   return (
     <div className="space-y-4">
