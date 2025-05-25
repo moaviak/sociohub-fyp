@@ -589,18 +589,44 @@ export const sendEventNotification = async (event: Event) => {
       return;
     }
 
+    // If audience is Invite, do not send notification
+    if (event.audience === "Invite") {
+      return;
+    }
+
     // Get society details
     const society = await prisma.society.findUnique({
       where: { id: event.societyId },
       select: { name: true },
     });
 
-    // Get all students
-    const students = await prisma.student.findMany({
-      select: {
-        id: true,
-      },
-    });
+    // Determine recipients based on audience
+    let recipients: { recipientType: "student"; recipientId: string }[] = [];
+    if (event.audience === "Open") {
+      // All students
+      const students = await prisma.student.findMany({
+        select: { id: true },
+      });
+      recipients = students.map((student) => ({
+        recipientType: "student" as const,
+        recipientId: student.id,
+      }));
+    } else if (event.audience === "Members") {
+      // Only society members
+      const members = await prisma.studentSociety.findMany({
+        where: { societyId: event.societyId },
+        select: { studentId: true },
+      });
+      recipients = members.map((member) => ({
+        recipientType: "student" as const,
+        recipientId: member.studentId,
+      }));
+    }
+
+    if (recipients.length === 0) {
+      // No one to notify
+      return;
+    }
 
     // Format notification data based on event visibility
     const isScheduled = event.visibility === "Schedule";
@@ -616,29 +642,19 @@ export const sendEventNotification = async (event: Event) => {
           event.title
         }"${event.tagline ? `: ${event.tagline}` : ""}`;
 
-    // Create notification for all students
+    // Create notification for recipients
     const notification = await createNotification({
       title: notificationTitle,
       description: notificationDescription,
       image: event.banner || undefined,
       webRedirectUrl: `/events/${event.id}`,
       mobileRedirectUrl: `event/${event.id}`,
-      recipients: students.map((student) => ({
-        recipientType: "student" as const,
-        recipientId: student.id,
-      })),
+      recipients,
     });
 
     // If notification was created successfully and we have socket.io instance
     if (notification && io) {
-      sendNotificationToUsers(
-        io,
-        students.map((student) => ({
-          recipientType: "student" as const,
-          recipientId: student.id,
-        })),
-        notification
-      );
+      sendNotificationToUsers(io, recipients, notification);
     }
 
     return notification;
