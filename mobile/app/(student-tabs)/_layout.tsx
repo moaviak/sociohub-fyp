@@ -3,7 +3,13 @@ import { useAppSelector } from "@/store/hooks";
 import { UserType } from "@/types";
 import { router, Tabs } from "expo-router";
 import { useEffect } from "react";
-import { Image, ImageSourcePropType, Text, View } from "react-native";
+import {
+  ActivityIndicator,
+  Image,
+  ImageSourcePropType,
+  Text,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 const TabIcon = ({
@@ -104,8 +110,8 @@ export default function StudentTabsLayout() {
   // Show loading state while checking auth
   if (!isAuthChecked || !isAuthenticated) {
     return (
-      <View>
-        <Text>Loading...</Text>
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <ActivityIndicator size="large" />
       </View>
     );
   }
