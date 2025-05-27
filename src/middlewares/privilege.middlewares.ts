@@ -39,7 +39,9 @@ export const verifyEventsPrivilege = asyncHandler(
     const userId = (req.user as IUser).id;
     const { societyId } = req.body;
 
-    console.log(req.body);
+    if (!societyId) {
+      throw new ApiError(403, "You don't have permission for this operation.");
+    }
 
     if (await haveEventsPrivilege(userId, societyId)) {
       next();

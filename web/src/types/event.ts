@@ -72,8 +72,19 @@ export interface Event {
   societyId?: string;
   society?: Society;
 
+  isRegistered?: boolean;
+  _count?: {
+    eventRegistrations: number;
+  };
   formStep?: number;
   isDraft?: boolean;
   createdAt?: string;
   updatedAt?: string;
+}
+
+export interface Registration {
+  id: string;
+  studentId: string;
+  eventId: string;
+  registeredAt?: string;
 }

@@ -13,6 +13,8 @@ import { uploadOnCloudinary, deleteFromCloudinary } from "../utils/cloudinary";
 import { createNotification } from "./notification.service";
 import { io } from "../app";
 import { sendNotificationToUsers } from "../socket";
+import QRCode from "qrcode";
+import { sendEventRegistrationConfirmationEmail } from "../utils/mail";
 
 const prisma = new PrismaClient();
 
@@ -472,46 +474,9 @@ export class EventService {
     try {
       const event = await prisma.event.findUnique({
         where: { id: eventId },
-        select: {
-          id: true,
-          title: true,
-          tagline: true,
-          description: true,
-          banner: true,
-          accessInstructions: true,
-          audience: true,
-          categories: true,
-          createdAt: true,
-          endDate: true,
-          endTime: true,
-          eventType: true,
-          announcement: true,
-          announcementEnabled: true,
-          formStep: true,
-          isDraft: true,
-          maxParticipants: true,
-          meetingLink: true,
-          paidEvent: true,
-          paymentMethods: true,
-          platform: true,
-          publishDateTime: true,
-          registrationDeadline: true,
-          registrationRequired: true,
-          society: {
-            select: {
-              id: true,
-              name: true,
-              logo: true,
-            },
-          },
-          startDate: true,
-          startTime: true,
-          status: true,
-          ticketPrice: true,
-          updatedAt: true,
-          venueAddress: true,
-          venueName: true,
-          visibility: true,
+        include: {
+          society: true,
+          _count: { select: { eventRegistrations: true } },
         },
       });
       return event;
@@ -575,6 +540,170 @@ export class EventService {
     } catch (error: any) {
       if (error instanceof ApiError) throw error;
       throw new ApiError(500, "Error updating event: " + error.message);
+    }
+  }
+
+  static async registerForEvent({
+    eventId,
+    studentId,
+  }: {
+    eventId: string;
+    studentId: string;
+  }) {
+    // Fetch event with all required fields
+    const event = await prisma.event.findUnique({
+      where: { id: eventId },
+      include: { society: true },
+    });
+    if (!event) throw new ApiError(404, "Event not found");
+
+    // 0. Event shouldn't be draft
+    if (event.visibility === "Draft") {
+      throw new ApiError(400, "Cannot register a draft event.");
+    }
+
+    // 1. Registration must be enabled
+    if (!event.registrationRequired)
+      throw new ApiError(400, "Registration is not required for this event");
+    // 2. Event must be published
+    if (event.visibility !== "Publish")
+      throw new ApiError(400, "Event is not open for registration");
+    // 3. Registration deadline must not be passed
+    if (
+      event.registrationDeadline &&
+      new Date(event.registrationDeadline) < new Date()
+    )
+      throw new ApiError(400, "Registration deadline has passed");
+    // 4. Event status must be Upcoming
+    if (event.status !== "Upcoming")
+      throw new ApiError(400, "Event is not open for registration");
+    // 5. Student must be eligible for audience
+    if (event.audience === "Members") {
+      const isMember = await prisma.studentSociety.findFirst({
+        where: { studentId, societyId: event.societyId },
+      });
+      if (!isMember)
+        throw new ApiError(
+          403,
+          "You must be a member of the society to register for this event"
+        );
+    }
+    if (event.audience === "Invite") {
+      // TOOD: Complete this when implemented Event Invites
+      throw new ApiError(403, "This event is invite-only");
+    }
+    // 6. Check for duplicate registration
+    const existing = await prisma.eventRegistration.findFirst({
+      where: { eventId, studentId },
+    });
+    if (existing)
+      throw new ApiError(409, "You have already registered for this event");
+    // 7. Check max participants
+    if (event.maxParticipants) {
+      const count = await prisma.eventRegistration.count({
+        where: { eventId },
+      });
+      if (count >= event.maxParticipants)
+        throw new ApiError(400, "Event has reached maximum participants");
+    }
+    // 8. Create registration
+    let ticket = null;
+    let registration = await prisma.eventRegistration.create({
+      data: { eventId, studentId },
+    });
+    // 9. If event is physical, generate ticket
+    let ticketQrCode: string | undefined = undefined;
+    let entryInstructions: string | undefined = undefined;
+    if (event.eventType === "Physical") {
+      // QR data: registrationId, eventId, studentId, eventTitle, societyName
+      const qrPayload = {
+        registrationId: registration.id,
+        eventId,
+        studentId,
+        eventTitle: event.title,
+        societyName: event.society.name,
+      };
+      ticketQrCode = await QRCode.toDataURL(JSON.stringify(qrPayload));
+      ticket = await prisma.eventTicket.create({
+        data: {
+          registrationId: registration.id,
+          qrCode: ticketQrCode,
+        },
+      });
+      // Link ticket to registration
+      registration = await prisma.eventRegistration.update({
+        where: { id: registration.id },
+        data: { ticket: { connect: { id: ticket.id } } },
+        include: { ticket: true },
+      });
+      entryInstructions =
+        "Please present the attached QR code at the event entrance. This ticket allows one-time entry only. Do not share your QR code with others.";
+    }
+    // Fetch student info for email
+    const student = await prisma.student.findUnique({
+      where: { id: studentId },
+    });
+    if (student) {
+      await sendEventRegistrationConfirmationEmail(String(student.email), {
+        studentName: student.firstName + " " + student.lastName,
+        eventTitle: event.title,
+        eventStartDate: event.startDate?.toLocaleDateString() ?? "",
+        eventEndDate: event.endDate?.toLocaleDateString() ?? "",
+        eventStartTime: event.startTime ?? undefined,
+        eventEndTime: event.endTime ?? undefined,
+        eventVenue: event.venueName || event.venueAddress || undefined,
+        eventType: event.eventType || "",
+        societyName: event.society.name,
+        ticketQrCode,
+        entryInstructions,
+        platform: event.platform ?? undefined,
+        meetingLink: event.meetingLink ?? undefined,
+        accessInstructions: event.accessInstructions ?? undefined,
+      });
+    }
+    return registration;
+  }
+
+  static async getUserEventRegistrations(userId: string, eventIds: string[]) {
+    return prisma.eventRegistration.findMany({
+      where: {
+        studentId: userId,
+        eventId: { in: eventIds },
+      },
+      select: { eventId: true },
+    });
+  }
+
+  static async deleteEvent(eventId: string) {
+    try {
+      // Find the event
+      const event = await prisma.event.findUnique({ where: { id: eventId } });
+      if (!event) {
+        throw new ApiError(404, "Event not found");
+      }
+
+      // Only allow deletion if event is a draft
+      if (event.visibility !== "Draft") {
+        throw new ApiError(400, "Only draft events can be deleted");
+      }
+
+      // Delete banner from Cloudinary if exists
+      if (event.banner) {
+        try {
+          await deleteFromCloudinary(event.banner);
+        } catch (e) {
+          // Log error but do not block
+        }
+      }
+
+      // Delete the event itself (no need to delete tickets/registrations for drafts)
+      const deletedEvent = await prisma.event.delete({
+        where: { id: eventId },
+      });
+      return deletedEvent;
+    } catch (error: any) {
+      if (error instanceof ApiError) throw error;
+      throw new ApiError(500, "Error deleting event: " + error.message);
     }
   }
 }

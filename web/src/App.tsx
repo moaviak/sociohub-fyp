@@ -58,12 +58,7 @@ function App() {
             <Route path="/dashboard" element={<DashboardPage />} />
 
             {/* Student specific routes */}
-            <Route path="/explore" element={<ExplorePage />}>
-              <Route
-                path="event-detail/:eventId"
-                element={<EventDetailPage />}
-              />
-            </Route>
+            <Route path="/explore" element={<ExplorePage />}></Route>
 
             {/* Society specific  routes*/}
             <Route path="/members" element={<MembersPage />}>
@@ -81,20 +76,9 @@ function App() {
 
             <Route path="/events" element={<EventsPage />}>
               <Route path="create-event" element={<CreateEventPage />} />
-              <Route
-                path="update-event/:eventid"
-                element={<UpdateEventPage />}
-              />
+
               <Route path=":societyId" element={<EventsPage />}>
                 <Route path="create-event" element={<CreateEventPage />} />
-                <Route
-                  path="update-event/:eventId"
-                  element={<UpdateEventPage />}
-                />
-                <Route
-                  path="event-detail/:eventId"
-                  element={<EventDetailPage />}
-                />
               </Route>
             </Route>
 
@@ -104,6 +88,7 @@ function App() {
 
             {/* Add other private routes here */}
             <Route path="/event/:id" element={<EventDetailPage />} />
+            <Route path="update-event/:eventid" element={<UpdateEventPage />} />
           </Route>
 
           {/* 404 Route */}

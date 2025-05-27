@@ -31,6 +31,8 @@ model Student {
   joinRequests  JoinRequest[]           @relation
   societies     StudentSociety[]        @relation
   notifications NotificationRecipient[] @relation("StudentNotifications")
+  eventRegistrations EventRegistration[]
+  scannedTickets EventTicket[] @relation("ScannedByStudent")
 }
 
 model Advisor {
@@ -287,5 +289,39 @@ model Event {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  eventRegistrations EventRegistration[]
+
   @@index([societyId])
+}
+
+model EventRegistration {
+  id            String   @id @default(uuid())
+  studentId     String
+  eventId       String
+  registeredAt  DateTime @default(now())
+
+  // Relations
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  event   Event   @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  ticket  EventTicket?
+
+  @@unique([studentId, eventId]) // Prevent duplicate registration
+  @@index([eventId])
+  @@index([studentId])
+}
+
+model EventTicket {
+  id            String   @id @default(uuid())
+  registrationId String  @unique
+  qrCode        String   // Store QR code data or URL
+  issuedAt      DateTime @default(now())
+  scannedAt     DateTime?
+  isScanned     Boolean  @default(false)
+  scannedBy     String?  // Student ID who scanned (admin)
+
+  // Relations
+  registration EventRegistration @relation(fields: [registrationId], references: [id], onDelete: Cascade)
+  scannedByStudent Student? @relation("ScannedByStudent", fields: [scannedBy], references: [id])
+
+  @@index([isScanned])
 }

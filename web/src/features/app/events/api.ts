@@ -4,7 +4,7 @@ import ApiError, {
   createApiError,
 } from "@/features/api-error";
 import { ApiResponse } from "@/features/api-response";
-import { Event } from "@/types";
+import { Event, Registration } from "@/types";
 import { EventAnnouncementInput } from "./types";
 
 export const eventApi = api.injectEndpoints({
@@ -165,6 +165,56 @@ export const eventApi = api.injectEndpoints({
         }
       },
     }),
+    registerForEvent: builder.mutation<Registration | ApiError, string>({
+      query: (arg) => ({
+        url: `/events/${arg}/register`,
+        method: "POST",
+      }),
+      transformResponse: (response: ApiResponse<Registration>) => {
+        if (response.success) {
+          return response.data;
+        }
+        return createApiError(response.message);
+      },
+      transformErrorResponse: (response) => {
+        const errorResponse = response.data as ApiErrorResponse;
+        return createApiError(errorResponse.message);
+      },
+      invalidatesTags: (result) => {
+        if (result && !("error" in result)) {
+          return [{ type: "Events", id: result.eventId }];
+        } else {
+          return [];
+        }
+      },
+    }),
+    deleteEvent: builder.mutation<
+      Event | ApiError,
+      { eventId: string; societyId: string }
+    >({
+      query: ({ eventId, societyId }) => ({
+        url: `/events/${eventId}`,
+        method: "DELETE",
+        body: { societyId },
+      }),
+      transformResponse: (response: ApiResponse<Event>) => {
+        if (response.success) {
+          return response.data;
+        }
+        return createApiError(response.message);
+      },
+      transformErrorResponse: (response) => {
+        const errorResponse = response.data as ApiErrorResponse;
+        return createApiError(errorResponse.message);
+      },
+      invalidatesTags: (result) => {
+        if (result && !("error" in result)) {
+          return [{ type: "Events", id: result.id }];
+        } else {
+          return [];
+        }
+      },
+    }),
   }),
 });
 
@@ -175,4 +225,6 @@ export const {
   useGetSocietyEventsQuery,
   useGetEventByIdQuery,
   useUpdateEventMutation,
+  useRegisterForEventMutation,
+  useDeleteEventMutation,
 } = eventApi;

@@ -1,4 +1,4 @@
-import { Event, EventStatus, UserType } from "@/types";
+import { Event, EventStatus, EventVisibility, UserType } from "@/types";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { formatEventDateTime, haveEventsPrivilege } from "@/lib/utils";
@@ -12,13 +12,16 @@ import { cn } from "@/lib/utils";
 import { Skeleton } from "../ui/skeleton";
 import { useAppSelector } from "@/app/hooks";
 import { EventOptions } from "./event-options";
-import { Link, useLocation } from "react-router";
+import { Link } from "react-router";
 
 interface EventCardProps {
   event: Event;
   variant?: "default" | "compact";
-  onRegister?: () => void;
+  onRegister?: (eventId: string) => Promise<void>;
   onViewDetails?: () => void;
+  isRegistering?: boolean;
+  onDelete?: (eventId: string, societyId: string) => Promise<void>;
+  isDeleting?: boolean;
 }
 
 export const EventCard = ({
@@ -26,9 +29,10 @@ export const EventCard = ({
   variant = "default",
   onRegister,
   onViewDetails,
+  isRegistering = false,
+  onDelete,
+  isDeleting = false,
 }: EventCardProps) => {
-  const { pathname } = useLocation();
-
   const { userType, user } = useAppSelector((state) => state.auth);
 
   const deadlineDate = new Date(event.registrationDeadline || "");
@@ -36,6 +40,7 @@ export const EventCard = ({
 
   const canRegister =
     userType === UserType.STUDENT &&
+    event.visibility !== EventVisibility.Draft &&
     event.registrationRequired &&
     now < deadlineDate &&
     event.status === EventStatus.Upcoming;
@@ -45,7 +50,9 @@ export const EventCard = ({
     ? haveEventsPrivilege(user.societies || [], event.societyId || "")
     : true;
 
-  console.log(event.status);
+  const handleClick = () => {
+    if (onRegister) onRegister(event.id);
+  };
 
   return (
     <Card
@@ -88,7 +95,14 @@ export const EventCard = ({
           >
             {event.title}
           </h3>
-          <EventOptions variant={variant} event={event} />
+          {havePrivilege && (
+            <EventOptions
+              variant={variant}
+              event={event}
+              onDelete={onDelete}
+              isDeleting={isDeleting}
+            />
+          )}
         </div>
         {/* Categories */}
         <div className="flex flex-wrap gap-2">
@@ -161,11 +175,16 @@ export const EventCard = ({
       <CardFooter
         className={cn(
           "flex flex-col gap-2 w-full",
-          variant === "compact" ? "p-2 pt-0" : "p-4 pt-0"
+          variant === "compact" ? "p-2 pt-0" : "px-2 py-4 pt-0"
         )}
       >
-        {canRegister && (
-          <Button onClick={onRegister} className="w-full" variant="default">
+        {canRegister && !event.isRegistered && (
+          <Button
+            onClick={handleClick}
+            className="w-full"
+            variant="default"
+            disabled={isRegistering}
+          >
             Register Now
           </Button>
         )}
@@ -175,7 +194,7 @@ export const EventCard = ({
           variant="outline"
           asChild
         >
-          <Link to={`${pathname}/event-detail/${event.id}`}>View Details</Link>
+          <Link to={`/event/${event.id}`}>View Details</Link>
         </Button>
       </CardFooter>
     </Card>

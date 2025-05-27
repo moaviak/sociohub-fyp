@@ -45,6 +45,23 @@ interface RoleAssignmentEmailData {
   privileges?: string[];
 }
 
+interface EventRegistrationConfirmationEmailData {
+  studentName: string;
+  eventTitle: string;
+  eventStartDate: string;
+  eventEndDate: string;
+  eventStartTime?: string;
+  eventEndTime?: string;
+  eventVenue?: string;
+  eventType: string;
+  societyName: string;
+  ticketQrCode?: string;
+  entryInstructions?: string;
+  platform?: string;
+  meetingLink?: string;
+  accessInstructions?: string;
+}
+
 /**
  * @param options Email configuration options
  */
@@ -140,6 +157,18 @@ export const sendRoleAssignmentEmail = async (
     email: emails,
     subject: `Role Assignment: ${data.roleName} in ${data.societyName}`,
     template: "role-assigned.ejs",
+    data,
+  });
+};
+
+export const sendEventRegistrationConfirmationEmail = async (
+  email: string,
+  data: EventRegistrationConfirmationEmailData
+) => {
+  await sendEmail({
+    email,
+    subject: `Registration Confirmed: ${data.eventTitle}`,
+    template: "event-registration-confirmation.ejs",
     data,
   });
 };

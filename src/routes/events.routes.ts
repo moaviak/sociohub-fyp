@@ -17,6 +17,8 @@ import {
   getEvents,
   getEventById,
   updateEvent,
+  registerForEvent,
+  deleteEvent,
 } from "../controllers/event.controller";
 import { verifyEventsPrivilege } from "../middlewares/privilege.middlewares";
 
@@ -87,6 +89,18 @@ router
     updateEventValidator(),
     validate,
     updateEvent
-  );
+  )
+  .delete(verifyJWT, verifyEventsPrivilege, deleteEvent);
+
+// Add registration endpoint
+router.post(
+  "/:eventId/register",
+  verifyJWT,
+  (req, res, next) => {
+    req.body.eventId = req.params.eventId;
+    next();
+  },
+  registerForEvent
+);
 
 export default router;

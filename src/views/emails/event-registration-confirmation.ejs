@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      .container {
+        font-family: Arial, sans-serif;
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+      .logo {
+        text-align: center;
+        margin-bottom: 30px;
+      }
+      .message {
+        background-color: #f8f9fa;
+        padding: 20px;
+        border-radius: 8px;
+        margin: 25px 0;
+      }
+      .event-details {
+        background-color: #f9f9f9;
+        border-left: 4px solid #0066cc;
+        padding: 15px;
+        margin: 20px 0;
+        border-radius: 4px;
+      }
+      .qr-section {
+        text-align: center;
+        margin: 30px 0;
+      }
+      .instructions {
+        background-color: #e6f7ff;
+        border-left: 4px solid #1890ff;
+        padding: 15px;
+        margin: 20px 0;
+        border-radius: 4px;
+      }
+      .footer {
+        color: #666;
+        font-size: 14px;
+        margin-top: 30px;
+        text-align: center;
+        border-top: 1px solid #eee;
+        padding-top: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="logo">
+        <img
+          src="http://localhost:3000/assets/images/logo-sociohub.svg"
+          alt="SocioHub"
+          width="120"
+        />
+      </div>
+
+      <h2>Hello <%= studentName %>,</h2>
+
+      <div class="message">
+        <p>
+          Your registration for <strong><%= eventTitle %></strong> organized by
+          <strong><%= societyName %></strong> has been confirmed!
+        </p>
+      </div>
+
+      <div class="event-details">
+        <h3>Event Details</h3>
+        <ul>
+          <li><strong>Type:</strong> <%= eventType %></li>
+          <li>
+            <strong>Start:</strong> <%= eventStartDate %> <% if (eventStartTime)
+            { %>at <%= eventStartTime %><% } %>
+          </li>
+          <li>
+            <strong>End:</strong> <%= eventEndDate %> <% if (eventEndTime) {
+            %>at <%= eventEndTime %><% } %>
+          </li>
+          <% if (eventVenue && eventType === 'Physical') { %>
+          <li><strong>Venue:</strong> <%= eventVenue %></li>
+          <% } %> <% if (eventType === 'Online' && platform) { %>
+          <li><strong>Platform:</strong> <%= platform %></li>
+          <% } %> <% if (eventType === 'Online' && meetingLink) { %>
+          <li>
+            <strong>Meeting Link:</strong>
+            <a href="<%= meetingLink %>"><%= meetingLink %></a>
+          </li>
+          <% } %>
+        </ul>
+      </div>
+
+      <% if (eventType === 'Physical' && ticketQrCode) { %>
+      <div class="qr-section">
+        <h3>Your Entry Ticket</h3>
+        <img
+          src="<%= ticketQrCode %>"
+          alt="QR Code Ticket"
+          width="180"
+          height="180"
+        />
+        <p style="margin-top: 10px; color: #888; font-size: 13px">
+          Present this QR code at the event entrance for one-time entry.
+        </p>
+      </div>
+      <% } %> <% if (eventType === 'Physical' && entryInstructions) { %>
+      <div class="instructions">
+        <h4>Entry Instructions</h4>
+        <p><%= entryInstructions %></p>
+      </div>
+      <% } %> <% if (eventType === 'Online' && accessInstructions) { %>
+      <div class="instructions">
+        <h4>Access Instructions</h4>
+        <p><%= accessInstructions %></p>
+      </div>
+      <% } %>
+
+      <div class="footer">
+        <p>Best Regards,<br />SocioHub Team</p>
+      </div>
+    </div>
+  </body>
+</html>

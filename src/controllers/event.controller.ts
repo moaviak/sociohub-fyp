@@ -19,6 +19,7 @@ import {
   EventAnnouncementService,
 } from "../services/event-announcement.service";
 import { haveEventsPrivilege } from "../utils/helpers";
+import { IUser } from "../types";
 
 export const createEvent = asyncHandler(async (req: Request, res: Response) => {
   // Get the local path for the uploaded banner if it exists
@@ -281,6 +282,8 @@ export const generateAnnouncement = asyncHandler(
 
 export const getEvents = asyncHandler(async (req: Request, res: Response) => {
   try {
+    const { id } = req.user as IUser;
+
     // If societyId is not provided, fetch all events
     const societyId = req.query.societyId as string | undefined;
 
@@ -333,9 +336,30 @@ export const getEvents = asyncHandler(async (req: Request, res: Response) => {
       userContext
     );
 
+    // For each event, check if the user is registered
+    const eventIds = events.map((e: any) => e.id);
+    let registrations: { eventId: string }[] = [];
+    if (eventIds.length > 0) {
+      registrations = await EventService.getUserEventRegistrations(
+        id,
+        eventIds
+      );
+    }
+    const registeredSet = new Set(registrations.map((r) => r.eventId));
+    const eventsWithRegistration = events.map((event: any) => ({
+      ...event,
+      isRegistered: registeredSet.has(event.id),
+    }));
+
     return res
       .status(200)
-      .json(new ApiResponse(200, events, "Events fetched successfully"));
+      .json(
+        new ApiResponse(
+          200,
+          eventsWithRegistration,
+          "Events fetched successfully"
+        )
+      );
   } catch (error: any) {
     if (error instanceof ApiError) throw error;
     throw new ApiError(500, "Error fetching events: " + error.message);
@@ -349,13 +373,29 @@ export const getEventById = asyncHandler(
       if (!eventId) {
         throw new ApiError(400, "Event ID is required");
       }
+      const user = req.user as IUser;
       const event = await EventService.getEventById(eventId);
       if (!event) {
         throw new ApiError(404, "Event not found");
       }
+      // Check if the user is registered for this event
+      let isRegistered = false;
+      if (user && user.id) {
+        const registration = await EventService.getUserEventRegistrations(
+          user.id,
+          [eventId]
+        );
+        isRegistered = registration.length > 0;
+      }
       return res
         .status(200)
-        .json(new ApiResponse(200, event, "Event retrieved successfully"));
+        .json(
+          new ApiResponse(
+            200,
+            { ...event, isRegistered },
+            "Event retrieved successfully"
+          )
+        );
     } catch (error: any) {
       if (error instanceof ApiError) throw error;
       throw new ApiError(500, "Error retrieving event: " + error.message);
@@ -507,5 +547,34 @@ export const updateEvent = asyncHandler(async (req: Request, res: Response) => {
   } catch (error: any) {
     if (error instanceof ApiError) throw error;
     throw new ApiError(500, "Error updating event: " + error.message);
+  }
+});
+
+export const registerForEvent = asyncHandler(async (req, res) => {
+  const user = req.user as IUser;
+  const { eventId } = req.body;
+  if (!eventId) throw new ApiError(400, "Event ID is required");
+  const registration = await EventService.registerForEvent({
+    eventId,
+    studentId: user.id,
+  });
+  return res
+    .status(201)
+    .json(new ApiResponse(201, registration, "Registration successful"));
+});
+
+export const deleteEvent = asyncHandler(async (req: Request, res: Response) => {
+  try {
+    const { eventId } = req.params;
+    if (!eventId) {
+      throw new ApiError(400, "Event ID is required");
+    }
+    const deletedEvent = await EventService.deleteEvent(eventId);
+    return res
+      .status(200)
+      .json(new ApiResponse(200, deletedEvent, "Event deleted successfully"));
+  } catch (error: any) {
+    if (error instanceof ApiError) throw error;
+    throw new ApiError(500, "Error deleting event: " + error.message);
   }
 });

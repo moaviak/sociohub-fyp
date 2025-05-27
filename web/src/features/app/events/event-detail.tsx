@@ -1,35 +1,65 @@
 import DOMPurify from "dompurify";
-import { Link, useNavigate } from "react-router";
+import { useNavigate } from "react-router";
 
 import { Button } from "@/components/ui/button";
 import { SpinnerLoader } from "@/components/spinner-loader";
 
-import { useGetEventByIdQuery } from "./api";
-import { formatEventDateTime, getRegistrationStatus } from "@/lib/utils";
+import {
+  useDeleteEventMutation,
+  useGetEventByIdQuery,
+  useRegisterForEventMutation,
+} from "./api";
+import {
+  formatEventDateTime,
+  getRegistrationStatus,
+  haveEventsPrivilege,
+} from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
+import { useAppSelector } from "@/app/hooks";
+import { EventStatus, EventVisibility, UserType } from "@/types";
+import { useEffect } from "react";
+import { toast } from "sonner";
+import { EventOptions } from "@/components/events/event-options";
 
 interface EventDetailProps {
   eventId: string;
-  societyId?: string;
 }
 
-export const EventDetail = ({ eventId, societyId }: EventDetailProps) => {
+export const EventDetail = ({ eventId }: EventDetailProps) => {
   const navigate = useNavigate();
 
   const { data: event, isLoading } = useGetEventByIdQuery(eventId);
+  const [registerForEvent, { isLoading: isRegistering, isError }] =
+    useRegisterForEventMutation();
+  const [deleteEvent, { isLoading: isDeleting, isError: isDeleteError }] =
+    useDeleteEventMutation();
 
-  if (event && "error" in event) {
-    navigate(-1);
-    return null;
-  }
+  const { userType, user } = useAppSelector((state) => state.auth);
 
-  if (!isLoading && !event) {
-    navigate(-1);
-    return null;
-  }
+  useEffect(() => {
+    if (isError) {
+      toast.error(
+        "Unexpected error occurred while registering. Please try again!"
+      );
+    }
 
-  if (isLoading) {
+    if (isDeleteError) {
+      toast.error(
+        "Unexpected error occurred while deleting. Please try again!"
+      );
+    }
+  }, [isError, isDeleteError]);
+
+  // Handle event fetch error or missing event
+  useEffect(() => {
+    if (!isLoading && (!event || "error" in event)) {
+      navigate(-1);
+    }
+  }, [isLoading, event, navigate]);
+
+  // Show loader while loading or redirecting
+  if (isLoading || !event || "error" in event) {
     return (
       <div className="flex w-full h-full items-center justify-center">
         <SpinnerLoader size="md" />
@@ -40,8 +70,44 @@ export const EventDetail = ({ eventId, societyId }: EventDetailProps) => {
   const registrationStatus = getRegistrationStatus(
     event?.registrationRequired || false,
     event?.registrationDeadline,
-    event?.paidEvent || false
+    event?.paidEvent,
+    event?.isRegistered
   );
+
+  const deadlineDate = new Date(event?.registrationDeadline || "");
+  const now = new Date();
+
+  const canRegister =
+    userType === UserType.STUDENT &&
+    event.visibility !== EventVisibility.Draft &&
+    event?.registrationRequired &&
+    now < deadlineDate &&
+    event?.status === EventStatus.Upcoming;
+
+  const isStudent = user && "registrationNumber" in user;
+  const havePrivilege = isStudent
+    ? haveEventsPrivilege(user.societies || [], event?.societyId || "")
+    : true;
+
+  const onRegister = async () => {
+    const response = await registerForEvent(event?.id);
+
+    if (!("error" in response)) {
+      toast.success("successfully registered for event.");
+    }
+  };
+
+  const onDelete = async (eventId: string, societyId: string) => {
+    const response = await deleteEvent({
+      eventId,
+      societyId,
+    });
+
+    if (!("error" in response)) {
+      toast.success("Event successfully deleted.");
+      navigate(-1);
+    }
+  };
 
   return (
     <div className="flex flex-col px-4 py-2">
@@ -50,9 +116,19 @@ export const EventDetail = ({ eventId, societyId }: EventDetailProps) => {
           <h5 className="h5-semibold">{event?.title}</h5>
           <p className="b3-regular">{event?.tagline}</p>
         </div>
-        <div className="space-x-4">
-          <Button>Edit Event</Button>
-          <Button variant="outline">Manage Registration</Button>
+        <div className="flex items-center gap-x-2">
+          {canRegister && !event?.isRegistered && (
+            <Button disabled={isRegistering} onClick={onRegister}>
+              Register
+            </Button>
+          )}
+          {havePrivilege && (
+            <EventOptions
+              event={event}
+              onDelete={onDelete}
+              isDeleting={isDeleting}
+            />
+          )}
         </div>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -101,7 +177,7 @@ export const EventDetail = ({ eventId, societyId }: EventDetailProps) => {
                 </div>
               )}
 
-            {event &&
+            {event.eventType &&
               (event.eventType === "Physical" ? (
                 <div className="space-y-2">
                   <span className="b2-semibold">Location:</span>
@@ -180,10 +256,10 @@ export const EventDetail = ({ eventId, societyId }: EventDetailProps) => {
               <>
                 <div className="">
                   <span className="b2-semibold">Spots Left:</span>
-                  {event?.maxParticipants ? (
+                  {event?.maxParticipants && event?._count !== undefined ? (
                     <div className="b2-regular text-neutral-600">
-                      {event.maxParticipants} out of {event.maxParticipants}
-                      // TODO: Calculate proper spots
+                      {event.maxParticipants - event._count.eventRegistrations}{" "}
+                      out of {event.maxParticipants}
                     </div>
                   ) : (
                     <div className="b2-regular text-neutral-600">Unlimited</div>

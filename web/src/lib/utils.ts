@@ -47,7 +47,7 @@ export function formatEventDateTime(
 }
 
 /**
- * Determine the registration status. i.e. '"Not required" | "Registration Open" | "Registration Closed" | "Paid Event"'
+ * Determine the registration status. i.e. '"Not required" | "Registered" | "Registration Open" | "Registration Closed" | "Paid Event"'
  * @param isRegistrationRequired - boolean
  * @param registrationDeadline - Datetime string
  * @param isPaidEvent - boolean
@@ -56,10 +56,15 @@ export function formatEventDateTime(
 export function getRegistrationStatus(
   isRegistrationRequired: boolean,
   registrationDeadline?: string,
-  isPaidEvent?: boolean
+  isPaidEvent?: boolean,
+  isRegistered?: boolean
 ) {
   if (!isRegistrationRequired) {
     return "Not required";
+  }
+
+  if (isRegistered) {
+    return "Registered";
   }
 
   // If deadline is not provided, assume registration is open unless it's a paid event
