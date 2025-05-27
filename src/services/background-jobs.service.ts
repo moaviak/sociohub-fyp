@@ -3,18 +3,22 @@ import prisma from "../db";
 import logger from "../logger/winston.logger";
 import { deleteFromCloudinary } from "../utils/cloudinary";
 
+// In-memory cache to avoid duplicate reminders within the same interval (reset on process restart)
+const sentReminders = new Set<string>();
+
 /**
- * Schedule all cleanup and maintenance jobs
+ * Schedule all background and maintenance jobs
  */
-export const initializeCleanupJobs = () => {
+export const initializeBackgroundJobs = () => {
   // Schedule join request cleanup
   scheduleJoinRequestCleanup();
   // Schedule event publishing
   scheduleEventPublishing();
   // Schedule event status updates
   scheduleEventStatusUpdates();
+  scheduleEventReminders();
 
-  logger.info("All cleanup jobs scheduled");
+  logger.info("All background jobs scheduled");
 };
 
 /**
@@ -154,4 +158,124 @@ const scheduleEventStatusUpdates = () => {
   });
 
   logger.info("Event status update job scheduled");
+};
+
+/**
+ * Scheduled job that runs every 10 minutes to send event start reminders
+ * - Notifies participants at 1 day, 12h, 3h, 1h, 15m, and 5m before event start
+ */
+const scheduleEventReminders = () => {
+  // Schedule to run every 10 minutes
+  cron.schedule("*/10 * * * *", async () => {
+    try {
+      const now = new Date();
+      // Fetch events starting within the next 1 day
+      const upcomingEvents = await prisma.event.findMany({
+        where: {
+          status: "Upcoming",
+          isDraft: false,
+          startDate: { gte: now },
+        },
+      });
+
+      // Reminder intervals in minutes and their message templates
+      const intervals = [
+        {
+          min: 1440,
+          label: "1 day",
+          msg: (title: string, time: string) =>
+            `Reminder: The event '${title}' is happening tomorrow at ${time}.`,
+        },
+        {
+          min: 720,
+          label: "12 hours",
+          msg: (title: string, time: string) =>
+            `Reminder: The event '${title}' starts in 12 hours at ${time}.`,
+        },
+        {
+          min: 180,
+          label: "3 hours",
+          msg: (title: string, time: string) =>
+            `Reminder: The event '${title}' starts in 3 hours at ${time}.`,
+        },
+        {
+          min: 60,
+          label: "1 hour",
+          msg: (title: string, time: string) =>
+            `Reminder: The event '${title}' starts in 1 hour at ${time}.`,
+        },
+        {
+          min: 15,
+          label: "15 minutes",
+          msg: (title: string, time: string) =>
+            `Reminder: The event '${title}' starts in 15 minutes at ${time}.`,
+        },
+        {
+          min: 5,
+          label: "5 minutes",
+          msg: (title: string, time: string) =>
+            `Reminder: The event '${title}' starts in 5 minutes at ${time}.`,
+        },
+      ];
+
+      for (const event of upcomingEvents) {
+        // Skip if startDate is null or undefined
+        if (!event.startDate) continue;
+        // Combine startDate and startTime into a Date object
+        const [startHour, startMinute] = (event.startTime || "00:00")
+          .split(":")
+          .map(Number);
+        const eventStart = new Date(event.startDate);
+        eventStart.setHours(startHour, startMinute, 0, 0);
+        const diffMinutes = Math.floor(
+          (eventStart.getTime() - now.getTime()) / 60000
+        );
+
+        for (const interval of intervals) {
+          // If event is within this interval and not already reminded
+          if (
+            diffMinutes <= interval.min &&
+            diffMinutes > interval.min - 10 // 10 min window
+          ) {
+            const reminderKey = `${event.id}_${interval.min}`;
+            if (sentReminders.has(reminderKey)) continue;
+            sentReminders.add(reminderKey);
+
+            // Fetch all participants (students) registered for this event
+            const registrations = await prisma.eventRegistration.findMany({
+              where: { eventId: event.id },
+              select: { studentId: true },
+            });
+            if (!registrations.length) continue;
+            const recipients = registrations.map((r) => ({
+              recipientType: "student" as const,
+              recipientId: r.studentId,
+            }));
+
+            // Format time for message
+            const timeStr = event.startTime || "";
+            const message = interval.msg(event.title, timeStr);
+
+            // Send notification
+            const { createNotification } = require("./notification.service");
+            await createNotification({
+              title: `Event Reminder: ${event.title}`,
+              description: message,
+              image: event.banner || undefined,
+              webRedirectUrl: `/event/${event.id}`,
+              mobileRedirectUrl: `event/${event.id}`,
+              recipients,
+            });
+
+            logger.info(
+              `Sent '${interval.label}' reminder for event '${event.title}' to ${recipients.length} participants.`
+            );
+          }
+        }
+      }
+    } catch (error) {
+      logger.error("Error during event reminder job:", error);
+    }
+  });
+  logger.info("Event reminder job scheduled");
 };
