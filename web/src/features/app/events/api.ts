@@ -242,6 +242,34 @@ export const eventApi = api.injectEndpoints({
         }
       },
     }),
+    getMyRegistrations: builder.query<Event[] | ApiError, void>({
+      query: () => ({
+        url: "/events/my-registrations",
+      }),
+      transformResponse: (response: ApiResponse<Event[]>) => {
+        if (response.success) {
+          return response.data;
+        }
+        return createApiError(response.message);
+      },
+      transformErrorResponse: (response) => {
+        const errorResponse = response.data as ApiErrorResponse;
+        return createApiError(errorResponse.message);
+      },
+      providesTags: (result) => {
+        if (result && !("error" in result)) {
+          return [
+            ...result.map((event) => ({
+              type: "Events" as const,
+              id: event.id,
+            })),
+            { type: "Events", id: "LIST" },
+          ];
+        } else {
+          return [];
+        }
+      },
+    }),
   }),
 });
 
@@ -255,4 +283,5 @@ export const {
   useRegisterForEventMutation,
   useDeleteEventMutation,
   useCancelEventMutation,
+  useGetMyRegistrationsQuery,
 } = eventApi;

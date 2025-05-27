@@ -774,23 +774,23 @@ export class EventService {
     const registrations = await prisma.eventRegistration.findMany({
       where: { studentId: userId },
       include: {
-        event: {
-          include: {
-            society: true,
-            _count: { select: { eventRegistrations: true } },
-          },
-        },
+        event: true,
         ticket: true,
+        student: true,
       },
       orderBy: { registeredAt: "desc" },
     });
     // Map to return event info with registration and ticket
     return registrations.map((reg) => ({
       ...reg.event,
+      isRegistered: true,
       registration: {
         id: reg.id,
+        studentId: reg.studentId,
+        eventId: reg.eventId,
         registeredAt: reg.registeredAt,
         ticket: reg.ticket,
+        student: reg.student,
       },
     }));
   }

@@ -95,12 +95,14 @@ export const EventCard = ({
           >
             {event.title}
           </h3>
-          {havePrivilege && (
+          {(havePrivilege ||
+            (event.isRegistered && event.registration?.ticket)) && (
             <EventOptions
               variant={variant}
               event={event}
               onDelete={onDelete}
               isDeleting={isDeleting}
+              havePrivilege={havePrivilege}
             />
           )}
         </div>

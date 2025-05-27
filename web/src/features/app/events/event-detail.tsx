@@ -123,11 +123,13 @@ export const EventDetail = ({ eventId }: EventDetailProps) => {
               Register
             </Button>
           )}
-          {havePrivilege && (
+          {(havePrivilege ||
+            (event.isRegistered && event.registration?.ticket)) && (
             <EventOptions
               event={event}
               onDelete={onDelete}
               isDeleting={isDeleting}
+              havePrivilege={havePrivilege}
             />
           )}
         </div>

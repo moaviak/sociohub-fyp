@@ -8,6 +8,15 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+// Convert 24-hour format to 12-hour format
+export const format24To12 = (time: string) => {
+  const [hours, minutes] = time.split(":");
+  const hour = parseInt(hours);
+  const ampm = hour >= 12 ? "PM" : "AM";
+  const hour12 = hour % 12 || 12;
+  return `${hour12}:${minutes} ${ampm}`;
+};
+
 export function formatEventDateTime(
   startDate: string,
   endDate: string,
@@ -16,17 +25,8 @@ export function formatEventDateTime(
 ): string {
   if (!startDate || !endDate || !startTime || !endTime) return "";
 
-  // Convert 24-hour format to 12-hour format
-  const formatTime = (time: string) => {
-    const [hours, minutes] = time.split(":");
-    const hour = parseInt(hours);
-    const ampm = hour >= 12 ? "PM" : "AM";
-    const hour12 = hour % 12 || 12;
-    return `${hour12}:${minutes} ${ampm}`;
-  };
-
-  const formattedStartTime = formatTime(startTime);
-  const formattedEndTime = formatTime(endTime);
+  const formattedStartTime = format24To12(startTime);
+  const formattedEndTime = format24To12(endTime);
 
   // Check if it's a same-day event
   if (startDate === endDate) {

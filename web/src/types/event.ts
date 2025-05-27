@@ -1,4 +1,4 @@
-import { Society } from ".";
+import { Society, Student } from ".";
 
 export enum PaymentMethods {
   CreditCard = "CreditCard",
@@ -76,6 +76,7 @@ export interface Event {
   _count?: {
     eventRegistrations: number;
   };
+  registration?: Registration;
   formStep?: number;
   isDraft?: boolean;
   createdAt?: string;
@@ -87,4 +88,16 @@ export interface Registration {
   studentId: string;
   eventId: string;
   registeredAt?: string;
+  ticket?: Ticket;
+  student?: Student;
+}
+
+export interface Ticket {
+  id: string;
+  registrationId?: string;
+  qrCode?: string;
+  issuedAt?: string;
+  isScanned?: boolean;
+  scannedAt?: string;
+  scannedBy?: Student;
 }

@@ -20,6 +20,7 @@ import {
 } from "../services/event-announcement.service";
 import { haveEventsPrivilege } from "../utils/helpers";
 import { IUser } from "../types";
+import prisma from "../db";
 
 export const createEvent = asyncHandler(async (req: Request, res: Response) => {
   // Get the local path for the uploaded banner if it exists
@@ -378,24 +379,40 @@ export const getEventById = asyncHandler(
       if (!event) {
         throw new ApiError(404, "Event not found");
       }
-      // Check if the user is registered for this event
       let isRegistered = false;
+      let registration = undefined;
       if (user && user.id) {
-        const registration = await EventService.getUserEventRegistrations(
-          user.id,
-          [eventId]
-        );
-        isRegistered = registration.length > 0;
+        // Find registration for this user and event, including ticket and student info
+        const reg = await prisma.eventRegistration.findFirst({
+          where: { studentId: user.id, eventId },
+          include: {
+            ticket: true,
+            student: true,
+          },
+        });
+        if (reg) {
+          isRegistered = true;
+          registration = {
+            id: reg.id,
+            studentId: reg.studentId,
+            eventId: reg.eventId,
+            registeredAt: reg.registeredAt,
+            ticket: reg.ticket,
+            student: reg.student,
+          };
+        }
       }
-      return res
-        .status(200)
-        .json(
-          new ApiResponse(
-            200,
-            { ...event, isRegistered },
-            "Event retrieved successfully"
-          )
-        );
+      return res.status(200).json(
+        new ApiResponse(
+          200,
+          {
+            ...event,
+            isRegistered,
+            ...(registration ? { registration } : {}),
+          },
+          "Event retrieved successfully"
+        )
+      );
     } catch (error: any) {
       if (error instanceof ApiError) throw error;
       throw new ApiError(500, "Error retrieving event: " + error.message);

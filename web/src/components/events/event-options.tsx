@@ -14,12 +14,14 @@ import { Link } from "react-router";
 import { useCancelEventMutation } from "@/features/app/events/api";
 import { useEffect } from "react";
 import { toast } from "sonner";
+import { EventTicket } from "./event-ticket";
 
 interface EventOptionsProps {
   variant?: "default" | "compact";
   event: Event;
   onDelete?: (eventId: string, societyId: string) => Promise<void>;
   isDeleting?: boolean;
+  havePrivilege?: boolean;
 }
 
 export const EventOptions = ({
@@ -27,6 +29,7 @@ export const EventOptions = ({
   event,
   onDelete,
   isDeleting,
+  havePrivilege,
 }: EventOptionsProps) => {
   const [cancelEvent, { isLoading, isError }] = useCancelEventMutation();
 
@@ -60,45 +63,59 @@ export const EventOptions = ({
         />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="border border-neutral-300">
-        <DropdownMenuItem className="b3-regular">
-          <Link
-            to={`/update-event/${event.id}`}
-            state={{ event }}
-            className="flex items-center gap-3"
+        {event.isRegistered && event.registration?.ticket && (
+          <DropdownMenuItem
+            className="b3-regular"
+            onSelect={(e) => e.preventDefault()}
           >
-            <Edit className="h-4 w-4" />
-            Edit Event
-          </Link>
-        </DropdownMenuItem>
-        <DropdownMenuSeparator className="bg-neutral-300" />
-        {event.visibility && event.visibility === EventVisibility.Draft ? (
-          <DropdownMenuItem>
-            <Button
-              variant="ghost"
-              size="inline"
-              className="text-red-600 p-0 group"
-              onClick={() => {
-                if (onDelete) onDelete(event.id, event.societyId || "");
-              }}
-              disabled={isDeleting}
-            >
-              <Trash2 className="h-4 w-4 text-red-500 group-hover:text-accent-foreground transition-colors" />
-              Delete Event
-            </Button>
+            <EventTicket event={event} ticket={event.registration.ticket} />
           </DropdownMenuItem>
-        ) : (
-          <DropdownMenuItem>
-            <Button
-              variant="ghost"
-              size="inline"
-              className="text-red-600 p-0 group"
-              onClick={handleCancel}
-              disabled={isLoading}
+        )}
+        {havePrivilege && (
+          <DropdownMenuItem className="b3-regular">
+            <Link
+              to={`/update-event/${event.id}`}
+              state={{ event }}
+              className="flex items-center gap-3"
             >
-              <Delete className="h-4 w-4 text-red-500 group-hover:text-accent-foreground transition-colors" />
-              Cancel Event
-            </Button>
+              <Edit className="h-4 w-4" />
+              Edit Event
+            </Link>
           </DropdownMenuItem>
+        )}
+        {havePrivilege && (
+          <>
+            <DropdownMenuSeparator className="bg-neutral-300" />
+            {event.visibility && event.visibility === EventVisibility.Draft ? (
+              <DropdownMenuItem>
+                <Button
+                  variant="ghost"
+                  size="inline"
+                  className="text-red-600 p-0 group"
+                  onClick={() => {
+                    if (onDelete) onDelete(event.id, event.societyId || "");
+                  }}
+                  disabled={isDeleting}
+                >
+                  <Trash2 className="h-4 w-4 text-red-500 group-hover:text-accent-foreground transition-colors" />
+                  Delete Event
+                </Button>
+              </DropdownMenuItem>
+            ) : (
+              <DropdownMenuItem>
+                <Button
+                  variant="ghost"
+                  size="inline"
+                  className="text-red-600 p-0 group"
+                  onClick={handleCancel}
+                  disabled={isLoading}
+                >
+                  <Delete className="h-4 w-4 text-red-500 group-hover:text-accent-foreground transition-colors" />
+                  Cancel Event
+                </Button>
+              </DropdownMenuItem>
+            )}
+          </>
         )}
       </DropdownMenuContent>
     </DropdownMenu>
