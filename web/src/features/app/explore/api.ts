@@ -10,9 +10,9 @@ import { Event } from "@/types/event";
 
 export const ExploreApi = api.injectEndpoints({
   endpoints: (builder) => ({
-    getSocieties: builder.query<Societies | ApiError, void>({
-      query: () => ({
-        url: "/society",
+    getSocieties: builder.query<Societies | ApiError, { search?: string }>({
+      query: (arg) => ({
+        url: `/society?search=${arg.search}`,
       }),
       transformResponse: (response: ApiResponse<Societies>) => {
         if (response.success) {

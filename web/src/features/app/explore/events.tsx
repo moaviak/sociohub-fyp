@@ -10,14 +10,23 @@ import {
   useRegisterForEventMutation,
 } from "../events/api";
 import { toast } from "sonner";
+import { useDebounceCallback } from "usehooks-ts";
 
 const Events = () => {
   const [filters, setFilters] = useState({
     status: undefined as string | undefined,
     categories: [] as string[],
   });
+  const [input, setInput] = useState("");
+  const [search, setSearch] = useState("");
+  const debouncedSetSearch = useDebounceCallback(setSearch, 300);
 
-  const { data: events, isFetching: isLoading } = useGetEventsQuery({
+  const {
+    data: events,
+    isFetching,
+    isLoading,
+  } = useGetEventsQuery({
+    search: search || "",
     status: filters.status || "",
     categories: filters.categories.join(","),
   });
@@ -65,11 +74,21 @@ const Events = () => {
     }
   };
 
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setInput(e.target.value);
+    debouncedSetSearch(e.target.value);
+  };
+
   return (
     <div className="flex flex-col px-4 pt-4 w-full">
       {" "}
       <div className="flex gap-x-4 py-2">
-        <SearchInput placeholder="Search Events" />
+        <SearchInput
+          placeholder="Search Events"
+          value={input}
+          onChange={handleInputChange}
+          isSearching={!isLoading && isFetching}
+        />
         <SearchFilter
           onFilterChange={(filters) =>
             setFilters({

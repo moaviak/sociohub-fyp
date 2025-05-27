@@ -9,7 +9,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { Event, EventVisibility } from "@/types/event";
+import { Event, EventStatus, EventVisibility } from "@/types/event";
 import { Link } from "react-router";
 import { useCancelEventMutation } from "@/features/app/events/api";
 import { useEffect } from "react";
@@ -71,7 +71,7 @@ export const EventOptions = ({
             <EventTicket event={event} ticket={event.registration.ticket} />
           </DropdownMenuItem>
         )}
-        {havePrivilege && (
+        {havePrivilege && event.status !== EventStatus.Cancelled && (
           <DropdownMenuItem className="b3-regular">
             <Link
               to={`/update-event/${event.id}`}
@@ -108,7 +108,7 @@ export const EventOptions = ({
                   size="inline"
                   className="text-red-600 p-0 group"
                   onClick={handleCancel}
-                  disabled={isLoading}
+                  disabled={isLoading || event.status === EventStatus.Cancelled}
                 >
                   <Delete className="h-4 w-4 text-red-500 group-hover:text-accent-foreground transition-colors" />
                   Cancel Event

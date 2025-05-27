@@ -10,10 +10,10 @@ export const MembersApi = api.injectEndpoints({
   endpoints: (builder) => ({
     getSocietyRequests: builder.query<
       JoinRequest[] | ApiError,
-      { societyId: string }
+      { societyId: string; search?: string }
     >({
-      query: ({ societyId }) => ({
-        url: `/society/requests/${societyId}`,
+      query: ({ societyId, search }) => ({
+        url: `/society/requests/${societyId}?search=${search}`,
       }),
       transformResponse: (response: ApiResponse<JoinRequest[]>) => {
         if (response.success) {
@@ -41,10 +41,10 @@ export const MembersApi = api.injectEndpoints({
     }),
     getRequestsHistory: builder.query<
       JoinRequest[] | ApiError,
-      { societyId: string }
+      { societyId: string; search?: string }
     >({
-      query: ({ societyId }) => ({
-        url: `/society/requests/${societyId}/history`,
+      query: ({ societyId, search }) => ({
+        url: `/society/requests/${societyId}/history?search=${search}`,
       }),
       transformResponse: (response: ApiResponse<JoinRequest[]>) => {
         if (response.success) {
@@ -137,10 +137,10 @@ export const MembersApi = api.injectEndpoints({
     }),
     getSocietyMembers: builder.query<
       Member[] | ApiError,
-      { societyId: string }
+      { societyId: string; search?: string }
     >({
-      query: ({ societyId }) => ({
-        url: `/society/members/${societyId}`,
+      query: ({ societyId, search }) => ({
+        url: `/society/members/${societyId}?search=${search}`,
       }),
       transformResponse: (response: ApiResponse<Member[]>) => {
         if (response.success) {

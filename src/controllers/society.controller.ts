@@ -66,8 +66,22 @@ export const createSociety = asyncHandler(
 export const getSocieties = asyncHandler(
   async (req: Request, res: Response) => {
     const user = req.user as IUser;
+    const search = req.query.search as string | undefined;
+
+    const where: any = {};
+    if (search) {
+      where.AND = [
+        {
+          OR: [
+            { name: { contains: search, mode: "insensitive" } },
+            { description: { contains: search, mode: "insensitive" } },
+          ],
+        },
+      ];
+    }
 
     const societies = await prisma.society.findMany({
+      where: Object.keys(where).length ? where : undefined,
       select: {
         id: true,
         name: true,
@@ -165,6 +179,7 @@ export const getSocietyMembers = asyncHandler(
   async (req: Request, res: Response) => {
     const { societyId } = req.params;
     const user = req.user as IUser;
+    const search = req.query.search as string | undefined;
 
     if (!societyId) {
       throw new ApiError(400, "Society ID is required.");
@@ -196,8 +211,30 @@ export const getSocietyMembers = asyncHandler(
     }
 
     // 2. Fetch members with their roles and privileges
+    const where: any = { societyId };
+    if (search) {
+      where.AND = [
+        {
+          OR: [
+            {
+              student: { firstName: { contains: search, mode: "insensitive" } },
+            },
+            {
+              student: { lastName: { contains: search, mode: "insensitive" } },
+            },
+            { student: { email: { contains: search, mode: "insensitive" } } },
+            {
+              student: {
+                registrationNumber: { contains: search, mode: "insensitive" },
+              },
+            },
+          ],
+        },
+      ];
+    }
+
     const members = await prisma.studentSociety.findMany({
-      where: { societyId },
+      where: Object.keys(where).length ? where : undefined,
       select: {
         societyId: true,
         student: {

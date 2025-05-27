@@ -5,7 +5,8 @@ import { SearchInput } from "@/components/search-input";
 import { DataTable } from "@/components/ui/data-table";
 import { rolesMemberColumns } from "../columns";
 import { Member } from "@/types";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
+import { useDebounceCallback } from "usehooks-ts";
 
 interface RolesFormMembersProps {
   form: UseFormReturn<
@@ -22,9 +23,17 @@ interface RolesFormMembersProps {
 
 export const RolesFormMembers = ({ form }: RolesFormMembersProps) => {
   const societyId = useGetSocietyId();
+  const [input, setInput] = useState("");
+  const [search, setSearch] = useState("");
+  const debouncedSetSearch = useDebounceCallback(setSearch, 300);
 
-  const { data: members, isLoading } = useGetSocietyMembersQuery({
+  const {
+    data: members,
+    isFetching,
+    isLoading,
+  } = useGetSocietyMembersQuery({
     societyId: societyId || "",
+    search,
   });
 
   // Get the current member IDs from the form
@@ -63,10 +72,20 @@ export const RolesFormMembers = ({ form }: RolesFormMembersProps) => {
     form.setValue("members", memberIds, { shouldDirty: true });
   };
 
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setInput(e.target.value);
+    debouncedSetSearch(e.target.value);
+  };
+
   return (
     <div className="space-y-2">
       <h5 className="b1-medium">Assign this role to members.</h5>
-      <SearchInput placeholder="Search member" />
+      <SearchInput
+        placeholder="Search member"
+        value={input}
+        onChange={handleInputChange}
+        isSearching={!isLoading && isFetching}
+      />
 
       <div className="min-h-[320px] max-h-[320px] py-4 overflow-y-auto">
         <DataTable

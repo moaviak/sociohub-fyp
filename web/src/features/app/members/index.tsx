@@ -5,17 +5,32 @@ import { SearchInput } from "@/components/search-input";
 
 import { membersColumns } from "./columns";
 import { useGetSocietyMembersQuery } from "./api";
+import { useState } from "react";
+import { useDebounceCallback } from "usehooks-ts";
 
 const Members = () => {
   const societyId = useGetSocietyId();
+  const [input, setInput] = useState("");
+  const [search, setSearch] = useState("");
+  const debouncedSetSearch = useDebounceCallback(setSearch, 300);
 
-  const { data: members, isLoading } = useGetSocietyMembersQuery({
+  const {
+    data: members,
+    isFetching,
+    isLoading,
+  } = useGetSocietyMembersQuery({
     societyId: societyId || "",
+    search,
   });
 
   if (members && "error" in members) {
     return null;
   }
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setInput(e.target.value);
+    debouncedSetSearch(e.target.value);
+  };
 
   return (
     <div className="flex flex-col px-4 pt-4 min-h-0 max-h-full overflow-hidden w-full">
@@ -27,7 +42,13 @@ const Members = () => {
             {members?.length && members.length > 1 ? "members" : "member"}
           </Badge>
         </div>
-        <SearchInput placeholder="Search member" className="w-xs" />
+        <SearchInput
+          placeholder="Search member"
+          className="w-xs"
+          value={input}
+          onChange={handleInputChange}
+          isSearching={!isLoading && isFetching}
+        />
       </div>
       <div className="container mx-auto overflow-y-auto custom-scrollbar">
         <DataTable

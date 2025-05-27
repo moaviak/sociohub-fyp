@@ -371,6 +371,7 @@ export const handleRequest = asyncHandler(
 export const getSocietyRequests = asyncHandler(
   async (req: Request, res: Response) => {
     const { societyId } = req.params;
+    const search = req.query.search as string | undefined;
 
     if (!societyId) {
       throw new ApiError(400, "Society ID is required.");
@@ -392,9 +393,32 @@ export const getSocietyRequests = asyncHandler(
       throw new ApiError(400, "Invalid Society ID.");
     }
 
+    // Build where clause for join requests
+    const where: any = { societyId: society.id, status: "PENDING" };
+    if (search) {
+      where.AND = [
+        {
+          OR: [
+            {
+              student: { firstName: { contains: search, mode: "insensitive" } },
+            },
+            {
+              student: { lastName: { contains: search, mode: "insensitive" } },
+            },
+            { student: { email: { contains: search, mode: "insensitive" } } },
+            {
+              student: {
+                registrationNumber: { contains: search, mode: "insensitive" },
+              },
+            },
+          ],
+        },
+      ];
+    }
+
     // Fetch join requests
     const requests = await prisma.joinRequest.findMany({
-      where: { societyId: society.id, status: "PENDING" },
+      where: Object.keys(where).length ? where : undefined,
       orderBy: { createdAt: "desc" },
       select: {
         id: true,
@@ -439,6 +463,7 @@ export const getSocietyRequests = asyncHandler(
 export const getRequestsHistory = asyncHandler(
   async (req: Request, res: Response) => {
     const { id } = req.params;
+    const search = req.query.search as string | undefined;
 
     if (!id) {
       throw new ApiError(400, "Society ID is required.");
@@ -464,14 +489,36 @@ export const getRequestsHistory = asyncHandler(
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-    const requests = await prisma.joinRequest.findMany({
-      where: {
-        societyId: society.id,
-        OR: [{ status: "APPROVED" }, { status: "REJECTED" }],
-        createdAt: {
-          gte: thirtyDaysAgo,
-        },
+    const where: any = {
+      societyId: society.id,
+      OR: [{ status: "APPROVED" }, { status: "REJECTED" }],
+      createdAt: {
+        gte: thirtyDaysAgo,
       },
+    };
+    if (search) {
+      where.AND = [
+        {
+          OR: [
+            {
+              student: { firstName: { contains: search, mode: "insensitive" } },
+            },
+            {
+              student: { lastName: { contains: search, mode: "insensitive" } },
+            },
+            { student: { email: { contains: search, mode: "insensitive" } } },
+            {
+              student: {
+                registrationNumber: { contains: search, mode: "insensitive" },
+              },
+            },
+          ],
+        },
+      ];
+    }
+
+    const requests = await prisma.joinRequest.findMany({
+      where: Object.keys(where).length ? where : undefined,
       orderBy: { createdAt: "desc" },
       select: {
         id: true,

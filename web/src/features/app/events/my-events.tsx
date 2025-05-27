@@ -1,5 +1,6 @@
 import { EventCard } from "@/components/events/event-card";
 import { useGetMyRegistrationsQuery } from "./api";
+import { EmptyState } from "../explore/components/empty-state";
 
 export const MyEvents = () => {
   const { data: events, isLoading } = useGetMyRegistrationsQuery();
@@ -11,6 +12,15 @@ export const MyEvents = () => {
         <EventCard.Skeleton />
         <EventCard.Skeleton />
       </div>
+    );
+  }
+
+  if (!isLoading && (!events || events.length === 0 || "error" in events)) {
+    return (
+      <EmptyState
+        title="No events found."
+        label="Try registering in an event."
+      />
     );
   }
 
