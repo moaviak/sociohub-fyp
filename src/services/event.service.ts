@@ -706,6 +706,94 @@ export class EventService {
       throw new ApiError(500, "Error deleting event: " + error.message);
     }
   }
+
+  static async cancelEvent(eventId: string) {
+    try {
+      const event = await prisma.event.findUnique({ where: { id: eventId } });
+      if (!event) {
+        throw new ApiError(404, "Event not found");
+      }
+      // Only allow cancellation for Upcoming or Schedule events
+      if (
+        event.visibility === "Draft" ||
+        event.status === "Completed" ||
+        event.status === "Cancelled"
+      ) {
+        throw new ApiError(
+          400,
+          "Only upcoming or scheduled events can be cancelled"
+        );
+      }
+      const cancelledEvent = await prisma.event.update({
+        where: { id: eventId },
+        data: { status: "Cancelled" },
+      });
+
+      // Fetch all registrations for this event
+      const registrations = await prisma.eventRegistration.findMany({
+        where: { eventId },
+        select: { studentId: true },
+      });
+      const studentRecipients = registrations.map((r) => ({
+        recipientType: "student" as const,
+        recipientId: r.studentId,
+      }));
+
+      // Delete all registrations for this event
+      await prisma.eventRegistration.deleteMany({ where: { eventId } });
+
+      // Send notifications in background
+      (async () => {
+        if (studentRecipients.length > 0) {
+          const notification = await createNotification({
+            title: `Event Cancelled: ${event.title}`,
+            description: `The event "${event.title}" has been cancelled. We apologize for any inconvenience.`,
+            image: event.banner || undefined,
+            webRedirectUrl: `/event/${event.id}`,
+            mobileRedirectUrl: `event/${event.id}`,
+            recipients: studentRecipients,
+          });
+          if (notification && io) {
+            sendNotificationToUsers(io, studentRecipients, notification);
+          }
+        }
+      })();
+
+      return cancelledEvent;
+    } catch (error: any) {
+      if (error instanceof ApiError) throw error;
+      throw new ApiError(500, "Error cancelling event: " + error.message);
+    }
+  }
+
+  /**
+   * Fetch all events a user is registered for, including ticket info
+   */
+  static async getUserRegisteredEvents(userId: string) {
+    // Find all registrations for the user, including event and ticket
+    const registrations = await prisma.eventRegistration.findMany({
+      where: { studentId: userId },
+      include: {
+        event: {
+          include: {
+            society: true,
+            _count: { select: { eventRegistrations: true } },
+          },
+        },
+        ticket: true,
+      },
+      orderBy: { registeredAt: "desc" },
+    });
+    // Map to return event info with registration and ticket
+    return registrations.map((reg) => ({
+      ...reg.event,
+      registration: {
+        id: reg.id,
+        registeredAt: reg.registeredAt,
+        ticket: reg.ticket,
+      },
+    }));
+  }
 }
 
 /**
@@ -776,7 +864,7 @@ export const sendEventNotification = async (event: Event) => {
       title: notificationTitle,
       description: notificationDescription,
       image: event.banner || undefined,
-      webRedirectUrl: `/events/${event.id}`,
+      webRedirectUrl: `/event/${event.id}`,
       mobileRedirectUrl: `event/${event.id}`,
       recipients,
     });

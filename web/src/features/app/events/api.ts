@@ -215,6 +215,33 @@ export const eventApi = api.injectEndpoints({
         }
       },
     }),
+    cancelEvent: builder.mutation<
+      Event | ApiError,
+      { eventId: string; societyId: string }
+    >({
+      query: ({ eventId, societyId }) => ({
+        url: `/events/${eventId}/cancel`,
+        method: "PATCH",
+        body: { societyId },
+      }),
+      transformResponse: (response: ApiResponse<Event>) => {
+        if (response.success) {
+          return response.data;
+        }
+        return createApiError(response.message);
+      },
+      transformErrorResponse: (response) => {
+        const errorResponse = response.data as ApiErrorResponse;
+        return createApiError(errorResponse.message);
+      },
+      invalidatesTags: (result) => {
+        if (result && !("error" in result)) {
+          return [{ type: "Events", id: result.id }];
+        } else {
+          return [];
+        }
+      },
+    }),
   }),
 });
 
@@ -227,4 +254,5 @@ export const {
   useUpdateEventMutation,
   useRegisterForEventMutation,
   useDeleteEventMutation,
+  useCancelEventMutation,
 } = eventApi;

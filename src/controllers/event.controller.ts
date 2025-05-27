@@ -578,3 +578,43 @@ export const deleteEvent = asyncHandler(async (req: Request, res: Response) => {
     throw new ApiError(500, "Error deleting event: " + error.message);
   }
 });
+
+export const cancelEvent = asyncHandler(async (req: Request, res: Response) => {
+  try {
+    const { eventId } = req.params;
+    if (!eventId) {
+      throw new ApiError(400, "Event ID is required");
+    }
+    const cancelledEvent = await EventService.cancelEvent(eventId);
+    return res
+      .status(200)
+      .json(
+        new ApiResponse(200, cancelledEvent, "Event cancelled successfully")
+      );
+  } catch (error: any) {
+    if (error instanceof ApiError) throw error;
+    throw new ApiError(500, "Error cancelling event: " + error.message);
+  }
+});
+
+/**
+ * Get all events the user is registered for, including ticket info
+ */
+export const getUserRegisteredEvents = asyncHandler(
+  async (req: Request, res: Response) => {
+    const user = req.user as IUser;
+    if (!user || !user.id) {
+      throw new ApiError(401, "Unauthorized");
+    }
+    const events = await EventService.getUserRegisteredEvents(user.id);
+    return res
+      .status(200)
+      .json(
+        new ApiResponse(
+          200,
+          events,
+          "User registered events fetched successfully"
+        )
+      );
+  }
+);

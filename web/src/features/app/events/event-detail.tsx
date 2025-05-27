@@ -10,6 +10,7 @@ import {
   useRegisterForEventMutation,
 } from "./api";
 import {
+  cn,
   formatEventDateTime,
   getRegistrationStatus,
   haveEventsPrivilege,
@@ -236,6 +237,29 @@ export const EventDetail = ({ eventId }: EventDetailProps) => {
                   <span className="b2-medium text-neutral-600">
                     {event.society.name}
                   </span>
+                </div>
+              </div>
+            )}
+
+            {event.status && (
+              <div className="">
+                <span className="b2-semibold">Status:</span>
+                <div className="flex flex-wrap gap-2 p-2">
+                  <Badge
+                    variant="outline"
+                    className={cn(
+                      event.status === EventStatus.Ongoing &&
+                        "bg-secondary-100 border-secondary-400 text-secondary-600",
+                      event.status === EventStatus.Upcoming &&
+                        "bg-accent-100 border-accent-400 text-accent-600",
+                      event.status === EventStatus.Completed &&
+                        "bg-emerald-100 border-emerald-400 text-emerald-500",
+                      event.status === EventStatus.Cancelled &&
+                        "bg-red-100 border-red-400 text-red-500"
+                    )}
+                  >
+                    {event.status}
+                  </Badge>
                 </div>
               </div>
             )}

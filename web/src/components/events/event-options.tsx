@@ -1,4 +1,4 @@
-import { MoreVertical } from "lucide-react";
+import { Delete, Edit, MoreVertical, Trash2 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import {
@@ -11,6 +11,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { Event, EventVisibility } from "@/types/event";
 import { Link } from "react-router";
+import { useCancelEventMutation } from "@/features/app/events/api";
+import { useEffect } from "react";
+import { toast } from "sonner";
 
 interface EventOptionsProps {
   variant?: "default" | "compact";
@@ -25,6 +28,27 @@ export const EventOptions = ({
   onDelete,
   isDeleting,
 }: EventOptionsProps) => {
+  const [cancelEvent, { isLoading, isError }] = useCancelEventMutation();
+
+  useEffect(() => {
+    if (isError) {
+      toast.error(
+        "An Error occurred while cancelling the event. Please try again!"
+      );
+    }
+  }, [isError]);
+
+  const handleCancel = async () => {
+    const response = await cancelEvent({
+      eventId: event.id,
+      societyId: event.societyId || "",
+    });
+
+    if (!("error" in response)) {
+      toast.success("Event successfully cancelled.");
+    }
+  };
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -37,7 +61,12 @@ export const EventOptions = ({
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="border border-neutral-300">
         <DropdownMenuItem className="b3-regular">
-          <Link to={`/update-event/${event.id}`} state={{ event }}>
+          <Link
+            to={`/update-event/${event.id}`}
+            state={{ event }}
+            className="flex items-center gap-3"
+          >
+            <Edit className="h-4 w-4" />
             Edit Event
           </Link>
         </DropdownMenuItem>
@@ -47,18 +76,26 @@ export const EventOptions = ({
             <Button
               variant="ghost"
               size="inline"
-              className="text-red-600"
+              className="text-red-600 p-0 group"
               onClick={() => {
                 if (onDelete) onDelete(event.id, event.societyId || "");
               }}
               disabled={isDeleting}
             >
+              <Trash2 className="h-4 w-4 text-red-500 group-hover:text-accent-foreground transition-colors" />
               Delete Event
             </Button>
           </DropdownMenuItem>
         ) : (
           <DropdownMenuItem>
-            <Button variant="ghost" size="inline" className="text-red-600">
+            <Button
+              variant="ghost"
+              size="inline"
+              className="text-red-600 p-0 group"
+              onClick={handleCancel}
+              disabled={isLoading}
+            >
+              <Delete className="h-4 w-4 text-red-500 group-hover:text-accent-foreground transition-colors" />
               Cancel Event
             </Button>
           </DropdownMenuItem>

@@ -19,6 +19,8 @@ import {
   updateEvent,
   registerForEvent,
   deleteEvent,
+  cancelEvent,
+  getUserRegisteredEvents,
 } from "../controllers/event.controller";
 import { verifyEventsPrivilege } from "../middlewares/privilege.middlewares";
 
@@ -76,6 +78,9 @@ router
     generateAnnouncement
   );
 
+// Add user registered events endpoint
+router.get("/my-registrations", verifyJWT, getUserRegisteredEvents);
+
 // Get event by ID
 router.route("/:eventId").get(verifyJWT, getEventById);
 
@@ -91,6 +96,9 @@ router
     updateEvent
   )
   .delete(verifyJWT, verifyEventsPrivilege, deleteEvent);
+
+// Cancel event by ID
+router.patch("/:eventId/cancel", verifyJWT, verifyEventsPrivilege, cancelEvent);
 
 // Add registration endpoint
 router.post(
