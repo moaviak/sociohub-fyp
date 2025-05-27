@@ -49,13 +49,39 @@ export const createSociety = asyncHandler(
       },
     });
 
-    await prisma.role.create({
-      data: {
-        name: "Member",
-        societyId: society.id,
-        description:
-          "A member of the society who participates in activities and events.",
-      },
+    await prisma.role.createMany({
+      data: [
+        {
+          name: "Member",
+          societyId: society.id,
+          description:
+            "A member of the society who participates in activities and events.",
+        },
+        {
+          name: "President",
+          societyId: society.id,
+          description:
+            "The President serves as the official representative of the Society and acts as the primary link between the Society and university administration. They are responsible for overseeing all functional offices, initiating society projects, and co-approving budgets alongside the Vice President, General Secretary, and Treasurer. The President holds the deciding vote in society matters unless a dissent is raised by the Vice President, General Secretary, or Patron. They are required to sign all official documents on behalf of the Society and ensure they are approved by the Patron. Furthermore, the President must adhere to all university policies and procedures and is responsible for ensuring that all members do the same.",
+        },
+        {
+          name: "Vice President",
+          societyId: society.id,
+          description:
+            "The Vice President assists the President in all responsibilities, including overseeing society operations, supporting project execution, and representing the Society when needed. They play a crucial supporting role in leadership, decision-making, and ensuring the smooth execution of society activities.",
+        },
+        {
+          name: "General Secretary",
+          societyId: society.id,
+          description:
+            "The General Secretary is responsible for facilitating the operations of all functional offices within the Society. They work closely with the President in corresponding with the university administration, ensuring smooth project execution, and maintaining momentum for all initiatives. Additionally, the General Secretary prepares and manages operational checklists for events and monitors ongoing tasks to ensure timely completion.",
+        },
+        {
+          name: "Treasurer",
+          societyId: society.id,
+          description:
+            "The Treasurer manages all financial matters of the Society, including maintaining accurate records of income, expenses, and donations. They are responsible for drafting budgets for proposed events, securing necessary approvals from the Patron and Accounts Office, and coordinating with the Accounts Office for the release of petty cash. The Treasurer ensures all receipts and financial documentation are properly recorded and organized, maintaining transparency and accountability in the Society’s financial operations.",
+        },
+      ],
     });
     res
       .status(201)
