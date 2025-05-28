@@ -1,5 +1,6 @@
 import { useAppSelector } from "@/store/hooks";
 import { UserType } from "@/types";
+import { Advisor } from "@/types/type";
 import { router, Stack, usePathname } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";

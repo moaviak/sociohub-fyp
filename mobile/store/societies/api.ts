@@ -1,3 +1,4 @@
+import { JoinRequest, Society } from "@/types/type";
 import { api } from "../api";
 import ApiError, { ApiErrorResponse, createApiError } from "../api-error";
 import { ApiResponse } from "../api-response";

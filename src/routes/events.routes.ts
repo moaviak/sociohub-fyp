@@ -4,6 +4,7 @@ import { upload } from "../middlewares/multer.middlewares";
 import {
   createEventValidator,
   generateAnnouncementValidator,
+  scanTicketValidator,
   updateEventValidator,
 } from "../validators/events.validators";
 import { draftEventValidator } from "../validators/events.draft.validators";
@@ -21,6 +22,7 @@ import {
   deleteEvent,
   cancelEvent,
   getUserRegisteredEvents,
+  scanTicket,
 } from "../controllers/event.controller";
 import { verifyEventsPrivilege } from "../middlewares/privilege.middlewares";
 
@@ -80,6 +82,16 @@ router
 
 // Add user registered events endpoint
 router.get("/my-registrations", verifyJWT, getUserRegisteredEvents);
+
+// Ticket scan endpoint (admin only)
+router.post(
+  "/scan-ticket",
+  verifyJWT,
+  scanTicketValidator(),
+  validate,
+  verifyEventsPrivilege,
+  scanTicket
+);
 
 // Get event by ID
 router.route("/:eventId").get(verifyJWT, getEventById);

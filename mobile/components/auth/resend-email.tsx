@@ -60,7 +60,7 @@ export const ResendEmail = ({
   };
 
   useEffect(() => {
-    let timer: NodeJS.Timeout;
+    let timer: NodeJS.Timeout | number;
     if (resendTimer > 0) {
       timer = setInterval(() => {
         setResendTimer((prev) => prev - 1);

@@ -1,6 +1,7 @@
 import { icons, images } from "@/constants";
 import { useAppSelector } from "@/store/hooks";
 import { UserType } from "@/types";
+import { Advisor } from "@/types/type";
 import { router, Tabs } from "expo-router";
 import { useEffect } from "react";
 import {
@@ -117,7 +118,7 @@ export default function StudentTabsLayout() {
   }
 
   return (
-    <SafeAreaView style={{ flex: 1 }}>
+    <SafeAreaView style={{ flex: 1 }} className="bg-white">
       <Tabs
         screenOptions={{
           tabBarShowLabel: false,

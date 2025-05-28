@@ -635,3 +635,22 @@ export const getUserRegisteredEvents = asyncHandler(
       );
   }
 );
+
+/**
+ * Scan and validate an event ticket (admin only)
+ */
+export const scanTicket = asyncHandler(async (req: Request, res: Response) => {
+  const admin = req.user as IUser;
+  const { registrationId, eventId, studentId, societyId } = req.body;
+
+  const ticket = await EventService.scanTicket({
+    registrationId,
+    eventId,
+    studentId,
+    societyId,
+    adminId: admin.id,
+  });
+  return res
+    .status(200)
+    .json(new ApiResponse(200, ticket, "Ticket scanned successfully"));
+});

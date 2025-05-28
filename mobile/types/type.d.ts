@@ -1,3 +1,5 @@
+import { Event } from ".";
+
 declare type SocietyAdvisor = {
   displayName: string;
   firstName: string;
@@ -86,4 +88,24 @@ declare interface Role {
   privileges?: string[];
   createdAt?: string;
   updatedAt?: string;
+}
+
+declare interface Registration {
+  id: string;
+  studentId: string;
+  eventId: string;
+  registeredAt?: string;
+  ticket?: Ticket;
+  student?: Student;
+  event?: Event;
+}
+
+declare interface Ticket {
+  id: string;
+  registrationId?: string;
+  qrCode?: string;
+  issuedAt?: string;
+  isScanned?: boolean;
+  scannedAt?: string;
+  scannedBy?: Student;
 }

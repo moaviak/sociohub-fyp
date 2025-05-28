@@ -620,8 +620,7 @@ export class EventService {
         registrationId: registration.id,
         eventId,
         studentId,
-        eventTitle: event.title,
-        societyName: event.society.name,
+        societyId: event.societyId,
       };
       ticketQrCode = await QRCode.toDataURL(JSON.stringify(qrPayload));
       ticket = await prisma.eventTicket.create({
@@ -793,6 +792,125 @@ export class EventService {
         student: reg.student,
       },
     }));
+  }
+
+  /**
+   * Scan and validate an event ticket, marking it as used
+   */
+  static async scanTicket({
+    registrationId,
+    eventId,
+    studentId,
+    societyId,
+    adminId,
+  }: {
+    registrationId: string;
+    eventId: string;
+    studentId: string;
+    societyId: string;
+    adminId: string;
+  }) {
+    // Find ticket by registrationId
+    const ticket = await prisma.eventTicket.findFirst({
+      where: { registrationId },
+      include: {
+        registration: {
+          include: {
+            event: true,
+            student: true,
+          },
+        },
+        scannedByStudent: true,
+      },
+    });
+    if (!ticket) {
+      throw new ApiError(
+        404,
+        "We couldn't find a ticket for this registration. Please check the details and try again."
+      );
+    }
+    // Validate registration matches eventId, studentId, societyId
+    const reg = ticket.registration;
+    if (!reg) {
+      throw new ApiError(
+        404,
+        "No registration found for this ticket. Please contact support."
+      );
+    }
+    if (reg.eventId !== eventId) {
+      throw new ApiError(
+        400,
+        "This ticket does not belong to the selected event."
+      );
+    }
+    if (reg.studentId !== studentId) {
+      throw new ApiError(400, "This ticket does not belong to this student.");
+    }
+    if (reg.event.societyId !== societyId) {
+      throw new ApiError(400, "This ticket does not belong to this society.");
+    }
+    // Check if already scanned
+    if (ticket.isScanned) {
+      throw new ApiError(409, "This ticket has already been used for entry.");
+    }
+    // Check event is ongoing and within scan window
+    const event = reg.event;
+    if (!event) {
+      throw new ApiError(
+        404,
+        "Event details for this ticket could not be found."
+      );
+    }
+    if (!event.startDate || !event.endDate) {
+      throw new ApiError(
+        500,
+        "Event timing information is missing. Please contact support."
+      );
+    }
+    const now = new Date();
+    const [startHour, startMinute] = (event.startTime || "00:00")
+      .split(":")
+      .map(Number);
+    const [endHour, endMinute] = (event.endTime || "23:59")
+      .split(":")
+      .map(Number);
+    const eventStart = new Date(event.startDate);
+    eventStart.setHours(startHour, startMinute, 0, 0);
+    const eventEnd = new Date(event.endDate);
+    eventEnd.setHours(endHour, endMinute, 59, 999);
+    const scanStart = new Date(eventStart.getTime() - 60 * 60 * 1000); // 1 hour before start
+    if (now < scanStart) {
+      throw new ApiError(
+        400,
+        "Ticket scanning will be available 1 hour before the event starts. Please try again closer to the event time."
+      );
+    }
+    if (now > eventEnd) {
+      throw new ApiError(
+        400,
+        "This event has ended. Ticket scanning is now closed."
+      );
+    }
+
+    // Mark ticket as scanned
+    const updatedTicket = await prisma.eventTicket.update({
+      where: { id: ticket.id },
+      data: {
+        isScanned: true,
+        scannedAt: now,
+        scannedBy: adminId,
+      },
+      include: {
+        registration: {
+          include: {
+            event: true,
+            student: true,
+          },
+        },
+        scannedByStudent: true,
+      },
+    });
+    return updatedTicket;
   }
 }
 

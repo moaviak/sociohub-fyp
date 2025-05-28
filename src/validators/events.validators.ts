@@ -615,3 +615,10 @@ export const updateEventValidator = () => [
     .isInt({ min: 1, max: 6 })
     .withMessage("Form step must be an integer between 1 and 6"),
 ];
+
+export const scanTicketValidator = () => [
+  body("registrationId").notEmpty().withMessage("Registration ID is required"),
+  body("eventId").notEmpty().withMessage("Event ID is required"),
+  body("studentId").notEmpty().withMessage("Student ID is required"),
+  body("societyId").notEmpty().withMessage("Society ID is required"),
+];

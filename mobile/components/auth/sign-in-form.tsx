@@ -34,6 +34,7 @@ import { Toast, ToastDescription, ToastTitle, useToast } from "../ui/toast";
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import ApiError from "@/store/api-error";
+import { AuthResponse } from "@/types/type";
 
 export const SignInForm = () => {
   const [selectedTab, setSelectedTab] = useState<"Advisor" | "Student">(
