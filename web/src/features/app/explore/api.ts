@@ -1,4 +1,4 @@
-import { JoinRequest } from "@/types";
+import { Advisor, JoinRequest, Student } from "@/types";
 import { api } from "@/features/api";
 import { ApiResponse } from "@/features/api-response";
 import ApiError, {
@@ -7,6 +7,20 @@ import ApiError, {
 } from "@/features/api-error";
 import { Societies } from "./types";
 import { Event } from "@/types/event";
+
+interface GetUsersResponse {
+  users: (Student | Advisor)[];
+  totalCount: number;
+  totalPages: number;
+  currentPage: number;
+}
+
+interface GetUsersQueryArg {
+  limit?: number;
+  // Add other query parameters if needed in the future
+  search?: string;
+  status?: string;
+}
 
 export const ExploreApi = api.injectEndpoints({
   endpoints: (builder) => ({
@@ -126,6 +140,53 @@ export const ExploreApi = api.injectEndpoints({
         }
       },
     }),
+    getAllUsers: builder.infiniteQuery<
+      GetUsersResponse | ApiError, // Keep full response for pagination info
+      GetUsersQueryArg,
+      number
+    >({
+      infiniteQueryOptions: {
+        initialPageParam: 1,
+        maxPages: 10,
+        getNextPageParam: (lastPage, _allPages, lastPageParam) => {
+          // Now we have access to full pagination info
+          if (lastPage && !("error" in lastPage)) {
+            return lastPageParam < lastPage.totalPages
+              ? lastPageParam + 1
+              : undefined;
+          }
+          return undefined;
+        },
+        getPreviousPageParam: (_firstPage, _allPages, firstPageParam) => {
+          return firstPageParam > 1 ? firstPageParam - 1 : undefined;
+        },
+      },
+      query: ({ queryArg, pageParam }) => {
+        const { limit = 20, search = "", status = "" } = queryArg;
+        const params = new URLSearchParams({
+          page: pageParam.toString(),
+          limit: limit.toString(),
+        });
+
+        if (search) params.append("search", search);
+        if (status) params.append("status", status);
+
+        return {
+          url: `/users?${params.toString()}`,
+        };
+      },
+      transformResponse: (response: ApiResponse<GetUsersResponse>) => {
+        if (response.success) {
+          return response.data;
+        }
+        return createApiError(response.message);
+      },
+      transformErrorResponse: (response) => {
+        const errorResponse = response.data as ApiErrorResponse;
+        return createApiError(errorResponse.message);
+      },
+      providesTags: ["Users"],
+    }),
   }),
 });
 
@@ -134,4 +195,5 @@ export const {
   useSendJoinRequestMutation,
   useCancelJoinRequestMutation,
   useGetEventsQuery,
+  useGetAllUsersInfiniteQuery,
 } = ExploreApi;

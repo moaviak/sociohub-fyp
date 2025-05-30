@@ -71,22 +71,26 @@ export const EventOptions = ({
             <EventTicket event={event} ticket={event.registration.ticket} />
           </DropdownMenuItem>
         )}
-        {havePrivilege && event.status !== EventStatus.Cancelled && (
-          <DropdownMenuItem className="b3-regular">
-            <Link
-              to={`/update-event/${event.id}`}
-              state={{ event }}
-              className="flex items-center gap-3"
-            >
-              <Edit className="h-4 w-4" />
-              Edit Event
-            </Link>
-          </DropdownMenuItem>
-        )}
+        {havePrivilege &&
+          event.status !== EventStatus.Cancelled &&
+          event.status !== EventStatus.Completed && (
+            <DropdownMenuItem className="b3-regular">
+              <Link
+                to={`/update-event/${event.id}`}
+                state={{ event }}
+                className="flex items-center gap-3"
+              >
+                <Edit className="h-4 w-4" />
+                Edit Event
+              </Link>
+            </DropdownMenuItem>
+          )}
         {havePrivilege && (
           <>
             <DropdownMenuSeparator className="bg-neutral-300" />
-            {event.visibility && event.visibility === EventVisibility.Draft ? (
+            {event.visibility &&
+            event.visibility === EventVisibility.Draft &&
+            event.status === EventStatus.Completed ? (
               <DropdownMenuItem>
                 <Button
                   variant="ghost"

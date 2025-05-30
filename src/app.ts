@@ -93,6 +93,7 @@ import advisorRoutes from "./routes/advisor.routes.js";
 import societyRoutes from "./routes/society.routes.js";
 import notificationRoutes from "./routes/notification.routes.js";
 import eventRoutes from "./routes/events.routes.js";
+import userRoutes from "./routes/user.routes.js";
 
 app.use("/api/auth", authRoutes);
 app.use("/api/student", studentRoutes);
@@ -100,6 +101,7 @@ app.use("/api/advisor", advisorRoutes);
 app.use("/api/society", societyRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/events", eventRoutes);
+app.use("/api/users", userRoutes);
 
 // common error handling middleware
 app.use(errorHandler);
