@@ -169,3 +169,14 @@ export const haveEventsPrivilege = (
 
   return society && society.privileges.includes(PRIVILEGES.EVENT_MANAGEMENT);
 };
+
+export const haveAnnouncementsPrivilege = (
+  societies: (Society & { privileges: string[] })[],
+  societyId: string
+) => {
+  const society = societies.find((society) => society.id === societyId);
+
+  return (
+    society && society.privileges.includes(PRIVILEGES.ANNOUNCEMENT_MANAGEMENT)
+  );
+};

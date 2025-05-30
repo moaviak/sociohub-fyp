@@ -325,3 +325,20 @@ model EventTicket {
 
   @@index([isScanned])
 }
+
+enum AnnouncementAudience {
+  All
+  Members
+}
+
+model announcement {
+  id String @id @default(uuid())
+  title String 
+  content String
+  publishDateTime DateTime?
+  audience AnnouncementAudience @default(All)
+  sendEmail Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

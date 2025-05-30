@@ -28,6 +28,8 @@ import CreateEventPage from "./pages/app/events/create-event-page";
 import UpdateEventPage from "./pages/app/events/update-event-page";
 import EventDetailPage from "./pages/app/events/event-detail-page";
 import MyEventsPage from "./pages/app/events/my-events-page";
+import AnnouncementsPage from "./pages/app/announcements";
+import CreateAnnouncementPage from "./pages/app/announcements/create-announcement";
 
 function App() {
   return (
@@ -80,6 +82,20 @@ function App() {
 
               <Route path=":societyId" element={<EventsPage />}>
                 <Route path="create-event" element={<CreateEventPage />} />
+              </Route>
+            </Route>
+
+            <Route path="/announcements" element={<AnnouncementsPage />}>
+              <Route
+                path="create-announcement"
+                element={<CreateAnnouncementPage />}
+              />
+
+              <Route path=":societyId" element={<AnnouncementsPage />}>
+                <Route
+                  path="create-announcement"
+                  element={<CreateAnnouncementPage />}
+                />
               </Route>
             </Route>
 

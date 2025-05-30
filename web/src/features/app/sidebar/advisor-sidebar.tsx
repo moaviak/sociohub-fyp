@@ -37,7 +37,7 @@ const navItems = [
   {
     label: "Announcements",
     icon: <Megaphone className="w-4 h-4" />,
-    href: "/annoucements",
+    href: "/announcements",
   },
   {
     label: "Finance",

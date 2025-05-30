@@ -1,0 +1,53 @@
+tbody.rdp-tbody {
+  display: flex;
+  flex-direction: column;
+  gap: 10px; /* Adjust gap between rows */
+}
+
+tbody.rdp-head {
+  display: flex;
+  flex-direction: column;
+  gap: 10px; /* Adjust gap between rows */
+}
+
+.rdp-head tr {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.rdp-tbody tr {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.rdp-tbody td {
+  flex: 1; /* Ensures equal width for all cells */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 5px;
+}
+.rdp-tbody button {
+  max-height: 10px;
+}
+
+.rdp-button {
+  width: 100%; /* Ensures the button takes full width of the cell */
+  height: 50px; /* Adjust as necessary */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 5px;
+  border-radius: 5px;
+  transition: background-color 0.3s ease;
+}
+
+.rdp-button:hover {
+  background-color: #f0f0f0; /* Hover effect */
+}
+
+.rdp-button:disabled {
+  opacity: 0.5;
+}

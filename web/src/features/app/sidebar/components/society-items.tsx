@@ -82,7 +82,7 @@ const getSocietyItems = (society: Society & { privileges: string[] }) => {
     {
       label: "Announcements",
       icon: <Megaphone className="w-4 h-4" />,
-      href: `/annoucements/${society.id}`,
+      href: `/announcements/${society.id}`,
     },
     ...(society.privileges.includes(PRIVILEGES.PAYMENT_FINANCE_MANAGEMENT)
       ? [

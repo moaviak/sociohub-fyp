@@ -61,9 +61,11 @@ export const UserAvatarMenu = ({ user, userType }: UserAvatarMenuProps) => {
           <DropdownMenuLabel>
             <Link to="/dashboard">Dashboard</Link>
           </DropdownMenuLabel>
-          <DropdownMenuLabel>
-            <Link to="/my-events">My Events</Link>
-          </DropdownMenuLabel>
+          {userType === UserType.STUDENT && (
+            <DropdownMenuLabel>
+              <Link to="/my-events">My Events</Link>
+            </DropdownMenuLabel>
+          )}
           <DropdownMenuSeparator className="bg-neutral-300" />
           <DropdownMenuLabel>
             <Button
