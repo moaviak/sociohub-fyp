@@ -1,6 +1,6 @@
 import { CalendarCheck, User, Users } from "lucide-react";
 import { useLocation, useNavigate } from "react-router";
-import React, { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo } from "react";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
