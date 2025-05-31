@@ -73,6 +73,7 @@ model Society {
   joinRequests JoinRequest[]    @relation
   members      StudentSociety[] @relation
   events       Event[]          @relation
+  announcements Announcement[] @relation
 }
 
 enum JoinRequestStatus {
@@ -331,13 +332,16 @@ enum AnnouncementAudience {
   Members
 }
 
-model announcement {
+model Announcement {
   id String @id @default(uuid())
   title String 
   content String
   publishDateTime DateTime?
   audience AnnouncementAudience @default(All)
   sendEmail Boolean @default(false)
+  societyId String
+
+  society Society @relation(fields: [societyId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

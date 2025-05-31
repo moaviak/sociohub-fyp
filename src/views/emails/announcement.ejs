@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      .container {
+        font-family: Arial, sans-serif;
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+      .logo {
+        text-align: center;
+        margin-bottom: 30px;
+      }
+      .announcement {
+        background-color: #f0f7ff;
+        border-left: 4px solid #0066cc;
+        padding: 15px;
+        margin: 20px 0;
+        border-radius: 4px;
+      }
+      .button {
+        display: inline-block;
+        background-color: #0066cc;
+        color: white;
+        padding: 12px 24px;
+        text-decoration: none;
+        border-radius: 4px;
+        font-weight: bold;
+        margin-top: 15px;
+      }
+      .footer {
+        color: #666;
+        font-size: 14px;
+        margin-top: 30px;
+        text-align: center;
+        border-top: 1px solid #eee;
+        padding-top: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="logo">
+        <img
+          src="http://localhost:3000/assets/images/logo-sociohub.svg"
+          alt="SocioHub"
+          width="120"
+        />
+      </div>
+
+      <h2>New Announcement</h2>
+
+      <div class="announcement">
+        <h3><%= title %></h3>
+        <p><%= content %></p>
+      </div>
+
+      <a href="http://localhost:5173/announcements" class="button">
+        View on SocioHub
+      </a>
+
+      <div class="footer">
+        <p>Best Regards,<br />The SocioHub Team</p>
+      </div>
+    </div>
+  </body>
+</html>

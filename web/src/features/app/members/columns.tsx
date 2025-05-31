@@ -155,7 +155,7 @@ export const rolesColumns: ColumnDef<Role>[] = [
       return (
         <div className="whitespace-normal">
           <p className="b2-medium">{role.name}</p>
-          <p className="b3-regular">{role.description}</p>
+          <p className="b3-regular line-clamp-3">{role.description}</p>
         </div>
       );
     },

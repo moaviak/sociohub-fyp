@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import { asyncHandler } from "../utils/asyncHandler";
 import {
+  haveAnnouncementsPrivilege,
   haveEventsPrivilege,
   haveMembersPrivilege,
   haveSettingsPrivilege,
@@ -44,6 +45,23 @@ export const verifyEventsPrivilege = asyncHandler(
     }
 
     if (await haveEventsPrivilege(userId, societyId)) {
+      next();
+    } else {
+      throw new ApiError(403, "You don't have permission for this operation.");
+    }
+  }
+);
+
+export const verifyAnnouncementsPrivilege = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const userId = (req.user as IUser).id;
+    const { societyId } = req.body;
+
+    if (!societyId) {
+      throw new ApiError(403, "You don't have permission for this operation.");
+    }
+
+    if (await haveAnnouncementsPrivilege(userId, societyId)) {
       next();
     } else {
       throw new ApiError(403, "You don't have permission for this operation.");

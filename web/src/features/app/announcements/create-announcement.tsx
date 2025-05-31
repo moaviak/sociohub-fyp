@@ -1,6 +1,13 @@
-import { AnnouncementForm } from "./announcement-form";
+import useGetSocietyId from "@/hooks/useGetSocietyId";
+import { AnnouncementForm } from "./components/announcement-form";
 
 export const CreateAnnouncement = () => {
+  const societyId = useGetSocietyId();
+
+  if (!societyId) {
+    return null;
+  }
+
   return (
     <div className="flex flex-col gap-y-6 h-full">
       <div>
@@ -10,7 +17,7 @@ export const CreateAnnouncement = () => {
         </p>
       </div>
 
-      <AnnouncementForm />
+      <AnnouncementForm societyId={societyId} />
     </div>
   );
 };
