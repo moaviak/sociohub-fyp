@@ -105,19 +105,4 @@ export interface Notification {
 
 export * from "./event";
 
-export enum AnnouncementAudience {
-  ALL = "All",
-  MEMBERS = "Members",
-}
-
-export interface Announcement {
-  id: string;
-  title: string;
-  content?: string;
-  publishDateTime?: string;
-  audience?: AnnouncementAudience;
-  sendEmail?: boolean;
-
-  createdAt?: string;
-  updatedAt?: string;
-}
+export * from "./announcement";

@@ -30,6 +30,7 @@ import EventDetailPage from "./pages/app/events/event-detail-page";
 import MyEventsPage from "./pages/app/events/my-events-page";
 import AnnouncementsPage from "./pages/app/announcements";
 import CreateAnnouncementPage from "./pages/app/announcements/create-announcement";
+import EditAnnouncementPage from "./pages/app/announcements/edit-announcement";
 
 function App() {
   return (
@@ -107,6 +108,10 @@ function App() {
             <Route path="/my-events" element={<MyEventsPage />} />
             <Route path="/event/:id" element={<EventDetailPage />} />
             <Route path="update-event/:eventid" element={<UpdateEventPage />} />
+            <Route
+              path="/edit-announcement/:id"
+              element={<EditAnnouncementPage />}
+            />
           </Route>
 
           {/* 404 Route */}

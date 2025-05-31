@@ -22,3 +22,21 @@ export const createAnnouncementValidator = () => [
     .isBoolean()
     .withMessage("Invalid sendEmail field."),
 ];
+
+export const updateAnnouncementValidator = () => [
+  body("title").optional().isString().withMessage("Title must be a string"),
+  body("content").optional().isString().withMessage("Content must be a string"),
+  body("publishDateTime")
+    .optional()
+    .isDate()
+    .withMessage("Invalid publish date and time"),
+  body("audience")
+    .optional()
+    .isIn(["All", "Members"])
+    .withMessage("Invalid audience type."),
+  body("sendEmail")
+    .optional()
+    .isBoolean()
+    .withMessage("Invalid sendEmail field."),
+  // Add other fields as needed
+];

@@ -28,11 +28,11 @@ model Student {
   createdAt               DateTime  @default(now())
   updatedAt               DateTime  @updatedAt
 
-  joinRequests  JoinRequest[]           @relation
-  societies     StudentSociety[]        @relation
-  notifications NotificationRecipient[] @relation("StudentNotifications")
+  joinRequests       JoinRequest[]           @relation
+  societies          StudentSociety[]        @relation
+  notifications      NotificationRecipient[] @relation("StudentNotifications")
   eventRegistrations EventRegistration[]
-  scannedTickets EventTicket[] @relation("ScannedByStudent")
+  scannedTickets     EventTicket[]           @relation("ScannedByStudent")
 }
 
 model Advisor {
@@ -68,12 +68,12 @@ model Society {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  advisor      Advisor?         @relation
-  roles        Role[]
-  joinRequests JoinRequest[]    @relation
-  members      StudentSociety[] @relation
-  events       Event[]          @relation
-  announcements Announcement[] @relation
+  advisor       Advisor?         @relation
+  roles         Role[]
+  joinRequests  JoinRequest[]    @relation
+  members       StudentSociety[] @relation
+  events        Event[]          @relation
+  announcements Announcement[]   @relation
 }
 
 enum JoinRequestStatus {
@@ -291,19 +291,20 @@ model Event {
   updatedAt DateTime @updatedAt
 
   eventRegistrations EventRegistration[]
+  eventAnnouncement  Announcement?       @relation("EventAnnouncement")
 
   @@index([societyId])
 }
 
 model EventRegistration {
-  id            String   @id @default(uuid())
-  studentId     String
-  eventId       String
-  registeredAt  DateTime @default(now())
+  id           String   @id @default(uuid())
+  studentId    String
+  eventId      String
+  registeredAt DateTime @default(now())
 
   // Relations
-  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  event   Event   @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  student Student      @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  event   Event        @relation(fields: [eventId], references: [id], onDelete: Cascade)
   ticket  EventTicket?
 
   @@unique([studentId, eventId]) // Prevent duplicate registration
@@ -312,17 +313,17 @@ model EventRegistration {
 }
 
 model EventTicket {
-  id            String   @id @default(uuid())
-  registrationId String  @unique
-  qrCode        String   // Store QR code data or URL
-  issuedAt      DateTime @default(now())
-  scannedAt     DateTime?
-  isScanned     Boolean  @default(false)
-  scannedBy     String?  // Student ID who scanned (admin)
+  id             String    @id @default(uuid())
+  registrationId String    @unique
+  qrCode         String // Store QR code data or URL
+  issuedAt       DateTime  @default(now())
+  scannedAt      DateTime?
+  isScanned      Boolean   @default(false)
+  scannedBy      String? // Student ID who scanned (admin)
 
   // Relations
-  registration EventRegistration @relation(fields: [registrationId], references: [id], onDelete: Cascade)
-  scannedByStudent Student? @relation("ScannedByStudent", fields: [scannedBy], references: [id])
+  registration     EventRegistration @relation(fields: [registrationId], references: [id], onDelete: Cascade)
+  scannedByStudent Student?          @relation("ScannedByStudent", fields: [scannedBy], references: [id])
 
   @@index([isScanned])
 }
@@ -332,16 +333,26 @@ enum AnnouncementAudience {
   Members
 }
 
+enum AnnouncementStatus {
+  Publish
+  Schedule
+}
+
 model Announcement {
-  id String @id @default(uuid())
-  title String 
-  content String
+  id              String               @id @default(uuid())
+  title           String
+  content         String
   publishDateTime DateTime?
-  audience AnnouncementAudience @default(All)
-  sendEmail Boolean @default(false)
-  societyId String
+  status          AnnouncementStatus
+  audience        AnnouncementAudience @default(All)
+  sendEmail       Boolean              @default(false)
+  societyId       String
 
   society Society @relation(fields: [societyId], references: [id], onDelete: Cascade)
+
+  // Optional relation to Event
+  event   Event?  @relation("EventAnnouncement", fields: [eventId], references: [id], onDelete: SetNull)
+  eventId String? @unique
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

@@ -15,6 +15,7 @@ import { io } from "../app";
 import { sendNotificationToUsers } from "../socket";
 import QRCode from "qrcode";
 import { sendEventRegistrationConfirmationEmail } from "../utils/mail";
+import { AnnouncementService } from "./announcement.service";
 
 const prisma = new PrismaClient();
 
@@ -171,6 +172,32 @@ export class EventService {
           society: true, // Include society details for notification
         },
       });
+
+      // --- ANNOUNCEMENT LOGIC ---
+      (async () => {
+        if (
+          event.announcementEnabled &&
+          event.announcement &&
+          event.visibility !== "Draft"
+        ) {
+          // Check if announcement already exists for this event
+          const existingAnnouncement = await prisma.announcement.findUnique({
+            where: { eventId: event.id },
+          });
+          if (!existingAnnouncement) {
+            // Create announcement
+            await AnnouncementService.createAnnouncement({
+              societyId: event.societyId,
+              title: event.title,
+              content: event.announcement,
+              publishDateTime: event.publishDateTime ?? undefined,
+              audience: event.audience === "Members" ? "Members" : "All",
+              sendEmail: false, // or true if you want to send email
+              eventId: event.id,
+            });
+          }
+        }
+      })();
 
       // Send notification if event is not a draft
       if (event.visibility !== "Draft") {
@@ -529,6 +556,63 @@ export class EventService {
           status: newStatus,
         },
       });
+
+      // --- ANNOUNCEMENT LOGIC ---
+      (async () => {
+        if (
+          prevVisibility === "Draft" &&
+          (newVisibility === "Publish" || newVisibility === "Schedule")
+        ) {
+          if (
+            (update.announcementEnabled || event.announcementEnabled) &&
+            (update.announcement || event.announcement)
+          ) {
+            // Check if announcement exists for this event
+            let announcement = await prisma.announcement.findUnique({
+              where: { eventId: eventId },
+            });
+            if (!announcement) {
+              // Create announcement if not exists
+              await AnnouncementService.createAnnouncement({
+                societyId: event.societyId,
+                title: update.title || event.title,
+                content: update.announcement || event.announcement!,
+                publishDateTime:
+                  update.publishDateTime || event.publishDateTime || undefined,
+                audience:
+                  (update.audience || event.audience) === "Members"
+                    ? "Members"
+                    : "All",
+                sendEmail: false, // or true if you want to send email
+                eventId: eventId,
+              });
+            } else {
+              // Update announcement if content or relevant fields changed
+              const shouldUpdate =
+                (update.announcement &&
+                  update.announcement !== announcement.content) ||
+                (update.title && update.title !== announcement.title) ||
+                (update.publishDateTime &&
+                  update.publishDateTime !== announcement.publishDateTime) ||
+                (update.audience && update.audience !== announcement.audience);
+              if (shouldUpdate) {
+                await AnnouncementService.updateAnnouncement(announcement.id, {
+                  title: update.title || event.title,
+                  content: update.announcement || event.announcement!,
+                  publishDateTime:
+                    update.publishDateTime ||
+                    event.publishDateTime ||
+                    undefined,
+                  audience:
+                    (update.audience || event.audience) === "Members"
+                      ? "Members"
+                      : "All",
+                });
+              }
+            }
+          }
+        }
+      })();
 
       if (
         prevVisibility === "Draft" &&

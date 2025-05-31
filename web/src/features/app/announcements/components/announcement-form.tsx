@@ -1,4 +1,4 @@
-import { Announcement, AnnouncementAudience } from "@/types";
+import { Announcement } from "@/types";
 import { useForm } from "react-hook-form";
 import { AnnouncementData, AnnouncementSchema } from "../schema";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -17,9 +17,13 @@ import { Switch } from "@/components/ui/switch";
 import { DateTimePicker } from "@/components/date-time-picker";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Button } from "@/components/ui/button";
-import { useCreateAnnouncementMutation } from "../api";
+import {
+  useCreateAnnouncementMutation,
+  useUpdateAnnouncementMutation,
+} from "../api";
 import ApiError from "@/features/api-error";
 import { toast } from "sonner";
+import { useNavigate } from "react-router";
 
 interface AnnouncementFormProps {
   announcement?: Announcement;
@@ -30,7 +34,10 @@ export const AnnouncementForm = ({
   announcement,
   societyId,
 }: AnnouncementFormProps) => {
+  const navigate = useNavigate();
   const [createAnnouncement, { isLoading }] = useCreateAnnouncementMutation();
+  const [updateAnnouncement, { isLoading: isUpdating }] =
+    useUpdateAnnouncementMutation();
 
   const form = useForm<AnnouncementData>({
     resolver: zodResolver(AnnouncementSchema),
@@ -49,19 +56,21 @@ export const AnnouncementForm = ({
   const publishNow = form.watch("publishNow");
 
   const onSubmit = async (data: AnnouncementData) => {
+    const body = {
+      societyId,
+      title: data.title,
+      content: data.content,
+      audience: data.audience,
+      publishDateTime: data.publishDateTime,
+      sendEmail: data.sendEmail,
+    };
     if (!announcement) {
       try {
-        const response = await createAnnouncement({
-          societyId,
-          title: data.title,
-          content: data.content,
-          publishDateTime: data.publishDateTime,
-          audience: data.audience as AnnouncementAudience,
-          sendEmail: data.sendEmail,
-        }).unwrap();
+        const response = await createAnnouncement(body).unwrap();
 
         if (!("error" in response)) {
           toast.success("Successfully created announcement.");
+          navigate(-1);
         } else {
           throw new Error(response.errorMessage);
         }
@@ -74,7 +83,26 @@ export const AnnouncementForm = ({
         }
       }
     } else {
-      // TODO: Update announcement
+      try {
+        const response = await updateAnnouncement({
+          announcementId: announcement.id,
+          ...body,
+        }).unwrap();
+
+        if (!("error" in response)) {
+          toast.success("Successfully updated announcement.");
+          navigate(-1);
+        } else {
+          throw new Error(response.errorMessage);
+        }
+      } catch (error) {
+        const apiError = error as ApiError;
+        if (apiError.errorMessage) {
+          toast.error(apiError.errorMessage);
+        } else {
+          toast.error("Unexpected error occurred while creating announcement.");
+        }
+      }
     }
   };
 
@@ -232,10 +260,14 @@ export const AnnouncementForm = ({
           />
 
           <div className="flex justify-end gap-3 my-6">
-            <Button type="button" variant="outline" disabled={isLoading}>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={isLoading || isUpdating}
+            >
               Cancel
             </Button>
-            <Button type="submit" disabled={isLoading}>
+            <Button type="submit" disabled={isLoading || isUpdating}>
               Publish
             </Button>
           </div>

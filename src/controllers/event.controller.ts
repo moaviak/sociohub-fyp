@@ -19,7 +19,7 @@ import {
   EventAnnouncementService,
 } from "../services/event-announcement.service";
 import { haveEventsPrivilege } from "../utils/helpers";
-import { IUser } from "../types";
+import { IUser, UserType } from "../types";
 import prisma from "../db";
 
 export const createEvent = asyncHandler(async (req: Request, res: Response) => {
@@ -316,11 +316,13 @@ export const getEvents = asyncHandler(async (req: Request, res: Response) => {
     }
 
     // Get user details
-    const user = req.user as { id: string };
+    const user = req.user as IUser;
     let userContext = undefined;
     if (societyId) {
       const hasPrivilege = await haveEventsPrivilege(user.id, societyId);
-      const isMember = await isSocietyMember(user.id, societyId);
+      const isMember =
+        user.userType === UserType.ADVISOR ||
+        (await isSocietyMember(user.id, societyId));
       userContext = {
         id: user.id,
         isMember,

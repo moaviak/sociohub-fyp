@@ -2,6 +2,7 @@ import cron from "node-cron";
 import prisma from "../db";
 import logger from "../logger/winston.logger";
 import { deleteFromCloudinary } from "../utils/cloudinary";
+import { AnnouncementService } from "./announcement.service";
 
 // In-memory cache to avoid duplicate reminders within the same interval (reset on process restart)
 const sentReminders = new Set<string>();
@@ -13,7 +14,7 @@ export const initializeBackgroundJobs = () => {
   // Schedule join request cleanup
   scheduleJoinRequestCleanup();
   // Schedule event publishing
-  scheduleEventPublishing();
+  schedulePublishing();
   // Schedule event status updates
   scheduleEventStatusUpdates();
   scheduleEventReminders();
@@ -76,7 +77,7 @@ const scheduleJoinRequestCleanup = () => {
  * - Finds events with visibility "Schedule" and publishDateTime in the past
  * - Updates their visibility to "Publish"
  */
-const scheduleEventPublishing = () => {
+const schedulePublishing = () => {
   // Schedule to run every 5 minutes
   cron.schedule("*/5 * * * *", async () => {
     try {
@@ -106,11 +107,43 @@ const scheduleEventPublishing = () => {
           `Published ${eventsToPublish.length} scheduled events whose publishDateTime has passed`
         );
       }
+
+      // --- ANNOUNCEMENTS ---
+      // Find scheduled announcements that need to be published
+      const announcementsToPublish = await prisma.announcement.findMany({
+        where: {
+          status: "Schedule",
+          publishDateTime: { lte: now },
+        },
+        include: { society: true },
+      });
+
+      for (const announcement of announcementsToPublish) {
+        // Update status to Publish
+        await prisma.announcement.update({
+          where: { id: announcement.id },
+          data: { status: "Publish" },
+        });
+
+        // Use the service function to send notifications and emails
+        await AnnouncementService.sendAnnouncementNotificationsAndEmails(
+          announcement,
+          announcement.society
+        );
+      }
+      if (announcementsToPublish.length > 0) {
+        logger.info(
+          `Published ${announcementsToPublish.length} scheduled announcements whose publishDateTime has passed`
+        );
+      }
     } catch (error) {
-      logger.error("Error during scheduled event publishing:", error);
+      logger.error(
+        "Error during scheduled event/announcement publishing:",
+        error
+      );
     }
   });
-  logger.info("Event publishing job scheduled");
+  logger.info("Event and announcement publishing job scheduled");
 };
 
 /**
