@@ -12,6 +12,7 @@ import {
   getAnnouncementById,
   updateAnnouncement,
   deleteAnnouncement,
+  getRecentAnnouncements,
 } from "../controllers/announcements.controller";
 
 const router = Router();
@@ -24,7 +25,8 @@ router
     createAnnouncementValidator(),
     validate,
     createAnnouncement
-  );
+  )
+  .get(verifyJWT, getRecentAnnouncements);
 
 // GET /society-announcements/:societyId - fetch all announcements for a society
 router.get(

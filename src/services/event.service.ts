@@ -387,7 +387,8 @@ export class EventService {
       id: string;
       isMember?: boolean;
       hasEventsPrivilege?: boolean;
-    }
+    },
+    limit?: number
   ) {
     try {
       const now = new Date();
@@ -486,6 +487,7 @@ export class EventService {
           { startDate: "asc" },
           { startTime: "asc" },
         ],
+        ...(limit ? { take: limit } : {}),
       });
 
       // Debug log

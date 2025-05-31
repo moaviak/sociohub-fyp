@@ -114,10 +114,10 @@ export const ExploreApi = api.injectEndpoints({
     }),
     getEvents: builder.query<
       Event[] | ApiError,
-      { status?: string; categories?: string; search?: string }
+      { status?: string; categories?: string; search?: string; limit?: number }
     >({
-      query: ({ status = "", categories = "", search = "" }) => ({
-        url: `/events?status=${status}&categories=${categories}&search=${search}`,
+      query: ({ status = "", categories = "", search = "", limit = "" }) => ({
+        url: `/events?status=${status}&categories=${categories}&search=${search}&limit=${limit}`,
       }),
       transformResponse: (response: ApiResponse<Event[]>) => {
         if (response.success) {

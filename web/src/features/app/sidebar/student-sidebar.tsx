@@ -2,6 +2,7 @@ import {
   CalendarDays,
   Compass,
   LayoutDashboard,
+  ListTodo,
   MessageSquare,
 } from "lucide-react";
 
@@ -29,6 +30,11 @@ const navItems = [
     label: "Calendar",
     icon: <CalendarDays className="w-4 h-4" />,
     href: "/calendar",
+  },
+  {
+    label: "To-Do",
+    icon: <ListTodo className="w-4 h-4" />,
+    href: "/todo",
   },
 ];
 

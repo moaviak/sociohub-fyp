@@ -150,3 +150,27 @@ export const deleteAnnouncement = asyncHandler(
     }
   }
 );
+
+export const getRecentAnnouncements = asyncHandler(
+  async (req: Request, res: Response) => {
+    const limit = req.query.limit
+      ? parseInt(req.query.limit as string, 10)
+      : 10;
+    try {
+      const announcements = await AnnouncementService.getRecentAnnouncements({
+        limit,
+      });
+      return res
+        .status(200)
+        .json(
+          new ApiResponse(
+            200,
+            announcements,
+            "Recent announcements fetched successfully"
+          )
+        );
+    } catch (error) {
+      throw new ApiError(500, "Failed to fetch recent announcements");
+    }
+  }
+);

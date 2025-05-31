@@ -151,6 +151,37 @@ export const AnnouncementApi = api.injectEndpoints({
       },
       invalidatesTags: ["Announcements"],
     }),
+    getRecentAnnouncements: builder.query<
+      Announcement[] | ApiError,
+      { limit?: number }
+    >({
+      query: ({ limit = "" }) => ({
+        url: `/announcements?limit=${limit}`,
+      }),
+      transformResponse: (response: ApiResponse<Announcement[]>) => {
+        if (response.success) {
+          return response.data;
+        }
+        return createApiError(response.message);
+      },
+      transformErrorResponse: (response) => {
+        const errorResponse = response.data as ApiErrorResponse;
+        return createApiError(errorResponse.message);
+      },
+      providesTags: (result) => {
+        if (result && !("error" in result)) {
+          return [
+            ...result.map((item) => ({
+              type: "Announcements" as const,
+              id: item.id,
+            })),
+            { type: "Announcements", id: "LIST" },
+          ];
+        } else {
+          return [];
+        }
+      },
+    }),
   }),
 });
 
@@ -160,4 +191,5 @@ export const {
   useGetAnnouncementByIdQuery,
   useUpdateAnnouncementMutation,
   useDeleteAnnouncementMutation,
+  useGetRecentAnnouncementsQuery,
 } = AnnouncementApi;

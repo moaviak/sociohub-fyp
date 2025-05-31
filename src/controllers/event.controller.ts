@@ -333,10 +333,16 @@ export const getEvents = asyncHandler(async (req: Request, res: Response) => {
       userContext = { id: user.id, isMember: false, hasEventsPrivilege: false };
     }
 
+    // Parse limit from query
+    const limit = req.query.limit
+      ? parseInt(req.query.limit as string, 10)
+      : undefined;
+
     const events = await EventService.getEvents(
       societyId,
       filters,
-      userContext
+      userContext,
+      limit
     );
 
     // For each event, check if the user is registered

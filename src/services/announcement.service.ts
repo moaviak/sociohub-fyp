@@ -180,4 +180,16 @@ export class AnnouncementService {
       .catch(() => null);
     return deleted;
   }
+
+  static async getRecentAnnouncements(options: { limit?: number } = {}) {
+    const { limit = 10 } = options;
+    // Only fetch published announcements, sorted by publishDateTime or createdAt
+    const announcements = await prisma.announcement.findMany({
+      where: { status: "Publish" },
+      orderBy: [{ publishDateTime: "desc" }, { createdAt: "desc" }],
+      take: limit,
+      include: { society: true },
+    });
+    return announcements;
+  }
 }

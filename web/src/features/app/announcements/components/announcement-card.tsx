@@ -8,9 +8,13 @@ import { useState, useRef, useEffect } from "react";
 
 interface AnnouncementCardProps {
   announcement: Announcement;
+  variant?: "default" | "compact";
 }
 
-export const AnnouncementCard = ({ announcement }: AnnouncementCardProps) => {
+export const AnnouncementCard = ({
+  announcement,
+  variant = "default",
+}: AnnouncementCardProps) => {
   const { society, title, content, createdAt } = announcement;
   const { user } = useAppSelector((state) => state.auth);
 
@@ -29,14 +33,15 @@ export const AnnouncementCard = ({ announcement }: AnnouncementCardProps) => {
 
   useEffect(() => {
     if (contentRef.current) {
-      // Check if content overflows 5 lines
+      // Check if content overflows N lines
       const lineHeight = parseFloat(
         getComputedStyle(contentRef.current).lineHeight
       );
-      const maxHeight = lineHeight * 5;
+      const maxLines = variant === "compact" ? 3 : 5;
+      const maxHeight = lineHeight * maxLines;
       setShowSeeMore(contentRef.current.scrollHeight > maxHeight + 2); // +2 for rounding
     }
-  }, [content]);
+  }, [content, variant]);
 
   return (
     <div className="bg-white rounded-xl drop-shadow-md p-5 flex gap-2 max-w-xl w-full">
@@ -61,7 +66,11 @@ export const AnnouncementCard = ({ announcement }: AnnouncementCardProps) => {
         <div
           ref={contentRef}
           className={`text-neutral-700 b3-regular whitespace-pre-line transition-all duration-200 ${
-            !expanded && showSeeMore ? "line-clamp-5" : ""
+            !expanded && showSeeMore
+              ? variant === "compact"
+                ? "line-clamp-3"
+                : "line-clamp-5"
+              : ""
           }`}
         >
           {content}
@@ -87,7 +96,7 @@ AnnouncementCard.Skeleton = function () {
       <div className="flex flex-col gap-3 py-2">
         <Skeleton className="h-4 w-60" />
         <Skeleton className="h-5 w-64" />
-        <Skeleton className="h-32 w-96" />
+        <Skeleton className="h-16 w-96" />
       </div>
     </div>
   );
