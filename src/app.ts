@@ -95,6 +95,7 @@ import notificationRoutes from "./routes/notification.routes.js";
 import eventRoutes from "./routes/events.routes.js";
 import userRoutes from "./routes/user.routes.js";
 import announcementRoutes from "./routes/announcements.routes.js";
+import tasksRoutes from "./routes/tasks.routes.js";
 
 app.use("/api/auth", authRoutes);
 app.use("/api/student", studentRoutes);
@@ -104,6 +105,7 @@ app.use("/api/notifications", notificationRoutes);
 app.use("/api/events", eventRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/announcements", announcementRoutes);
+app.use("/api/tasks", tasksRoutes);
 
 // common error handling middleware
 app.use(errorHandler);

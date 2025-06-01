@@ -366,6 +366,7 @@ model Task {
   id          String   @id @default(uuid())
   description String
   isStarred   Boolean  @default(false)
+  isCompleted Boolean  @default(false)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 

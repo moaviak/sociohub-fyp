@@ -7,6 +7,8 @@ import {
 } from "./notification.service";
 import { sendEmail } from "../utils/mail";
 import { haveAnnouncementsPrivilege } from "../utils/helpers";
+import { sendNotificationToUsers } from "../socket";
+import { io } from "../app";
 
 export interface CreateAnnouncementInput {
   societyId: string;
@@ -75,12 +77,15 @@ export class AnnouncementService {
     }
     // Send notification
     if (recipients.length > 0) {
-      await createNotification({
+      const notification = await createNotification({
         title: announcement.title,
         description: announcement.content,
         recipients,
         image: society?.logo,
       });
+      if (notification) {
+        sendNotificationToUsers(io, recipients, notification);
+      }
     }
     // Send email if requested
     if (announcement.sendEmail && emails.length > 0) {

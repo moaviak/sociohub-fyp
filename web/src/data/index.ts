@@ -147,6 +147,11 @@ export const ROLES_PRIVILEGES = [
     title: "Society Settings Management",
     description: "Can update society settings.",
   },
+  {
+    key: "task_management",
+    title: "Task Management",
+    description: "Can assign tasks to society members.",
+  },
 ];
 
 export const PRIVILEGES = {

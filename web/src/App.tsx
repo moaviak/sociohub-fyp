@@ -31,6 +31,7 @@ import MyEventsPage from "./pages/app/events/my-events-page";
 import AnnouncementsPage from "./pages/app/announcements";
 import CreateAnnouncementPage from "./pages/app/announcements/create-announcement";
 import EditAnnouncementPage from "./pages/app/announcements/edit-announcement";
+import TodoListPage from "./pages/app/todo-list-page";
 
 function App() {
   return (
@@ -105,6 +106,8 @@ function App() {
             </Route>
 
             {/* Add other private routes here */}
+            <Route path="/todo" element={<TodoListPage />} />
+
             <Route path="/my-events" element={<MyEventsPage />} />
             <Route path="/event/:id" element={<EventDetailPage />} />
             <Route path="update-event/:eventid" element={<UpdateEventPage />} />

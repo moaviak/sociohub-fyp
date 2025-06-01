@@ -3,6 +3,8 @@ import prisma from "../db";
 import logger from "../logger/winston.logger";
 import { deleteFromCloudinary } from "../utils/cloudinary";
 import { AnnouncementService } from "./announcement.service";
+import { sendNotificationToUsers } from "../socket";
+import { io } from "../app";
 
 // In-memory cache to avoid duplicate reminders within the same interval (reset on process restart)
 const sentReminders = new Set<string>();
@@ -291,7 +293,7 @@ const scheduleEventReminders = () => {
 
             // Send notification
             const { createNotification } = require("./notification.service");
-            await createNotification({
+            const notification = await createNotification({
               title: `Event Reminder: ${event.title}`,
               description: message,
               image: event.banner || undefined,
@@ -299,6 +301,10 @@ const scheduleEventReminders = () => {
               mobileRedirectUrl: `event/${event.id}`,
               recipients,
             });
+
+            if (notification) {
+              sendNotificationToUsers(io, recipients, notification);
+            }
 
             logger.info(
               `Sent '${interval.label}' reminder for event '${event.title}' to ${recipients.length} participants.`

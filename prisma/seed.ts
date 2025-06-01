@@ -135,6 +135,11 @@ async function main() {
         title: "Society Settings Management",
         description: "Can update society settings.",
       },
+      {
+        key: "task_management",
+        title: "Task Management",
+        description: "Can assign tasks to society members.",
+      },
     ],
   });
 

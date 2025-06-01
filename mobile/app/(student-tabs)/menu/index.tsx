@@ -7,11 +7,11 @@ import { useAppSelector } from "@/store/hooks";
 
 const MenuPage = () => {
   const { user } = useAppSelector((state) => state.auth);
-  const haveEventPrivilege =
+  const haveTicketHandlingPrivilege =
     user &&
     "registrationNumber" in user &&
     user.societies?.some((society) =>
-      society.privileges.includes("event_management")
+      society.privileges.includes("event_ticket_handling")
     );
 
   return (
@@ -20,7 +20,7 @@ const MenuPage = () => {
         <Text className="font-heading font-bold text-2xl">Menu Options</Text>
       </View>
       <VStack space="md">
-        {haveEventPrivilege && (
+        {haveTicketHandlingPrivilege && (
           <View className="gap-2">
             <ScanTicket />
             <View className="w-full h-0.5 bg-neutral-200" />
