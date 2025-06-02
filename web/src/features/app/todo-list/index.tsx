@@ -6,7 +6,7 @@ import { useState, useEffect } from "react";
 import { Task } from "@/types";
 
 export const TodoList = () => {
-  const { data, isLoading } = useGetUserTasksQuery();
+  const { data, isLoading } = useGetUserTasksQuery({});
   const [tasks, setTasks] = useState<Task[]>([]);
   const [isAddingNewTask, setIsAddingNewTask] = useState(false);
 

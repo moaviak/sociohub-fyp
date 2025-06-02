@@ -6,17 +6,20 @@ import { Task } from "@/types";
 import { ComponentRef, useRef, useState, useEffect } from "react";
 import { useUpdateTaskMutation, useCreateTaskMutation } from "../api";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 
 interface TaskDescriptionFormProps {
   data: Task;
   isNew?: boolean;
   onCreate?: (task: Task) => void;
+  variant?: "default" | "compact";
 }
 
 export const TaskDescriptionForm = ({
   data,
   isNew = false,
   onCreate,
+  variant = "default",
 }: TaskDescriptionFormProps) => {
   const formRef = useRef<ComponentRef<"form">>(null);
   const inputRef = useRef<ComponentRef<"input">>(null);
@@ -88,15 +91,24 @@ export const TaskDescriptionForm = ({
       <form
         action={onSubmit}
         ref={formRef}
-        className="flex items-center gap-x-2 w-full"
+        className={cn(
+          "flex items-center w-full",
+          variant === "compact" ? "gap-x-1" : "gap-x-2"
+        )}
       >
         <Input
           ref={inputRef}
+          required
           id="description"
           name="description"
           onBlur={onBlur}
           defaultValue={description}
-          className="b2-regular text-neutral-700 px-[7px] py-1 h-7 bg-transparent focus-visible:outline-none focus-visible:ring-transparent border-none"
+          className={cn(
+            variant === "compact"
+              ? "text-xs px-2 py-0.5 h-6"
+              : "b2-regular px-[7px] py-1 h-7",
+            "bg-transparent text-neutral-700 focus-visible:outline-none focus-visible:ring-transparent border-none"
+          )}
         />
       </form>
     );
@@ -106,7 +118,12 @@ export const TaskDescriptionForm = ({
     <Button
       onClick={enableEditing}
       variant="transparent"
-      className="b2-regular text-neutral-700 justify-start! h-auto w-full p-1 px-2"
+      className={cn(
+        "text-neutral-700 justify-start! h-auto w-full whitespace-normal text-left",
+        variant === "compact"
+          ? "b3-regular h-auto w-full p-0 px-1"
+          : "b2-regular p-1 px-2"
+      )}
       disabled={!!data.assignedBySociety || !!data.assignedBySocietyId}
     >
       {description}

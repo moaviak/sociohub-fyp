@@ -116,7 +116,7 @@ export const deleteTask = async (taskId: string, userId: string) => {
   return { id: taskId };
 };
 
-export const getUserTasks = async (userId: string) => {
+export const getUserTasks = async (userId: string, limit?: number) => {
   // Fetch tasks created by or assigned to the user (student)
   return prisma.task.findMany({
     where: {
@@ -127,7 +127,12 @@ export const getUserTasks = async (userId: string) => {
       ],
     },
     include: { assignedBySociety: true },
-    orderBy: [{ isStarred: "desc" }, { createdAt: "desc" }],
+    orderBy: [
+      { isStarred: "desc" },
+      { isCompleted: "asc" },
+      { createdAt: "desc" },
+    ],
+    ...(limit ? { take: limit } : {}),
   });
 };
 

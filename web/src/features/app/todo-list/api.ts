@@ -8,9 +8,9 @@ import { Task } from "@/types";
 
 const TodoListApi = api.injectEndpoints({
   endpoints: (builder) => ({
-    getUserTasks: builder.query<Task[] | ApiError, void>({
-      query: () => ({
-        url: "/tasks",
+    getUserTasks: builder.query<Task[] | ApiError, { limit?: number }>({
+      query: ({ limit = "" }) => ({
+        url: `/tasks?limit=${limit}`,
       }),
       transformResponse: (response: ApiResponse<Task[]>) => {
         if (response.success) {
@@ -73,6 +73,7 @@ const TodoListApi = api.injectEndpoints({
         const errorResponse = response.data as ApiErrorResponse;
         return createApiError(errorResponse.message);
       },
+      invalidatesTags: [{ type: "Tasks", id: "LIST" }],
     }),
     starTask: builder.mutation<
       Task | ApiError,
@@ -93,6 +94,7 @@ const TodoListApi = api.injectEndpoints({
         const errorResponse = response.data as ApiErrorResponse;
         return createApiError(errorResponse.message);
       },
+      invalidatesTags: [{ type: "Tasks", id: "LIST" }],
     }),
     assignTask: builder.mutation<
       Task | ApiError,

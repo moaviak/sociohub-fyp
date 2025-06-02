@@ -1,3 +1,4 @@
+import { TodoList } from "./components/todo-list";
 import { RecentAnnouncements } from "./components/recent-announcements";
 import { UpcomingEvents } from "./components/upcoming-events";
 
@@ -10,9 +11,11 @@ export const StudentDashboard = () => {
       </div>
       <div className="flex-1 space-y-4">
         <div>
+          <TodoList />
+        </div>
+        <div>
           <RecentAnnouncements />
         </div>
-        <div>{/* TODO LIST */}</div>
       </div>
     </div>
   );

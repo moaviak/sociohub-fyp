@@ -70,7 +70,10 @@ export const deleteTask = asyncHandler(async (req: Request, res: Response) => {
 export const getUserTasks = asyncHandler(
   async (req: Request, res: Response) => {
     const user = req.user as IUser;
-    const tasks = await taskService.getUserTasks(user.id);
+    const limit = req.query.limit
+      ? parseInt(req.query.limit as string, 10)
+      : undefined;
+    const tasks = await taskService.getUserTasks(user.id, limit);
     res
       .status(200)
       .json(new ApiResponse(200, tasks, "User tasks fetched successfully"));

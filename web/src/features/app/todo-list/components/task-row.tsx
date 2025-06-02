@@ -20,9 +20,15 @@ interface TaskProps {
   task: Task;
   isNew?: boolean;
   onCreate?: (task: Task) => void;
+  variant?: "default" | "compact";
 }
 
-export const TaskRow = ({ task, isNew = false, onCreate }: TaskProps) => {
+export const TaskRow = ({
+  task,
+  isNew = false,
+  onCreate,
+  variant = "default",
+}: TaskProps) => {
   const [completeTask] = useCompleteTaskMutation();
   const [starTask] = useStarTaskMutation();
   const [deleteTask, { isLoading }] = useDeleteTaskMutation();
@@ -80,35 +86,67 @@ export const TaskRow = ({ task, isNew = false, onCreate }: TaskProps) => {
 
   if (isNew) {
     return (
-      <div className="flex p-6 rounded-md outline outline-neutral-300 items-center gap-4">
+      <div
+        className={cn(
+          "flex rounded-md outline outline-neutral-300 items-center",
+          variant === "compact" ? "p-4 gap-2" : "p-6 gap-4"
+        )}
+      >
         <Checkbox
           disabled
-          className="w-5 h-5 data-[state=checked]:bg-primary-600 data-[state=checked]:border-primary-600 border-neutral-400 cursor-pointer"
+          className={cn(
+            variant === "compact"
+              ? "w-4 h-4 border-neutral-300"
+              : "w-5 h-5 border-neutral-400",
+            "data-[state=checked]:bg-primary-600 data-[state=checked]:border-primary-600 cursor-pointer"
+          )}
         />
-        <TaskDescriptionForm data={task} isNew onCreate={onCreate} />
+        <TaskDescriptionForm
+          data={task}
+          isNew
+          onCreate={onCreate}
+          variant={variant}
+        />
         <Button variant="ghost" size="inline" className="group" disabled>
           <Star
             className={cn(
-              "w-5 h-5 group-hover:text-amber-300! group-hover:fill-amber-300! ",
+              variant === "compact" ? "w-4 h-4" : "w-5 h-5",
+              "group-hover:text-amber-300! group-hover:fill-amber-300! ",
               isStarred ? "text-amber-300 fill-amber-300" : "text-neutral-400"
             )}
           />
         </Button>
         <Button variant="ghost" size="inline" disabled>
-          <Trash2 className="w-5 h-5 text-red-400" />
+          <Trash2
+            className={
+              variant === "compact"
+                ? "w-4 h-4 text-red-400"
+                : "w-5 h-5 text-red-400"
+            }
+          />
         </Button>
       </div>
     );
   }
 
   return (
-    <div className="flex p-6 rounded-md outline outline-neutral-300 items-center gap-4">
+    <div
+      className={cn(
+        "flex rounded-md outline outline-neutral-300 items-center",
+        variant === "compact" ? "p-4 gap-2" : "p-6 gap-4"
+      )}
+    >
       <Checkbox
         checked={isComplete}
         onCheckedChange={handleComplete}
-        className="w-5 h-5 data-[state=checked]:bg-primary-600 data-[state=checked]:border-primary-600 border-neutral-400 cursor-pointer"
+        className={cn(
+          variant === "compact"
+            ? "w-4 h-4 border-neutral-300"
+            : "w-5 h-5 border-neutral-400",
+          "data-[state=checked]:bg-primary-600 data-[state=checked]:border-primary-600 cursor-pointer"
+        )}
       />
-      <TaskDescriptionForm data={task} />
+      <TaskDescriptionForm data={task} variant={variant} />
       {task.assignedBySociety && (
         <Hint description={`Task Assigned by: ${task.assignedBySociety.name}`}>
           <img
@@ -116,7 +154,9 @@ export const TaskRow = ({ task, isNew = false, onCreate }: TaskProps) => {
               task.assignedBySociety.logo ||
               "/assets/images/society-placeholder.png"
             }
-            className="w-10 rounded-full"
+            className={
+              variant === "compact" ? "w-7 rounded-full" : "w-10 rounded-full"
+            }
           />
         </Hint>
       )}
@@ -128,7 +168,8 @@ export const TaskRow = ({ task, isNew = false, onCreate }: TaskProps) => {
       >
         <Star
           className={cn(
-            "w-5 h-5 group-hover:text-amber-300! group-hover:fill-amber-300! ",
+            variant === "compact" ? "w-4 h-4" : "w-5 h-5",
+            "group-hover:text-amber-300! group-hover:fill-amber-300! ",
             isStarred ? "text-amber-300 fill-amber-300" : "text-neutral-400"
           )}
         />
@@ -141,19 +182,48 @@ export const TaskRow = ({ task, isNew = false, onCreate }: TaskProps) => {
         }
         onClick={handleDelete}
       >
-        <Trash2 className="w-5 h-5 text-red-400" />
+        <Trash2
+          className={
+            variant === "compact"
+              ? "w-4 h-4 text-red-400"
+              : "w-5 h-5 text-red-400"
+          }
+        />
       </Button>
     </div>
   );
 };
 
-TaskRow.Skeleton = function () {
+TaskRow.Skeleton = function ({
+  variant = "default",
+}: {
+  variant?: "default" | "compact";
+}) {
   return (
-    <div className="flex p-6 rounded-md outline outline-neutral-300 items-center gap-2">
-      <Skeleton className="h-5 w-5 rounded-md" />
-      <Skeleton className="h-5 w-full" />
-      <Skeleton className="h-6 w-6 rounded-md" />
-      <Skeleton className="h-6 w-6 rounded-md" />
+    <div
+      className={cn(
+        "flex rounded-md outline outline-neutral-300 items-center",
+        variant === "compact" ? "p-4 gap-2" : "p-6 gap-2"
+      )}
+    >
+      <Skeleton
+        className={
+          variant === "compact" ? "h-4 w-4 rounded-md" : "h-5 w-5 rounded-md"
+        }
+      />
+      <Skeleton
+        className={variant === "compact" ? "h-4 w-full" : "h-5 w-full"}
+      />
+      <Skeleton
+        className={
+          variant === "compact" ? "h-5 w-5 rounded-md" : "h-6 w-6 rounded-md"
+        }
+      />
+      <Skeleton
+        className={
+          variant === "compact" ? "h-5 w-5 rounded-md" : "h-6 w-6 rounded-md"
+        }
+      />
     </div>
   );
 };
