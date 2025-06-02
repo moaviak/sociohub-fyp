@@ -107,6 +107,7 @@ export const TaskDescriptionForm = ({
       onClick={enableEditing}
       variant="transparent"
       className="b2-regular text-neutral-700 justify-start! h-auto w-full p-1 px-2"
+      disabled={!!data.assignedBySociety || !!data.assignedBySocietyId}
     >
       {description}
     </Button>

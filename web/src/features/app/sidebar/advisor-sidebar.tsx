@@ -7,7 +7,6 @@ import {
   Megaphone,
   MessageSquare,
   Settings,
-  ShieldHalf,
   Users,
 } from "lucide-react";
 
@@ -43,11 +42,6 @@ const navItems = [
     label: "Finance",
     icon: <CircleDollarSign className="w-4 h-4" />,
     href: "/finance",
-  },
-  {
-    label: "Teams",
-    icon: <ShieldHalf className="w-4 h-4" />,
-    href: "/teams",
   },
   {
     label: "Inbox",

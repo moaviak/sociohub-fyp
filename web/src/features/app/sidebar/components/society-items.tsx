@@ -5,7 +5,6 @@ import {
   CircleDollarSign,
   Megaphone,
   Settings,
-  ShieldHalf,
   Users,
 } from "lucide-react";
 import { useState } from "react";
@@ -93,11 +92,6 @@ const getSocietyItems = (society: Society & { privileges: string[] }) => {
           },
         ]
       : []),
-    {
-      label: "Teams",
-      icon: <ShieldHalf className="w-4 h-4" />,
-      href: `/teams/${society.id}`,
-    },
     ...(society.privileges.includes(PRIVILEGES.SOCIETY_SETTINGS_MANAGEMENT)
       ? [
           {

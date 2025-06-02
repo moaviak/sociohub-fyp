@@ -180,3 +180,12 @@ export const haveAnnouncementsPrivilege = (
     society && society.privileges.includes(PRIVILEGES.ANNOUNCEMENT_MANAGEMENT)
   );
 };
+
+export const haveTasksPrivilege = (
+  societies: (Society & { privileges: string[] })[],
+  societyId: string
+) => {
+  const society = societies.find((society) => society.id === societyId);
+
+  return society && society.privileges.includes(PRIVILEGES.TASK_MANAGEMENT);
+};

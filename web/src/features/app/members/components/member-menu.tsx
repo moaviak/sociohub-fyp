@@ -13,11 +13,12 @@ import { Button } from "@/components/ui/button";
 
 import { useAppSelector } from "@/app/hooks";
 import useGetSocietyId from "@/hooks/useGetSocietyId";
-import { haveMembersPrivilege } from "@/lib/utils";
+import { haveMembersPrivilege, haveTasksPrivilege } from "@/lib/utils";
 
 import { RemoveMemberDialog } from "./remove-member-dialog";
 import { useState } from "react";
 import { ManageRoles } from "./manage-roles";
+import { AssignTask } from "./assign-task";
 
 interface MemberMenuProps {
   member: Member;
@@ -27,6 +28,7 @@ export const MemberMenu = ({ member }: MemberMenuProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [showRemoveDialog, setShowRemoveDialog] = useState(false);
   const [showRolesDialog, setShowRolesDialog] = useState(false);
+  const [showTaskDialog, setShowTaskDialog] = useState(false);
 
   const { user } = useAppSelector((state) => state.auth);
   const societyId = useGetSocietyId();
@@ -34,6 +36,9 @@ export const MemberMenu = ({ member }: MemberMenuProps) => {
   const isStudent = user && "registrationNumber" in user;
   const havePrivilege = isStudent
     ? haveMembersPrivilege(user.societies || [], societyId || "")
+    : true;
+  const haveTaskPrivilege = isStudent
+    ? haveTasksPrivilege(user.societies || [], societyId || "")
     : true;
 
   const handleRemoveMember = (e: React.MouseEvent) => {
@@ -53,6 +58,16 @@ export const MemberMenu = ({ member }: MemberMenuProps) => {
     // Small delay before showing the dialog to avoid UI glitches
     setTimeout(() => {
       setShowRolesDialog(true);
+    }, 50);
+  };
+
+  const handleAssignTask = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsOpen(false);
+    // Small delay before showing the dialog to avoid UI glitches
+    setTimeout(() => {
+      setShowTaskDialog(true);
     }, 50);
   };
 
@@ -80,6 +95,10 @@ export const MemberMenu = ({ member }: MemberMenuProps) => {
 
   const handleRolesDialogClose = () => {
     setShowRolesDialog(false);
+  };
+
+  const handleTaskDialogClose = () => {
+    setShowTaskDialog(false);
   };
 
   return (
@@ -110,6 +129,19 @@ export const MemberMenu = ({ member }: MemberMenuProps) => {
           {member.id !== user?.id && (
             <DropdownMenuItem className="b3-regular">
               Send Message
+            </DropdownMenuItem>
+          )}
+          {haveTaskPrivilege && member.id !== user?.id && (
+            <DropdownMenuItem
+              className="b3-regular"
+              onSelect={(e) => e.preventDefault()}
+            >
+              <p
+                className="cursor-pointer b3-regular"
+                onClick={handleAssignTask}
+              >
+                Assign Task
+              </p>
             </DropdownMenuItem>
           )}
           {havePrivilege && (
@@ -143,6 +175,14 @@ export const MemberMenu = ({ member }: MemberMenuProps) => {
           key={`roles-${member.id}`}
           member={member}
           onClose={handleRolesDialogClose}
+        />
+      )}
+
+      {showTaskDialog && (
+        <AssignTask
+          key={`task-${member.id}`}
+          member={member}
+          onClose={handleTaskDialogClose}
         />
       )}
     </>

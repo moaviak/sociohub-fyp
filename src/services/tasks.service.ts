@@ -81,23 +81,26 @@ export const assignTask = async ({
     data: {
       description,
       assignedBySocietyId: societyId,
-      createdByAdvisorId: assignerId,
+      createdByStudentId: memberId,
     },
   });
   // Notify member
-  const notification = await createNotification({
-    title: "New Task Assigned",
-    description: task.description,
-    recipients: [{ recipientType: "student", recipientId: memberId }],
-  });
+  (async () => {
+    const notification = await createNotification({
+      title: "New Task Assigned",
+      description: task.description,
+      recipients: [{ recipientType: "student", recipientId: memberId }],
+      webRedirectUrl: "/todo",
+    });
 
-  if (notification) {
-    sendNotificationToUsers(
-      io,
-      [{ recipientType: "student", recipientId: memberId }],
-      notification
-    );
-  }
+    if (notification) {
+      sendNotificationToUsers(
+        io,
+        [{ recipientType: "student", recipientId: memberId }],
+        notification
+      );
+    }
+  })();
   return task;
 };
 
@@ -146,6 +149,9 @@ export const updateTaskDescription = async ({
   ) {
     throw new ApiError(403, "You do not have permission to update this task");
   }
+
+  // TODO: Allow Privileged Users to Edit Society Tasks
+
   return prisma.task.update({
     where: { id: taskId },
     data: { description },

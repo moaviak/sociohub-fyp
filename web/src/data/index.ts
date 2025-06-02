@@ -162,6 +162,7 @@ export const PRIVILEGES = {
   EVENT_TICKET_HANDLING: "event_ticket_handling",
   PAYMENT_FINANCE_MANAGEMENT: "payment_finance_management",
   SOCIETY_SETTINGS_MANAGEMENT: "society_settings_management",
+  TASK_MANAGEMENT: "task_management",
 };
 
 export const REJECT_REASONS = [
