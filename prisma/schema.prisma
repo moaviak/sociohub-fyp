@@ -63,6 +63,10 @@ model Society {
   id                  String  @id @default(uuid())
   name                String  @unique
   description         String
+  statementOfPurpose  String?
+  advisorMessage      String?
+  mission             String?
+  coreValues          String?
   logo                String?
   membersLimit        Int     @default(40)
   acceptingNewMembers Boolean @default(true)

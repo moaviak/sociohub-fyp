@@ -30,17 +30,26 @@ export interface Society {
   id: string;
   name: string;
   description: string;
+  statementOfPurpose?: string;
+  advisorMessage?: string;
+  coreValues?: string;
+  mission?: string;
   logo?: string;
   acceptingNewMembers?: boolean;
   membersLimit?: number;
   createdAt: string;
   updatedAt: string;
+  advisorId?: string;
   advisor?: Advisor;
   roles?: Role[];
   _count?: {
     members: number;
-    joinRequests: number;
+    events?: number;
+    joinRequests?: number;
   };
+  officeBearers?: { role: string; student: Student }[];
+  isMember?: boolean;
+  hasRequestedToJoin?: boolean;
 }
 
 export enum JoinRequestStatus {

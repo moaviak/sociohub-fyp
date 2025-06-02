@@ -8,9 +8,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 import { useCancelJoinRequestMutation } from "../api";
 import { RegistrationForm } from "./registration-form";
+import { Link } from "react-router";
 
 interface SocietyProps {
-  society: Society & { isMember: boolean; hasRequestedToJoin: boolean };
+  society: Society;
 }
 
 export const SocietyTile = ({ society }: SocietyProps) => {
@@ -42,12 +43,15 @@ export const SocietyTile = ({ society }: SocietyProps) => {
         src={society.logo || "/assets/images/society-placeholder.png"}
         className="rounded-full w-12 h-12"
       />
-      <div className="space-y-2 flex-1 overflow-hidden max-h-80">
+      <Link
+        to={`/society/${society.id}`}
+        className="space-y-2 flex-1 overflow-hidden max-h-80"
+      >
         <h6 className="h6-semibold">{society.name}</h6>
         <p className="b3-regular overflow-ellipsis line-clamp-5">
           {society.description}
         </p>
-      </div>
+      </Link>
       {!society.acceptingNewMembers ? (
         <></>
       ) : society.isMember || society.hasRequestedToJoin ? (

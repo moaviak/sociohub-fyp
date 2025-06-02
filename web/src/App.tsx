@@ -32,6 +32,7 @@ import AnnouncementsPage from "./pages/app/announcements";
 import CreateAnnouncementPage from "./pages/app/announcements/create-announcement";
 import EditAnnouncementPage from "./pages/app/announcements/edit-announcement";
 import TodoListPage from "./pages/app/todo-list-page";
+import SocietyPage from "./pages/app/society-page";
 
 function App() {
   return (
@@ -66,6 +67,10 @@ function App() {
             <Route path="/explore" element={<ExplorePage />}></Route>
 
             {/* Society specific  routes*/}
+            <Route path="/society" element={<SocietyPage />}>
+              <Route path=":societyId" element={<SocietyPage />} />
+            </Route>
+
             <Route path="/members" element={<MembersPage />}>
               <Route path="roles" element={<RolesPage />} />
               <Route path="requests" element={<RequestsPage />}>
@@ -107,8 +112,8 @@ function App() {
 
             {/* Add other private routes here */}
             <Route path="/todo" element={<TodoListPage />} />
-
             <Route path="/my-events" element={<MyEventsPage />} />
+
             <Route path="/event/:id" element={<EventDetailPage />} />
             <Route path="update-event/:eventid" element={<UpdateEventPage />} />
             <Route

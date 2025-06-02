@@ -173,32 +173,133 @@ export const getSocieties = asyncHandler(
 
 export const getSociety = asyncHandler(async (req: Request, res: Response) => {
   const { societyId } = req.params;
+  const user = req.user as IUser;
 
   if (!societyId) {
     throw new ApiError(400, "Society id is required.");
   }
-
   const society = await prisma.society.findUnique({
     where: { id: societyId },
-    select: {
-      id: true,
-      name: true,
-      description: true,
-      logo: true,
-      membersLimit: true,
-      acceptingNewMembers: true,
-      createdAt: true,
-      updatedAt: true,
+    include: {
+      advisor: {
+        select: {
+          id: true,
+          firstName: true,
+          lastName: true,
+          displayName: true,
+          avatar: true,
+        },
+      },
+      joinRequests: {
+        where: { studentId: user.id, status: "PENDING" },
+        select: { studentId: true },
+      },
+      _count: {
+        select: {
+          members: true,
+          events: {
+            where: {
+              status: "Upcoming",
+              visibility: "Publish",
+              isDraft: false,
+            },
+          },
+        },
+      },
+      members: {
+        where: {
+          OR: [
+            { studentId: user.id },
+            {
+              roles: {
+                some: {
+                  role: {
+                    name: {
+                      in: [
+                        "President",
+                        "Vice President",
+                        "General Secretary",
+                        "Treasurer",
+                      ],
+                    },
+                  },
+                },
+              },
+            },
+          ],
+        },
+        select: {
+          student: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true,
+              email: true,
+              avatar: true,
+            },
+          },
+          roles: {
+            select: {
+              role: {
+                select: {
+                  name: true,
+                },
+              },
+            },
+          },
+        },
+      },
     },
   });
-
   if (!society) {
     throw new ApiError(400, "Invalid society id.");
   }
 
+  // Check membership status
+  const isMember = society.members.some((m) => m.student.id === user.id);
+  const hasRequestedToJoin = society.joinRequests.length > 0;
+
+  // Transform members array to get office bearers
+  const officeBearers = [
+    "President",
+    "Vice President",
+    "General Secretary",
+    "Treasurer",
+  ]
+    .map((roleName) => {
+      const member = society.members.find((m) =>
+        m.roles.some((r) => r.role.name === roleName)
+      );
+
+      return member
+        ? {
+            role: roleName,
+            student: {
+              id: member.student.id,
+              firstName: member.student.firstName,
+              lastName: member.student.lastName,
+              email: member.student.email,
+              avatar: member.student.avatar,
+            },
+          }
+        : null;
+    })
+    .filter((bearer) => bearer !== null);
+
+  // Remove members from final response and add transformed data
+  const responseData = {
+    ...society,
+    members: undefined,
+    joinRequests: undefined,
+    upcomingEventsCount: society._count.events,
+    officeBearers,
+    isMember,
+    hasRequestedToJoin,
+  };
+
   return res
     .status(200)
-    .json(new ApiResponse(200, society, "Society successfully fetched."));
+    .json(new ApiResponse(200, responseData, "Society successfully fetched."));
 });
 
 export const getSocietyMembers = asyncHandler(

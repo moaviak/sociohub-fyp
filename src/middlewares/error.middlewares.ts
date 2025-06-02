@@ -31,7 +31,7 @@ const errorHandler: express.ErrorRequestHandler = (
 
   if (!(error instanceof ApiError)) {
     let statusCode = 500;
-    let message = error.message || "Something went wrong";
+    let message = "Something went wrong";
 
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
       // Handle specific Prisma error codes

@@ -29,7 +29,7 @@ export const EventForm = ({ event }: EventFormProps) => {
     isLoading,
     isDrafting,
     isUpdating,
-  } = useEventFormApi(form, event, societyId, navigate);
+  } = useEventFormApi(form, event, societyId || event?.societyId, navigate);
 
   const renderStepContent = () => {
     switch (step) {

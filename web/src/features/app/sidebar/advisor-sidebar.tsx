@@ -1,4 +1,5 @@
 import {
+  Building,
   CalendarCheck,
   CalendarDays,
   CircleDollarSign,
@@ -17,6 +18,11 @@ const navItems = [
     label: "Dashboard",
     icon: <LayoutDashboard className="w-4 h-4" />,
     href: "/dashboard",
+  },
+  {
+    label: "Society Profile",
+    icon: <Building className="w-4 h-4" />,
+    href: `/society`,
   },
   {
     label: "Members",

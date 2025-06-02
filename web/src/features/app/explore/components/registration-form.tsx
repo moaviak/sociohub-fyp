@@ -40,12 +40,17 @@ import {
 
 import { SocietyRules } from "./society-rules";
 import { useSendJoinRequestMutation } from "../api";
+import { cn } from "@/lib/utils";
 
 interface RegistrationFormProps {
-  society: Society & { isMember: boolean; hasRequestedToJoin: boolean };
+  society: Society;
+  className?: string;
 }
 
-export const RegistrationForm = ({ society }: RegistrationFormProps) => {
+export const RegistrationForm = ({
+  society,
+  className,
+}: RegistrationFormProps) => {
   const { user, userType } = useAppSelector((state) => state.auth);
   const [isOpen, setIsOpen] = useState(false);
 
@@ -107,13 +112,13 @@ export const RegistrationForm = ({ society }: RegistrationFormProps) => {
               : "default"
           }
           disabled={society.hasRequestedToJoin || society.isMember}
-          className="w-full"
+          className={cn(className || "w-full")}
         >
           {society.hasRequestedToJoin
             ? "Requested"
             : society.isMember
             ? "Joined"
-            : "Join"}
+            : "Join Society"}
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-3xl flex flex-col gap-y-4 min-h-0 max-h-[90vh] overflow-hidden">
