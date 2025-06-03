@@ -14,6 +14,7 @@ import { EventCategories } from "@/data";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import FileUploader from "@/components/file-uploader";
+import { useEffect, useState } from "react";
 
 interface BasicInfoProps {
   form: UseFormReturn<EventFormData>;
@@ -21,6 +22,14 @@ interface BasicInfoProps {
 }
 
 export const BasicInfo = ({ form, banner }: BasicInfoProps) => {
+  const [existingImage, setExistingImage] = useState<string | undefined>(
+    banner
+  );
+
+  useEffect(() => {
+    setExistingImage(banner);
+  }, [banner]);
+
   return (
     <div className="space-y-4">
       <h3 className="h6-semibold">Basic Event Information</h3>
@@ -141,7 +150,13 @@ export const BasicInfo = ({ form, banner }: BasicInfoProps) => {
                         browse: "browse",
                         sizeLimit: "Max size: 5 MB",
                       }}
-                      existingImages={banner ? [{ url: banner }] : []}
+                      existingImages={
+                        existingImage ? [{ url: existingImage }] : []
+                      }
+                      onRemoteImageRemove={() => {
+                        setExistingImage(undefined);
+                        field.onChange(undefined);
+                      }}
                     />
                   );
                 })()}

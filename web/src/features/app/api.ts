@@ -54,7 +54,38 @@ export const appApi = api.injectEndpoints({
         }
       },
     }),
+    updateSocietyProfile: builder.mutation<
+      Society | ApiError,
+      { societyId: string; formData: FormData }
+    >({
+      query: ({ societyId, formData }) => ({
+        url: `/society/profile/${societyId}`,
+        method: "PATCH",
+        body: formData,
+      }),
+      transformResponse: (response: ApiResponse<Society>) => {
+        if (response.success) {
+          return response.data;
+        }
+        return createApiError(response.message);
+      },
+      transformErrorResponse: (response) => {
+        const errorResponse = response.data as ApiErrorResponse;
+        return createApiError(errorResponse.message);
+      },
+      invalidatesTags: (result) => {
+        if (result && !("error" in result)) {
+          return [{ type: "Societies", id: result.id }];
+        } else {
+          return [];
+        }
+      },
+    }),
   }),
 });
 
-export const { useGetSocietyQuery, useUpdateSocietySettingsMutation } = appApi;
+export const {
+  useGetSocietyQuery,
+  useUpdateSocietySettingsMutation,
+  useUpdateSocietyProfileMutation,
+} = appApi;

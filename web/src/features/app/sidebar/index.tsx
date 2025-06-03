@@ -14,7 +14,7 @@ const Sidebar = () => {
   }
 
   return (
-    <div className="flex flex-col max-h-screen items-center overflow-y-scroll overflow-x-hidden custom-scrollbar py-6 gap-y-4">
+    <div className="col-span-2 flex flex-col max-h-screen items-center overflow-y-scroll overflow-x-hidden custom-scrollbar py-6 gap-y-4">
       <Logo />
       {userType === UserType.ADVISOR ? <AdvisorSidebar /> : <StudentSidebar />}
     </div>

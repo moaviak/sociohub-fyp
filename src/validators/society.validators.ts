@@ -31,3 +31,34 @@ export const societySettingsValidator = () => {
       .withMessage("Invalid settings."),
   ];
 };
+
+export const updateSocietyProfileValidator = () => {
+  return [
+    body("description")
+      .optional()
+      .trim()
+      .notEmpty()
+      .withMessage("Vision cannot be empty if provided."),
+    body("statementOfPurpose")
+      .optional()
+      .trim()
+      .notEmpty()
+      .withMessage("Statement of Purpose cannot be empty if provided."),
+    body("advisorMessage")
+      .optional()
+      .trim()
+      .notEmpty()
+      .withMessage("Advisor Message cannot be empty if provided."),
+    body("mission")
+      .optional()
+      .trim()
+      .notEmpty()
+      .withMessage("Mission cannot be empty if provided."),
+    body("coreValues")
+      .optional()
+      .trim()
+      .notEmpty()
+      .withMessage("Core Values cannot be empty if provided."),
+    // Logo is handled by multer, so no express-validator check here
+  ];
+};

@@ -17,9 +17,7 @@ export const NavItem = ({ item }: NavItemProps) => {
   return (
     <Link
       key={item.href}
-      className={cn(
-        "flex gap-x-4 max-w-[220px] b3-regular justify-start items-center"
-      )}
+      className={cn("flex gap-x-4 b3-regular justify-start items-center")}
       to={item.href}
     >
       <span

@@ -12,6 +12,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SocietyPosts } from "./components/society-posts";
 import { SocietyEvents } from "./components/society-events";
 import { SocietyInfo } from "./components/society-info";
+import { haveSettingsPrivilege } from "@/lib/utils";
 
 interface SocietyProps {
   id: string;
@@ -36,6 +37,11 @@ export const Society = ({ id }: SocietyProps) => {
   if (!society) {
     return <Navigate to="/app/dashboard" replace />;
   }
+
+  const isStudent = user && "registrationNumber" in user;
+  const havePermissionToEdit = isStudent
+    ? haveSettingsPrivilege(user.societies || [], society.id)
+    : true;
 
   const onCancelRequest = async () => {
     try {
@@ -96,9 +102,9 @@ export const Society = ({ id }: SocietyProps) => {
         ) : (
           <RegistrationForm society={society} className="w-auto" />
         )}
-        {society.advisor?.id === user?.id && (
+        {havePermissionToEdit && (
           <Button variant={"outline"} size="sm" asChild>
-            <Link to={`edit-society/${society.id}`}>
+            <Link to={`/settings/${society.id}/profile`} state={{ society }}>
               <Edit className="w-4 h-4" />
               Edit Profile
             </Link>

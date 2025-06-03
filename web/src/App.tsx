@@ -21,7 +21,6 @@ import SocietyFormPage from "@/pages/society-form-page";
 import VerifyEmailPage from "@/pages/verify-email-page";
 import RequestsPage from "@/pages/app/members/requests-page";
 import RequestsHistoryPage from "./pages/app/members/requests-history-page";
-import SocietySettingsPage from "./pages/app/society-settings-page";
 import { NotificationSocketProvider } from "./features/app/notifications/socket-provider";
 import EventsPage from "./pages/app/events";
 import CreateEventPage from "./pages/app/events/create-event-page";
@@ -33,6 +32,10 @@ import CreateAnnouncementPage from "./pages/app/announcements/create-announcemen
 import EditAnnouncementPage from "./pages/app/announcements/edit-announcement";
 import TodoListPage from "./pages/app/todo-list-page";
 import SocietyPage from "./pages/app/society-page";
+import SocietySettingsLayout from "./layouts/app/society-settings-layout";
+import SocietySettingsPage from "./pages/app/society-settings";
+import ProfileSettingsPage from "./pages/app/society-settings/profile-settings-page";
+import MembersSettingsPage from "./pages/app/society-settings/members-settings-page";
 
 function App() {
   return (
@@ -106,8 +109,20 @@ function App() {
               </Route>
             </Route>
 
-            <Route path="/settings" element={<SocietySettingsPage />}>
+            <Route path="/settings" element={<SocietySettingsLayout />}>
+              <Route index element={<SocietySettingsPage />} />
+              <Route path="profile" element={<ProfileSettingsPage />} />
+              <Route path="members" element={<MembersSettingsPage />} />
+
               <Route path=":societyId" element={<SocietySettingsPage />} />
+              <Route
+                path=":societyId/profile"
+                element={<ProfileSettingsPage />}
+              />
+              <Route
+                path=":societyId/members"
+                element={<MembersSettingsPage />}
+              />
             </Route>
 
             {/* Add other private routes here */}

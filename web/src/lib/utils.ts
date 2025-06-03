@@ -189,3 +189,15 @@ export const haveTasksPrivilege = (
 
   return society && society.privileges.includes(PRIVILEGES.TASK_MANAGEMENT);
 };
+
+export const haveSettingsPrivilege = (
+  societies: (Society & { privileges: string[] })[],
+  societyId: string
+) => {
+  const society = societies.find((society) => society.id === societyId);
+
+  return (
+    society &&
+    society.privileges.includes(PRIVILEGES.SOCIETY_SETTINGS_MANAGEMENT)
+  );
+};

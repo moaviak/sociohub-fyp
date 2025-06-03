@@ -167,3 +167,15 @@ export const SocietySettingsSchema = z.object({
 });
 
 export type SocietySettingsValues = z.infer<typeof SocietySettingsSchema>;
+
+export const SocietyProfileSchema = z.object({
+  name: z.string().min(1, { message: "Name is required" }),
+  description: z.string().min(1, { message: "Description is required" }),
+  logo: z.instanceof(File).optional(),
+  statementOfPurpose: z.string().optional(),
+  advisorMessage: z.string().optional(),
+  mission: z.string().optional(),
+  coreValues: z.string().optional(),
+});
+
+export type SocietyProfileData = z.infer<typeof SocietyProfileSchema>;

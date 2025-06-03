@@ -40,7 +40,7 @@ export const EventCard = ({
 
   const canRegister =
     userType === UserType.STUDENT &&
-    event.visibility !== EventVisibility.Draft &&
+    event.visibility === EventVisibility.Publish &&
     event.registrationRequired &&
     now < deadlineDate &&
     event.status === EventStatus.Upcoming;

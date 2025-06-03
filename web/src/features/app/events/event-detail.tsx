@@ -22,6 +22,7 @@ import { EventStatus, EventVisibility, UserType } from "@/types";
 import { useEffect } from "react";
 import { toast } from "sonner";
 import { EventOptions } from "@/components/events/event-options";
+import { CountdownTimer } from "./components/countdown-timer";
 
 interface EventDetailProps {
   eventId: string;
@@ -80,7 +81,7 @@ export const EventDetail = ({ eventId }: EventDetailProps) => {
 
   const canRegister =
     userType === UserType.STUDENT &&
-    event.visibility !== EventVisibility.Draft &&
+    event.visibility === EventVisibility.Publish &&
     event?.registrationRequired &&
     now < deadlineDate &&
     event?.status === EventStatus.Upcoming;
@@ -138,12 +139,13 @@ export const EventDetail = ({ eventId }: EventDetailProps) => {
         {/* Left/Main Content */}
         <div className="md:col-span-2 flex flex-col gap-4">
           {/* Event Image */}
-          <div className="w-full aspect-[4/3] bg-neutral-200 rounded-lg overflow-hidden flex items-center justify-center">
+          <div className="w-full aspect-[4/3] bg-black rounded-lg overflow-hidden flex items-center justify-center">
             <img
               src={event?.banner || "/assets/image/image-placheholder.png"}
               className="w-full h-full object-contain object-center"
             />
           </div>
+
           {/* About this Event */}
           <div>
             <h3 className="h6-semibold mb-2">About this Event</h3>
@@ -157,7 +159,12 @@ export const EventDetail = ({ eventId }: EventDetailProps) => {
               }}
             />
           </div>
+          {event.visibility === EventVisibility.Schedule &&
+            event.publishDateTime && (
+              <CountdownTimer targetDate={new Date(event.publishDateTime)} />
+            )}
         </div>
+
         {/* Right/Sidebar */}
         <div className="md:col-span-1 flex flex-col gap-4">
           {/* Event Information Summary */}

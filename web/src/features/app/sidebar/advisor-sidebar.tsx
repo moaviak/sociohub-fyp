@@ -68,7 +68,7 @@ const navItems = [
 
 export const AdvisorSidebar = () => {
   return (
-    <div className="flex flex-col py-4 xl:min-w-[220px]">
+    <div className="flex flex-col py-4 w-full">
       {navItems.map((item) => (
         <NavItem key={item.href} item={item} />
       ))}

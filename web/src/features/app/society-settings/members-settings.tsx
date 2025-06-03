@@ -22,7 +22,7 @@ import { toast } from "sonner";
 import ApiError from "@/features/api-error";
 import { Navigate } from "react-router";
 
-const SocietySettings = () => {
+export const MembersSettings = () => {
   const societyId = useGetSocietyId();
   const [originalValues, setOriginalValues] =
     useState<SocietySettingsValues | null>(null);
@@ -159,5 +159,3 @@ const SocietySettings = () => {
     </div>
   );
 };
-
-export default SocietySettings;

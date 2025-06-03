@@ -5,6 +5,7 @@ import {
   createSocietyValidator,
   removeMemberValidator,
   societySettingsValidator,
+  updateSocietyProfileValidator,
 } from "../validators/society.validators";
 import { validate } from "../validators/validate";
 import {
@@ -14,6 +15,7 @@ import {
   getSocietyMembers,
   removeMember,
   updateSettings,
+  updateSocietyProfile,
 } from "../controllers/society.controller";
 import {
   verifyMemberPrivilege,
@@ -60,6 +62,16 @@ router
     societySettingsValidator(),
     validate,
     updateSettings
+  );
+
+router
+  .route("/profile/:societyId")
+  .patch(
+    verifyJWT,
+    upload.single("logo"),
+    updateSocietyProfileValidator(),
+    validate,
+    updateSocietyProfile
   );
 
 export default router;

@@ -3,8 +3,12 @@ import { asyncHandler } from "../utils/asyncHandler";
 import { IUser, RequestAction } from "../types";
 import prisma from "../db";
 import { ApiError } from "../utils/ApiError";
-import { uploadOnCloudinary } from "../utils/cloudinary";
-import { getLocalPath, haveMembersPrivilege } from "../utils/helpers";
+import { uploadOnCloudinary, deleteFromCloudinary } from "../utils/cloudinary";
+import {
+  getLocalPath,
+  haveMembersPrivilege,
+  haveSettingsPrivilege,
+} from "../utils/helpers";
 import { ApiResponse } from "../utils/ApiResponse";
 import {
   sendMemberRemovalStatusEmail,
@@ -79,7 +83,7 @@ export const createSociety = asyncHandler(
           name: "Treasurer",
           societyId: society.id,
           description:
-            "The Treasurer manages all financial matters of the Society, including maintaining accurate records of income, expenses, and donations. They are responsible for drafting budgets for proposed events, securing necessary approvals from the Patron and Accounts Office, and coordinating with the Accounts Office for the release of petty cash. The Treasurer ensures all receipts and financial documentation are properly recorded and organized, maintaining transparency and accountability in the Society’s financial operations.",
+            "The Treasurer manages all financial matters of the Society, including maintaining accurate records of income, expenses, and donations. They are responsible for drafting budgets for proposed events, securing necessary approvals from the Patron and Accounts Office, and coordinating with the Accounts Office for the release of petty cash. The Treasurer ensures all receipts and financial documentation are properly recorded and organized, maintaining transparency and accountability in the Society's financial operations.",
         },
       ],
     });
@@ -534,5 +538,94 @@ export const updateSettings = asyncHandler(
     return res
       .status(200)
       .json(new ApiResponse(200, society, "Settings updated successfully."));
+  }
+);
+
+export const updateSocietyProfile = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { societyId } = req.params;
+    const user = req.user as IUser;
+    const {
+      description,
+      statementOfPurpose,
+      advisorMessage,
+      mission,
+      coreValues,
+    } = req.body;
+
+    if (!societyId) {
+      throw new ApiError(400, "Society id is required.");
+    }
+
+    // Only advisor can update
+    const society = await prisma.society.findUnique({
+      where: { id: societyId },
+      select: { id: true, advisor: { select: { id: true } }, logo: true },
+    });
+    if (!society) {
+      throw new ApiError(404, "Society not found.");
+    }
+
+    const havePrivilege = haveSettingsPrivilege(user.id, society.id);
+
+    if (!havePrivilege) {
+      throw new ApiError(
+        403,
+        "You don't have permission to update the society profile."
+      );
+    }
+
+    // Handle logo upload
+    let newLogoUrl = society.logo;
+    if (req.file) {
+      const logoPath = getLocalPath(req.file.filename);
+      // Upload new logo
+      const uploadResult = await uploadOnCloudinary(
+        logoPath,
+        societyId,
+        "image"
+      );
+      if (uploadResult?.secure_url) {
+        // Delete previous logo if exists
+        if (society.logo) {
+          deleteFromCloudinary(society.logo);
+        }
+        newLogoUrl = uploadResult.secure_url;
+      }
+    }
+
+    // Update the society
+    const updatedSociety = await prisma.society.update({
+      where: { id: societyId },
+      data: {
+        logo: newLogoUrl,
+        ...(description !== undefined && { description }),
+        ...(statementOfPurpose !== undefined && { statementOfPurpose }),
+        ...(advisorMessage !== undefined && { advisorMessage }),
+        ...(mission !== undefined && { mission }),
+        ...(coreValues !== undefined && { coreValues }),
+      },
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        statementOfPurpose: true,
+        advisorMessage: true,
+        mission: true,
+        coreValues: true,
+        logo: true,
+        updatedAt: true,
+      },
+    });
+
+    return res
+      .status(200)
+      .json(
+        new ApiResponse(
+          200,
+          updatedSociety,
+          "Society profile updated successfully."
+        )
+      );
   }
 );
