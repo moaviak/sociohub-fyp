@@ -5,26 +5,42 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { IdCard, MoreHorizontal } from "lucide-react";
+import {
+  IdCard,
+  MessageCircleMore,
+  MoreHorizontal,
+  MoreVertical,
+} from "lucide-react";
 import { Link } from "react-router";
 import { Advisor, Student } from "@/types";
 
 interface UserMenuProps {
   user: Student | Advisor;
+  variant: "profile" | "explore";
 }
 
-export const UserMenu = ({ user }: UserMenuProps) => {
+export const UserMenu = ({ user, variant = "explore" }: UserMenuProps) => {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="h-8 w-8 p-0">
-          <MoreHorizontal className="h-4 w-4" />
+          {variant === "explore" ? (
+            <MoreHorizontal className="h-4 w-4" />
+          ) : (
+            <MoreVertical className="w-6 h-6 text-neutral-900" />
+          )}
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
+        {variant === "explore" && (
+          <DropdownMenuItem className="b3-regular">
+            <IdCard className="h-4 w-4 mr-2" />
+            <Link to={`/profile/${user.id}`}>View Profile</Link>
+          </DropdownMenuItem>
+        )}
         <DropdownMenuItem className="b3-regular">
-          <IdCard className="h-4 w-4 mr-2" />
-          <Link to={`/profile/${user.id}`}>View Profile</Link>
+          <MessageCircleMore className="h-4 w-4 mr-2" />
+          <Link to={``}>Send Message</Link>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

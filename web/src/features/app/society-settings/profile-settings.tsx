@@ -13,6 +13,7 @@ import {
   FormField,
   FormItem,
   FormLabel,
+  FormMessage,
 } from "@/components/ui/form";
 import { PhotoUpload } from "@/components/photo-upload";
 import { Input } from "@/components/ui/input";
@@ -45,15 +46,6 @@ const ProfileSettings = () => {
 
   const form = useForm<SocietyProfileData>({
     resolver: zodResolver(SocietyProfileSchema),
-    defaultValues: {
-      name: society?.name || "",
-      description: society?.description || "",
-      logo: undefined,
-      statementOfPurpose: society?.statementOfPurpose || "",
-      advisorMessage: society?.advisorMessage || "",
-      mission: society?.mission || "",
-      coreValues: society?.coreValues || "",
-    },
   });
 
   useEffect(() => {
@@ -61,6 +53,20 @@ const ProfileSettings = () => {
       navigate(-1);
     }
   }, [isLoading, navigate, society]);
+
+  useEffect(() => {
+    if (society) {
+      form.reset({
+        name: society.name,
+        description: society.description || "",
+        logo: undefined,
+        statementOfPurpose: society.statementOfPurpose || "",
+        advisorMessage: society.advisorMessage || "",
+        mission: society.mission || "",
+        coreValues: society.coreValues || "",
+      });
+    }
+  }, [form, society]);
 
   if (isLoading) {
     return (
@@ -135,6 +141,7 @@ const ProfileSettings = () => {
                     className="outline outline-neutral-400"
                   />
                 </FormControl>
+                <FormMessage />
               </FormItem>
             )}
           />
@@ -151,6 +158,7 @@ const ProfileSettings = () => {
                     placeholder="Enter your society vision here"
                   />
                 </FormControl>
+                <FormMessage />
               </FormItem>
             )}
           />
@@ -167,6 +175,7 @@ const ProfileSettings = () => {
                     placeholder="Enter your society statement of purpose here"
                   />
                 </FormControl>
+                <FormMessage />
               </FormItem>
             )}
           />
@@ -183,6 +192,7 @@ const ProfileSettings = () => {
                     placeholder="Enter faculty advisor message here"
                   />
                 </FormControl>
+                <FormMessage />
               </FormItem>
             )}
           />
@@ -199,6 +209,7 @@ const ProfileSettings = () => {
                     placeholder="Enter your society mission here"
                   />
                 </FormControl>
+                <FormMessage />
               </FormItem>
             )}
           />
@@ -215,6 +226,7 @@ const ProfileSettings = () => {
                     placeholder="Enter your society core values here"
                   />
                 </FormControl>
+                <FormMessage />
               </FormItem>
             )}
           />

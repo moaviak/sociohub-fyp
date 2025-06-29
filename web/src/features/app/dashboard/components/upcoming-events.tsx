@@ -6,6 +6,7 @@ import { EventCard } from "./event-card";
 export const UpcomingEvents = () => {
   const { data, isLoading } = useGetEventsQuery({
     limit: 3,
+    status: "Upcoming",
   });
 
   const events = data && !("error" in data) ? data : [];
@@ -20,8 +21,12 @@ export const UpcomingEvents = () => {
             <EventCard.Skeleton />
             <EventCard.Skeleton />
           </>
-        ) : (
+        ) : events.length > 0 ? (
           events.map((event) => <EventCard key={event.id} event={event} />)
+        ) : (
+          <div className="flex items-center justify-center">
+            <p className="b3-regular">No Upcoming Events</p>
+          </div>
         )}
       </div>
       <Button variant={"outline"} asChild>

@@ -179,3 +179,21 @@ export const SocietyProfileSchema = z.object({
 });
 
 export type SocietyProfileData = z.infer<typeof SocietyProfileSchema>;
+
+export const UserProfileSchema = z.object({
+  firstName: z.string().min(1, { message: "First Name is required" }),
+  lastName: z.string().min(1, { message: "Last Name is required" }),
+  displayName: z.string().optional(),
+  avatar: z.instanceof(File).optional(),
+  phone: z
+    .string()
+    .regex(phoneRegex, "Invalid phone number")
+    .optional()
+    .or(z.literal("")),
+  bio: z
+    .string()
+    .max(255, { message: "Bio must not exceed 255 characters." })
+    .optional(),
+});
+
+export type UserProfileData = z.infer<typeof UserProfileSchema>;

@@ -36,6 +36,10 @@ import SocietySettingsLayout from "./layouts/app/society-settings-layout";
 import SocietySettingsPage from "./pages/app/society-settings";
 import ProfileSettingsPage from "./pages/app/society-settings/profile-settings-page";
 import MembersSettingsPage from "./pages/app/society-settings/members-settings-page";
+import UserProfilePage from "./pages/app/user";
+import UserSettingsLayout from "./layouts/app/user-settings-layout";
+import UserSettingsPage from "./pages/app/user/settings-page";
+import UserProfileSettingsPage from "./pages/app/user/profile-settings-page";
 
 function App() {
   return (
@@ -135,6 +139,12 @@ function App() {
               path="/edit-announcement/:id"
               element={<EditAnnouncementPage />}
             />
+
+            <Route path="/profile/:id" element={<UserProfilePage />} />
+            <Route path="/user-settings" element={<UserSettingsLayout />}>
+              <Route index element={<UserSettingsPage />} />
+              <Route path="profile" element={<UserProfileSettingsPage />} />
+            </Route>
           </Route>
 
           {/* 404 Route */}

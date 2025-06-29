@@ -66,6 +66,9 @@ export const UserAvatarMenu = ({ user, userType }: UserAvatarMenuProps) => {
               <Link to="/my-events">My Events</Link>
             </DropdownMenuLabel>
           )}
+          <DropdownMenuLabel>
+            <Link to="/user-settings">Settings</Link>
+          </DropdownMenuLabel>
           <DropdownMenuSeparator className="bg-neutral-300" />
           <DropdownMenuLabel>
             <Button

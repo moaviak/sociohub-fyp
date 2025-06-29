@@ -51,7 +51,7 @@ export const StudentSidebar = () => {
       <div className="space-y-2 my-4">
         {societies &&
           !("error" in societies) &&
-          societies.map((society) => (
+          societies.map(({ society }) => (
             <SocietyItems key={society.id} society={society} />
           ))}
       </div>

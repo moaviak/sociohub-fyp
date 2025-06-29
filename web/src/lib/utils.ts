@@ -153,51 +153,58 @@ export const formatSocietyName = (societyName: string): string => {
 };
 
 export const haveMembersPrivilege = (
-  societies: (Society & { privileges: string[] })[],
+  societies: { society: Society & { privileges: string[] } }[],
   societyId: string
 ) => {
-  const society = societies.find((society) => society.id === societyId);
+  const society = societies.find(({ society }) => society.id === societyId);
 
-  return society && society.privileges.includes(PRIVILEGES.MEMBER_MANAGEMENT);
+  return (
+    society && society.society.privileges.includes(PRIVILEGES.MEMBER_MANAGEMENT)
+  );
 };
 
 export const haveEventsPrivilege = (
-  societies: (Society & { privileges: string[] })[],
+  societies: { society: Society & { privileges: string[] } }[],
   societyId: string
 ) => {
-  const society = societies.find((society) => society.id === societyId);
+  const society = societies.find(({ society }) => society.id === societyId);
 
-  return society && society.privileges.includes(PRIVILEGES.EVENT_MANAGEMENT);
+  return (
+    society && society.society.privileges.includes(PRIVILEGES.EVENT_MANAGEMENT)
+  );
 };
 
 export const haveAnnouncementsPrivilege = (
-  societies: (Society & { privileges: string[] })[],
+  societies: { society: Society & { privileges: string[] } }[],
   societyId: string
 ) => {
-  const society = societies.find((society) => society.id === societyId);
+  const society = societies.find(({ society }) => society.id === societyId);
 
   return (
-    society && society.privileges.includes(PRIVILEGES.ANNOUNCEMENT_MANAGEMENT)
+    society &&
+    society.society.privileges.includes(PRIVILEGES.ANNOUNCEMENT_MANAGEMENT)
   );
 };
 
 export const haveTasksPrivilege = (
-  societies: (Society & { privileges: string[] })[],
+  societies: { society: Society & { privileges: string[] } }[],
   societyId: string
 ) => {
-  const society = societies.find((society) => society.id === societyId);
+  const society = societies.find(({ society }) => society.id === societyId);
 
-  return society && society.privileges.includes(PRIVILEGES.TASK_MANAGEMENT);
+  return (
+    society && society.society.privileges.includes(PRIVILEGES.TASK_MANAGEMENT)
+  );
 };
 
 export const haveSettingsPrivilege = (
-  societies: (Society & { privileges: string[] })[],
+  societies: { society: Society & { privileges: string[] } }[],
   societyId: string
 ) => {
-  const society = societies.find((society) => society.id === societyId);
+  const society = societies.find(({ society }) => society.id === societyId);
 
   return (
     society &&
-    society.privileges.includes(PRIVILEGES.SOCIETY_SETTINGS_MANAGEMENT)
+    society.society.privileges.includes(PRIVILEGES.SOCIETY_SETTINGS_MANAGEMENT)
   );
 };

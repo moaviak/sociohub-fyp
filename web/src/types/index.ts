@@ -5,20 +5,22 @@ export interface User {
   lastName?: string;
   isEmailVerified?: boolean;
   avatar?: string;
+  bio?: string;
+  phone?: string;
   createdAt?: string;
   updatedAt?: string;
 }
 
 export interface Student extends User {
   registrationNumber?: string;
-  societies?: (Society & { privileges: string[] })[];
+  societies?: { society: Society & { privileges: string[] }; roles?: Role[] }[];
 }
 
 export interface Advisor extends User {
   displayName?: string;
-  phone?: string;
   societyId?: string;
   societyName?: string;
+  society?: Society;
 }
 
 export enum UserType {
