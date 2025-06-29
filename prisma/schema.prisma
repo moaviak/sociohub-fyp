@@ -14,13 +14,16 @@ datasource db {
 }
 
 model Student {
-  id                      String    @id @default(uuid())
-  firstName               String
-  lastName                String
-  email                   String    @unique
-  registrationNumber      String    @unique
-  password                String
-  avatar                  String?
+  id                 String  @id @default(uuid())
+  firstName          String
+  lastName           String
+  email              String  @unique
+  registrationNumber String  @unique
+  password           String
+  avatar             String?
+  bio                String?
+  phone              String? @unique
+
   refreshToken            String?
   isEmailVerified         Boolean   @default(false)
   emailVerificationCode   String?
@@ -37,14 +40,16 @@ model Student {
 }
 
 model Advisor {
-  id                      String                  @id @default(uuid())
-  firstName               String
-  lastName                String
-  displayName             String
-  email                   String                  @unique
-  password                String
-  avatar                  String?
-  phone                   String?                 @unique
+  id          String  @id @default(uuid())
+  firstName   String
+  lastName    String
+  displayName String
+  email       String  @unique
+  password    String
+  avatar      String?
+  bio         String?
+  phone       String? @unique
+
   refreshToken            String?
   isEmailVerified         Boolean                 @default(false)
   emailVerificationCode   String?

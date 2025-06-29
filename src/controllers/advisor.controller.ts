@@ -1,14 +1,9 @@
-import bcrypt from "bcryptjs";
 import { Request, Response } from "express";
 
 import prisma from "../db";
-import { ApiError } from "../utils/ApiError";
 import { ApiResponse } from "../utils/ApiResponse";
 import { asyncHandler } from "../utils/asyncHandler";
-import { sendVerificationEmail } from "../utils/mail";
-import { generateAvatarUrlFromInitials, getLocalPath } from "../utils/helpers";
 import { UserType } from "../types";
-import { uploadOnCloudinary } from "../utils/cloudinary";
 import { generateAccessAndRefreshTokens } from "../utils/authHelpers";
 import { registerAdvisorService } from "../services/advisor.service";
 

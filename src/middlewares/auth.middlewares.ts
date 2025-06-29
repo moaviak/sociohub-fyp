@@ -30,6 +30,8 @@ export const verifyJWT = asyncHandler(
           firstName: true,
           lastName: true,
           avatar: true,
+          bio: true,
+          phone: true,
           ...(decodedToken.userType === UserType.STUDENT && {
             registrationNumber: true,
           }),

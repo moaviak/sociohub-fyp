@@ -1,3 +1,4 @@
+import { Advisor, Student } from "@prisma/client";
 import prisma from "../db";
 import { UserType, IUser } from "../types";
 
@@ -135,4 +136,123 @@ export const getAllUsersService = async ({
     currentPage: page,
     searchTerm: search,
   };
+};
+
+export const getUserByIdService = async (userId: string) => {
+  // First try to find in Student table
+  const student = await prisma.student.findUnique({
+    where: { id: userId },
+    include: {
+      societies: {
+        select: {
+          society: true,
+          roles: {
+            select: {
+              role: true,
+            },
+          },
+        },
+      },
+    },
+  });
+
+  if (student) {
+    return {
+      ...student,
+      societies: student.societies.map((society) => ({
+        society: society.society,
+        roles: society.roles
+          .filter(({ role }) => role.name !== "Member")
+          .map(({ role }) => role),
+      })),
+    };
+  }
+
+  // If not found in Student, try Advisor table
+  const advisor = await prisma.advisor.findUnique({
+    where: { id: userId },
+    include: {
+      society: true,
+    },
+  });
+
+  if (advisor) {
+    return advisor;
+  }
+
+  return null;
+};
+
+export const updateUserProfileService = async (
+  userId: string,
+  updateFields: any
+): Promise<IUser | null> => {
+  // Try to update Student first
+  let updatedUser = await prisma.student
+    .update({
+      where: { id: userId },
+      data: {
+        firstName: updateFields.firstName,
+        lastName: updateFields.lastName,
+        phone: updateFields.phone,
+        bio: updateFields.bio,
+        avatar: updateFields.avatar,
+      },
+    })
+    .catch(() => null);
+
+  if (updatedUser) {
+    return {
+      id: updatedUser.id,
+      email: updatedUser.email,
+      firstName: updatedUser.firstName,
+      lastName: updatedUser.lastName,
+      avatar: updatedUser.avatar || undefined,
+      isEmailVerified: updatedUser.isEmailVerified,
+      registrationNumber: updatedUser.registrationNumber,
+      displayName: undefined,
+      societyId: undefined,
+      userType: UserType.STUDENT,
+      createdAt: updatedUser.createdAt,
+      updatedAt: updatedUser.updatedAt,
+      bio: updatedUser.bio || undefined,
+      phone: updatedUser.phone || undefined,
+    };
+  }
+
+  // If not a student, try Advisor
+  const advisor = await prisma.advisor
+    .update({
+      where: { id: userId },
+      data: {
+        firstName: updateFields.firstName,
+        lastName: updateFields.lastName,
+        phone: updateFields.phone,
+        bio: updateFields.bio,
+        avatar: updateFields.avatar,
+        displayName: updateFields.displayName,
+      },
+    })
+    .catch(() => null);
+
+  if (advisor) {
+    return {
+      id: advisor.id,
+      email: advisor.email,
+      firstName: advisor.firstName,
+      lastName: advisor.lastName,
+      avatar: advisor.avatar || undefined,
+      isEmailVerified: advisor.isEmailVerified,
+      registrationNumber: undefined,
+      displayName: advisor.displayName,
+      societyId: advisor.societyId || undefined,
+      userType: UserType.ADVISOR,
+      createdAt: advisor.createdAt,
+      updatedAt: advisor.updatedAt,
+      bio: advisor.bio || undefined,
+      phone: advisor.phone || undefined,
+    };
+  }
+
+  return null;
 };

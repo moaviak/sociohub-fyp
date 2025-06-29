@@ -100,6 +100,8 @@ const formatAdvisorData = async (user: Advisor, email: string) => {
     createdAt: user.createdAt,
     updatedAt: user.updatedAt,
     societyId: user.societyId,
+    bio: user.bio,
+    phone: user.phone,
     societyName,
   };
 };
@@ -136,8 +138,10 @@ const formatStudentData = async (user: Student | IUser) => {
       r.role.privileges.forEach((p) => privileges.add(p.key))
     );
     return {
-      ...entry.society,
-      privileges: Array.from(privileges),
+      society: {
+        ...entry.society,
+        privileges: Array.from(privileges),
+      },
     };
   });
 
@@ -151,6 +155,8 @@ const formatStudentData = async (user: Student | IUser) => {
     createdAt: user.createdAt,
     updatedAt: user.updatedAt,
     registrationNumber: user.registrationNumber,
+    bio: user.bio,
+    phone: user.phone,
     societies: formattedSocieties,
   };
 };
