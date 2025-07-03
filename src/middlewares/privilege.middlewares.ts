@@ -3,6 +3,7 @@ import { asyncHandler } from "../utils/asyncHandler";
 import {
   haveAnnouncementsPrivilege,
   haveEventsPrivilege,
+  haveMeetingsPrivilege,
   haveMembersPrivilege,
   haveSettingsPrivilege,
   haveTicketHandlingPrivilege,
@@ -80,6 +81,23 @@ export const verifyAnnouncementsPrivilege = asyncHandler(
     }
 
     if (await haveAnnouncementsPrivilege(userId, societyId)) {
+      next();
+    } else {
+      throw new ApiError(403, "You don't have permission for this operation.");
+    }
+  }
+);
+
+export const verifyMeetingsPrivilege = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const userId = (req.user as IUser).id;
+    const { societyId } = req.body;
+
+    if (!societyId) {
+      throw new ApiError(403, "You don't have permission for this operation.");
+    }
+
+    if (await haveMeetingsPrivilege(userId, societyId)) {
       next();
     } else {
       throw new ApiError(403, "You don't have permission for this operation.");
