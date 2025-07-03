@@ -97,6 +97,13 @@ import userRoutes from "./routes/user.routes.js";
 import announcementRoutes from "./routes/announcements.routes.js";
 import tasksRoutes from "./routes/tasks.routes.js";
 
+// Add Daily webhook route
+import { handleDailyWebhook } from "./controllers/daily-webhook.controller.js";
+app.post("/api/webhooks/daily", handleDailyWebhook);
+
+// Register meeting routes
+import meetingRoutes from "./routes/meeting.routes.js";
+
 app.use("/api/auth", authRoutes);
 app.use("/api/student", studentRoutes);
 app.use("/api/advisor", advisorRoutes);
@@ -106,11 +113,24 @@ app.use("/api/events", eventRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/announcements", announcementRoutes);
 app.use("/api/tasks", tasksRoutes);
+app.use("/api/meetings", meetingRoutes);
 
 // common error handling middleware
 app.use(errorHandler);
 
 // Initialize the cleanup services
 initializeBackgroundJobs();
+
+// Configure Daily webhooks on startup
+import { DailyService } from "./services/daily.service.js";
+(async () => {
+  try {
+    const dailyService = new DailyService();
+    await dailyService.configureWebhooks();
+    console.log("Daily webhooks configured on startup.");
+  } catch (err) {
+    console.error("Failed to configure Daily webhooks:", err);
+  }
+})();
 
 export { httpServer, io };

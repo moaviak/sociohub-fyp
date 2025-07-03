@@ -4,6 +4,7 @@ import { DailyService, DailyRoomConfig } from "./daily.service";
 import { createNotification } from "./notification.service";
 import { sendNotificationToUsers } from "../socket";
 import { ApiError } from "../utils/ApiError";
+import { io } from "../app";
 
 export interface MeetingData {
   title: string;
@@ -27,6 +28,12 @@ export interface JoinData {
   };
 }
 
+interface MeetingNotificationRecipient {
+  recipientType: "student" | "advisor";
+  recipientId: string;
+  webRedirectUrl: string;
+}
+
 export class MeetingService {
   private dailyService: DailyService;
 
@@ -45,7 +52,6 @@ export class MeetingService {
       societyId,
       audienceType,
       maxParticipants,
-      recordingEnabled,
       invitedUserIds = [],
     } = meetingData;
 
@@ -68,7 +74,6 @@ export class MeetingService {
         hostSocietyId: societyId,
         audienceType,
         maxParticipants,
-        recordingEnabled,
       },
     });
 
@@ -237,11 +242,8 @@ export class MeetingService {
   ): Promise<string> {
     const roomName = `meeting-${meeting.id}-${Date.now()}`;
 
-    // Calculate room expiration (24 hours from now or 2 hours after scheduled end)
-    const expirationTime = Math.max(
-      Date.now() + 24 * 60 * 60 * 1000, // 24 hours from now
-      meeting.scheduledAt.getTime() + 2 * 60 * 60 * 1000 // 2 hours after scheduled time
-    );
+    // Set room expiration to 80 minutes from now
+    const expirationTime = Date.now() + 80 * 60 * 1000; // 80 minutes in ms
 
     const roomConfig: DailyRoomConfig = {
       name: roomName,
@@ -255,7 +257,6 @@ export class MeetingService {
         enable_prejoin_ui: false,
         enable_network_ui: true,
         enable_screenshare: true,
-        enable_recording: meeting.recordingEnabled ? "cloud" : undefined,
         exp: Math.floor(expirationTime / 1000),
         eject_after_elapsed: 8 * 60 * 60, // 8 hours max meeting duration
         eject_at_room_exp: true,
@@ -319,42 +320,53 @@ export class MeetingService {
   }
 
   async sendMeetingNotifications(meetingId: string): Promise<void> {
-    // Implementation for sending notifications
-    // This would remain largely the same as your original implementation
-  }
-
-  async startRecording(meetingId: string): Promise<any> {
     const meeting = await prisma.meeting.findUnique({
       where: { id: meetingId },
+      include: {
+        hostSociety: { select: { name: true, members: true } },
+        invitations: { select: { advisorId: true, studentId: true } },
+      },
     });
 
-    if (!meeting || !meeting.dailyRoomName) {
-      throw new ApiError(404, "Meeting not found");
+    let recipients: MeetingNotificationRecipient[] = [];
+    if (meeting?.audienceType === "ALL_SOCIETY_MEMBERS") {
+      recipients =
+        meeting?.hostSociety.members.map((member) => ({
+          recipientType: "student",
+          recipientId: member.studentId,
+          webRedirectUrl: `/video-meetings/${meeting?.hostSocietyId}`,
+        })) || [];
+    } else if (meeting?.invitations) {
+      recipients = meeting.invitations.map((invitation) => {
+        if (invitation.advisorId) {
+          return {
+            recipientType: "advisor",
+            recipientId: invitation.advisorId,
+            webRedirectUrl: `/video-meetings/${meeting?.hostSocietyId}`,
+          };
+        } else {
+          return {
+            recipientType: "student",
+            recipientId: invitation.studentId!,
+            webRedirectUrl: `/video-meetings/${meeting?.hostSocietyId}`,
+          };
+        }
+      });
     }
 
-    const recording = await this.dailyService.startRecording(
-      meeting.dailyRoomName
-    );
+    const validRecipients = (recipients || []).filter(
+      (recipient) => recipient.recipientId !== null
+    ) as MeetingNotificationRecipient[];
 
-    // Update meeting recording status
-    await prisma.meeting.update({
-      where: { id: meetingId },
-      data: { recordingStatus: "RECORDING" },
+    const notification = await createNotification({
+      title: "New Meeting Scheduled",
+      description: `A new meeting has been scheduled by ${meeting?.hostSociety.name}.`,
+      recipients: validRecipients,
     });
 
-    return recording;
-  }
-
-  async stopRecording(meetingId: string, recordingId: string): Promise<any> {
-    const recording = await this.dailyService.stopRecording(recordingId);
-
-    // Update meeting recording status
-    await prisma.meeting.update({
-      where: { id: meetingId },
-      data: { recordingStatus: "STOPPED" },
-    });
-
-    return recording;
+    if (notification) {
+      sendNotificationToUsers(io, validRecipients, notification);
+    }
   }
 
   async deleteMeeting(meetingId: string): Promise<void> {

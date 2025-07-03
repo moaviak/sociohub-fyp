@@ -142,81 +142,6 @@ export class DailyService {
   }
 
   /**
-   * Start recording a meeting
-   */
-  async startRecording(
-    roomName: string,
-    layout?: object
-  ): Promise<DailyRecordingResponse> {
-    try {
-      const recordingConfig = {
-        room_name: roomName,
-        layout: layout || {
-          preset: "default",
-        },
-      };
-
-      const response = await this.client.post<DailyRecordingResponse>(
-        "/recordings",
-        recordingConfig
-      );
-      return response.data;
-    } catch (error) {
-      console.error("Error starting recording:", error);
-      throw new Error("Failed to start recording");
-    }
-  }
-
-  /**
-   * Stop recording a meeting
-   */
-  async stopRecording(recordingId: string): Promise<DailyRecordingResponse> {
-    try {
-      const response = await this.client.patch<DailyRecordingResponse>(
-        `/recordings/${recordingId}`,
-        {
-          status: "finished",
-        }
-      );
-      return response.data;
-    } catch (error) {
-      console.error("Error stopping recording:", error);
-      throw new Error("Failed to stop recording");
-    }
-  }
-
-  /**
-   * Get recording details
-   */
-  async getRecording(recordingId: string): Promise<DailyRecordingResponse> {
-    try {
-      const response = await this.client.get<DailyRecordingResponse>(
-        `/recordings/${recordingId}`
-      );
-      return response.data;
-    } catch (error) {
-      console.error("Error getting recording:", error);
-      throw new Error("Failed to get recording details");
-    }
-  }
-
-  /**
-   * List recordings for a room
-   */
-  async listRecordings(roomName?: string): Promise<DailyRecordingResponse[]> {
-    try {
-      const params = roomName ? { room_name: roomName } : {};
-      const response = await this.client.get<{
-        data: DailyRecordingResponse[];
-      }>("/recordings", { params });
-      return response.data.data;
-    } catch (error) {
-      console.error("Error listing recordings:", error);
-      throw new Error("Failed to list recordings");
-    }
-  }
-
-  /**
    * Get room analytics/participants
    */
   async getRoomAnalytics(roomName: string): Promise<any> {
@@ -234,22 +159,25 @@ export class DailyService {
    */
   async configureWebhooks(): Promise<void> {
     try {
+      const response = await this.client.get("/webhooks");
+
+      if (response.data && response.data.length > 0) {
+        console.log("Daily webhooks already configured");
+        return;
+      }
+
       const webhookUrl =
         process.env.WEBHOOK_URL ||
         "https://api.sociohub.site/api/webhooks/daily";
 
       // Configure webhook
-      await this.client.post("/domains", {
-        webhook_url: webhookUrl,
-        webhook_events: [
+      await this.client.post("/webhooks", {
+        url: webhookUrl,
+        eventTypes: [
           "participant.joined",
           "participant.left",
-          "participant.updated",
           "meeting.started",
           "meeting.ended",
-          "recording.started",
-          "recording.finished",
-          "recording.error",
         ],
       });
 
