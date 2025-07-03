@@ -16,7 +16,7 @@ export const Navbar = () => {
   const { user, userType } = useAppSelector((state) => state.auth);
 
   return (
-    <div className="h-16 w-full px-10 bg-transparent flex items-center">
+    <div className="min-h-16 w-full px-10 bg-transparent flex items-center">
       <div className="md:max-w-screen-2xl mx-auto flex items-center w-full justify-between gap-4">
         <Logo />
 

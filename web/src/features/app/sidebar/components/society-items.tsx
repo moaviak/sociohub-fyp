@@ -6,6 +6,7 @@ import {
   Megaphone,
   Settings,
   Users,
+  Video,
 } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router";
@@ -82,6 +83,11 @@ const getSocietyItems = (society: Society & { privileges: string[] }) => {
       label: "Announcements",
       icon: <Megaphone className="w-4 h-4" />,
       href: `/announcements/${society.id}`,
+    },
+    {
+      label: "Video Meetings",
+      icon: <Video className="w-4 h-4" />,
+      href: `/video-meetings/${society.id}`,
     },
     ...(society.privileges.includes(PRIVILEGES.PAYMENT_FINANCE_MANAGEMENT)
       ? [

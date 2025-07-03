@@ -24,7 +24,6 @@ function AuthLayout() {
     !isSocietyForm;
 
   useEffect(() => {
-    
     if (!isAuthChecked) {
       // Still loading, don't redirect yet
       return;
@@ -88,7 +87,7 @@ function AuthLayout() {
   }
 
   return (
-    <div className="flex flex-col relative overflow-hidden min-h-screen">
+    <div className="flex flex-col relative h-screen max-h-screen overflow-y-auto">
       <Header />
       <img
         src="/assets/images/Background.png"

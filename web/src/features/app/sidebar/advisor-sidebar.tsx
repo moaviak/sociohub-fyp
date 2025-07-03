@@ -9,6 +9,7 @@ import {
   MessageSquare,
   Settings,
   Users,
+  Video,
 } from "lucide-react";
 
 import { NavItem } from "./components/nav-item";
@@ -53,6 +54,11 @@ const navItems = [
     label: "Inbox",
     icon: <MessageSquare className="w-4 h-4" />,
     href: "/inbox",
+  },
+  {
+    label: "Video Meetings",
+    icon: <Video className="w-4 h-4" />,
+    href: "/video-meetings",
   },
   {
     label: "Calendar",

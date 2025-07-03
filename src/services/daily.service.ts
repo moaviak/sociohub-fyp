@@ -68,18 +68,58 @@ export class DailyService {
         Authorization: `Bearer ${this.apiKey}`,
         "Content-Type": "application/json",
       },
-      timeout: 10000,
+      timeout: 30000,
     });
   }
   /**
    * Create a new Daily room
    */
   async createRoom(config: DailyRoomConfig): Promise<DailyRoom> {
+    let roomName = config.name;
     try {
-      const response = await this.client.post<DailyRoom>("/rooms", config);
+      const response = await this.client.post<DailyRoom>("/rooms", config, {
+        timeout: 30000,
+      });
       return response.data;
-    } catch (error) {
-      console.error("Error creating Daily room:", error);
+    } catch (error: any) {
+      // Axios timeout or network error
+      if (error.code === "ECONNABORTED" || error.message?.includes("timeout")) {
+        console.error(
+          "Timeout or network error creating Daily room, checking if room exists...",
+          error
+        );
+        if (roomName) {
+          try {
+            const existingRoom = await this.getRoom(roomName);
+            if (existingRoom) {
+              console.warn(
+                "Room was created despite timeout, returning existing room."
+              );
+              return existingRoom;
+            }
+          } catch (fetchErr) {
+            console.error("Room not found after timeout:", fetchErr);
+          }
+        }
+        throw new Error("Failed to create video room (timeout/network error)");
+      }
+      // Duplicate room error (Daily returns 409 or similar)
+      if (error.response && error.response.status === 409 && roomName) {
+        try {
+          const existingRoom = await this.getRoom(roomName);
+          if (existingRoom) {
+            console.warn("Duplicate room error, returning existing room.");
+            return existingRoom;
+          }
+        } catch (fetchErr) {
+          console.error("Room not found after duplicate error:", fetchErr);
+        }
+      }
+      // Log and rethrow other errors
+      console.error(
+        "Error creating Daily room:",
+        error?.response?.data || error
+      );
       throw new Error("Failed to create video room");
     }
   }
@@ -122,12 +162,15 @@ export class DailyService {
     try {
       const exp = Math.floor(Date.now() / 1000) + expiresInSeconds;
 
+      // Daily expects 'room' not 'room_name' in the payload
       const tokenPayload = {
-        room_name: roomName,
-        user_id: userId,
-        user_name: userName,
-        is_owner: isOwner,
-        exp: exp,
+        properties: {
+          room_name: roomName,
+          user_id: userId,
+          user_name: userName,
+          is_owner: isOwner,
+          exp: exp,
+        },
       };
 
       const response = await this.client.post<{ token: string }>(
@@ -135,8 +178,11 @@ export class DailyService {
         tokenPayload
       );
       return response.data.token;
-    } catch (error) {
-      console.error("Error generating meeting token:", error);
+    } catch (error: any) {
+      console.error(
+        "Error generating meeting token:",
+        error?.response?.data || error
+      );
       throw new Error("Failed to generate meeting token");
     }
   }

@@ -30,7 +30,7 @@ export const usersColumns: ColumnDef<Student | Advisor>[] = [
 
       return (
         <div className="flex justify-end">
-          <UserMenu user={user} />
+          <UserMenu user={user} variant="explore" />
         </div>
       );
     },

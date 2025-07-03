@@ -129,3 +129,38 @@ export interface Task {
   createdAt?: string;
   updatedAt?: string;
 }
+
+export interface Meeting {
+  id: string;
+  title: string;
+  description?: string;
+  streamCallId?: string;
+  meetingCode: string;
+  scheduledAt: string;
+  hostSocietyId: string;
+  hostSociety: Society;
+  hostAdvisorId?: string;
+  hostAdvisor?: Advisor;
+  hostStudentId?: string;
+  hostStudent?: Student;
+  audienceType: MeetingAudienceType;
+  status: MeetingStatus;
+  startedAt?: string;
+  endedAt?: string;
+  invitedUserIds: string[];
+  invitedUsers: User[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export enum MeetingAudienceType {
+  ALL_SOCIETY_MEMBERS = "ALL_SOCIETY_MEMBERS",
+  SPECIFIC_MEMBERS = "SPECIFIC_MEMBERS",
+}
+
+export enum MeetingStatus {
+  SCHEDULED = "SCHEDULED",
+  LIVE = "LIVE",
+  ENDED = "ENDED",
+  CANCELLED = "CANCELLED",
+}
