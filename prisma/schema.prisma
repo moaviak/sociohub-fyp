@@ -391,3 +391,94 @@ model Task {
   @@index([createdByAdvisorId])
   @@index([assignedBySocietyId])
 }
+
+model Meeting {
+  id          String    @id @default(cuid())
+  title       String
+  description String?
+  meetingCode String    @unique
+  scheduledAt DateTime
+  startedAt   DateTime?
+  endedAt     DateTime?
+
+  // Replace streamCallId with dailyRoomUrl and dailyRoomName
+  dailyRoomUrl  String? // Daily room URL
+  dailyRoomName String? // Daily room name
+
+  hostAdvisorId String?
+  hostStudentId String?
+  hostSocietyId String
+
+  audienceType     AudienceType @default(ALL_SOCIETY_MEMBERS)
+  maxParticipants  Int?
+  recordingEnabled Boolean      @default(false)
+
+  // Add Daily-specific fields
+  dailyRoomConfig Json? // Store room configuration
+  recordingStatus RecordingStatus @default(NOT_STARTED)
+
+  status    MeetingStatus @default(SCHEDULED)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  // Relations
+  hostAdvisor  Advisor?             @relation("MeetingHostAdvisor", fields: [hostAdvisorId], references: [id])
+  hostStudent  Student?             @relation("MeetingHostStudent", fields: [hostStudentId], references: [id])
+  hostSociety  Society              @relation(fields: [hostSocietyId], references: [id])
+  participants MeetingParticipant[]
+  invitations  MeetingInvitation[]
+
+  @@map("meetings")
+}
+
+model MeetingParticipant {
+  id        String  @id @default(cuid())
+  meetingId String
+  studentId String?
+  advisorId String?
+
+  joinedAt DateTime  @default(now())
+  leftAt   DateTime?
+
+  // Replace sessionId with dailySessionId
+  dailySessionId String? // Daily session ID
+
+  role      ParticipantRole @default(PARTICIPANT)
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+
+  // Relations
+  meeting Meeting  @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  student Student? @relation(fields: [studentId], references: [id])
+  advisor Advisor? @relation(fields: [advisorId], references: [id])
+
+  @@unique([meetingId, studentId])
+  @@unique([meetingId, advisorId])
+  @@map("meeting_participants")
+}
+
+enum RecordingStatus {
+  NOT_STARTED
+  RECORDING
+  STOPPED
+  PROCESSING
+  COMPLETED
+  FAILED
+}
+
+enum MeetingStatus {
+  SCHEDULED
+  LIVE
+  ENDED
+  CANCELLED
+}
+
+enum AudienceType {
+  ALL_SOCIETY_MEMBERS
+  SPECIFIC_MEMBERS
+}
+
+enum ParticipantRole {
+  HOST
+  PARTICIPANT
+}
