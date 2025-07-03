@@ -37,6 +37,9 @@ model Student {
   eventRegistrations EventRegistration[]
   scannedTickets     EventTicket[]           @relation("ScannedByStudent")
   tasks              Task[]                  @relation
+  MeetingParticipant MeetingParticipant[]
+  MeetingInvitation  MeetingInvitation[]
+  Meeting            Meeting[]               @relation("MeetingHostStudent")
 }
 
 model Advisor {
@@ -60,6 +63,9 @@ model Advisor {
   society                 Society?                @relation(fields: [societyId], references: [id], onDelete: SetNull)
   notifications           NotificationRecipient[] @relation("AdvisorNotifications")
   tasks                   Task[]                  @relation
+  Meeting                 Meeting[]               @relation("MeetingHostAdvisor")
+  MeetingParticipant      MeetingParticipant[]
+  MeetingInvitation       MeetingInvitation[]
 
   @@index([societyId])
 }
@@ -87,6 +93,7 @@ model Society {
   announcements Announcement[]   @relation
 
   tasksAssigned Task[]
+  Meeting       Meeting[]
 }
 
 enum JoinRequestStatus {
@@ -481,4 +488,27 @@ enum AudienceType {
 enum ParticipantRole {
   HOST
   PARTICIPANT
+}
+
+model MeetingInvitation {
+  id        String   @id @default(cuid())
+  meetingId String
+  meeting   Meeting  @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  studentId String?
+  student   Student? @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  advisorId String?
+  advisor   Advisor? @relation(fields: [advisorId], references: [id], onDelete: Cascade)
+
+  status InvitationStatus @default(PENDING)
+  sentAt DateTime         @default(now())
+
+  @@unique([meetingId, studentId])
+  @@unique([meetingId, advisorId])
+  @@map("meeting_invitations")
+}
+
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
 }

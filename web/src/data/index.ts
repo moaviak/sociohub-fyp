@@ -152,6 +152,11 @@ export const ROLES_PRIVILEGES = [
     title: "Task Management",
     description: "Can assign tasks to society members.",
   },
+  {
+    key: "meeting_management",
+    title: "Meeting Management",
+    description: "Can initiate and manage video meetings.",
+  },
 ];
 
 export const PRIVILEGES = {
@@ -163,6 +168,7 @@ export const PRIVILEGES = {
   PAYMENT_FINANCE_MANAGEMENT: "payment_finance_management",
   SOCIETY_SETTINGS_MANAGEMENT: "society_settings_management",
   TASK_MANAGEMENT: "task_management",
+  MEETING_MANAGEMENT: "meeting_management",
 };
 
 export const REJECT_REASONS = [
