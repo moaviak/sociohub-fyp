@@ -41,133 +41,126 @@ import UserSettingsLayout from "./layouts/app/user-settings-layout";
 import UserSettingsPage from "./pages/app/user/settings-page";
 import UserProfileSettingsPage from "./pages/app/user/profile-settings-page";
 import VideoMeetingPage from "./pages/app/video-meeting-page";
-import { MeetingProvider } from "./contexts/meeting-context";
+import MeetingRoomPage from "./pages/app/meeting-room-page";
 
 function App() {
   return (
     <NotificationSocketProvider>
-      <MeetingProvider>
-        <Routes>
-          <Route element={<MainLayout />}>
-            {/* Public Marketing Routes */}
-            <Route element={<MarketingLayout />}>
-              <Route path="/" element={<LandingPage />} />
-              <Route path="/contact-us" element={<ContactPage />} />
+      <Routes>
+        <Route element={<MainLayout />}>
+          <Route
+            path="/meeting-room/:meetingId"
+            element={<MeetingRoomPage />}
+          />
+          {/* Public Marketing Routes */}
+          <Route element={<MarketingLayout />}>
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/contact-us" element={<ContactPage />} />
+          </Route>
+
+          {/* Auth Routes */}
+          <Route element={<AuthLayout />}>
+            {/* Public Auth Routes */}
+            <Route path="/sign-in" element={<SignInPage />} />
+            <Route path="/sign-up" element={<SignUpPage />}>
+              <Route path="student" element={<StudentSignUpPage />} />
+              <Route path="advisor" element={<AdvisorSignUpPage />} />
             </Route>
 
-            {/* Auth Routes */}
-            <Route element={<AuthLayout />}>
-              {/* Public Auth Routes */}
-              <Route path="/sign-in" element={<SignInPage />} />
-              <Route path="/sign-up" element={<SignUpPage />}>
-                <Route path="student" element={<StudentSignUpPage />} />
-                <Route path="advisor" element={<AdvisorSignUpPage />} />
-              </Route>
+            {/* Auth-Required Onboarding Routes */}
+            <Route path="/sign-up/verify-email" element={<VerifyEmailPage />} />
+            <Route path="/sign-up/society-form" element={<SocietyFormPage />} />
+          </Route>
 
-              {/* Auth-Required Onboarding Routes */}
-              <Route
-                path="/sign-up/verify-email"
-                element={<VerifyEmailPage />}
-              />
-              <Route
-                path="/sign-up/society-form"
-                element={<SocietyFormPage />}
-              />
+          {/* Private Routes */}
+          <Route element={<AppLayout />}>
+            <Route path="/dashboard" element={<DashboardPage />} />
+
+            {/* Student specific routes */}
+            <Route path="/explore" element={<ExplorePage />}></Route>
+
+            {/* Society specific  routes*/}
+            <Route path="/society" element={<SocietyPage />}>
+              <Route path=":societyId" element={<SocietyPage />} />
             </Route>
 
-            {/* Private Routes */}
-            <Route element={<AppLayout />}>
-              <Route path="/dashboard" element={<DashboardPage />} />
-
-              {/* Student specific routes */}
-              <Route path="/explore" element={<ExplorePage />}></Route>
-
-              {/* Society specific  routes*/}
-              <Route path="/society" element={<SocietyPage />}>
-                <Route path=":societyId" element={<SocietyPage />} />
+            <Route path="/members" element={<MembersPage />}>
+              <Route path="roles" element={<RolesPage />} />
+              <Route path="requests" element={<RequestsPage />}>
+                <Route path="history" element={<RequestsHistoryPage />} />
               </Route>
-
-              <Route path="/members" element={<MembersPage />}>
+              <Route path=":societyId" element={<MembersPage />}>
                 <Route path="roles" element={<RolesPage />} />
                 <Route path="requests" element={<RequestsPage />}>
                   <Route path="history" element={<RequestsHistoryPage />} />
                 </Route>
-                <Route path=":societyId" element={<MembersPage />}>
-                  <Route path="roles" element={<RolesPage />} />
-                  <Route path="requests" element={<RequestsPage />}>
-                    <Route path="history" element={<RequestsHistoryPage />} />
-                  </Route>
-                </Route>
               </Route>
+            </Route>
 
-              <Route path="/events" element={<EventsPage />}>
+            <Route path="/events" element={<EventsPage />}>
+              <Route path="create-event" element={<CreateEventPage />} />
+
+              <Route path=":societyId" element={<EventsPage />}>
                 <Route path="create-event" element={<CreateEventPage />} />
-
-                <Route path=":societyId" element={<EventsPage />}>
-                  <Route path="create-event" element={<CreateEventPage />} />
-                </Route>
               </Route>
+            </Route>
 
-              <Route path="/announcements" element={<AnnouncementsPage />}>
+            <Route path="/announcements" element={<AnnouncementsPage />}>
+              <Route
+                path="create-announcement"
+                element={<CreateAnnouncementPage />}
+              />
+
+              <Route path=":societyId" element={<AnnouncementsPage />}>
                 <Route
                   path="create-announcement"
                   element={<CreateAnnouncementPage />}
                 />
-
-                <Route path=":societyId" element={<AnnouncementsPage />}>
-                  <Route
-                    path="create-announcement"
-                    element={<CreateAnnouncementPage />}
-                  />
-                </Route>
-              </Route>
-
-              <Route path="/video-meetings" element={<VideoMeetingPage />}>
-                <Route path=":societyId" element={<VideoMeetingPage />} />
-              </Route>
-
-              <Route path="/settings" element={<SocietySettingsLayout />}>
-                <Route index element={<SocietySettingsPage />} />
-                <Route path="profile" element={<ProfileSettingsPage />} />
-                <Route path="members" element={<MembersSettingsPage />} />
-
-                <Route path=":societyId" element={<SocietySettingsPage />} />
-                <Route
-                  path=":societyId/profile"
-                  element={<ProfileSettingsPage />}
-                />
-                <Route
-                  path=":societyId/members"
-                  element={<MembersSettingsPage />}
-                />
-              </Route>
-
-              {/* Add other private routes here */}
-              <Route path="/todo" element={<TodoListPage />} />
-              <Route path="/my-events" element={<MyEventsPage />} />
-
-              <Route path="/event/:id" element={<EventDetailPage />} />
-              <Route
-                path="update-event/:eventid"
-                element={<UpdateEventPage />}
-              />
-              <Route
-                path="/edit-announcement/:id"
-                element={<EditAnnouncementPage />}
-              />
-
-              <Route path="/profile/:id" element={<UserProfilePage />} />
-              <Route path="/user-settings" element={<UserSettingsLayout />}>
-                <Route index element={<UserSettingsPage />} />
-                <Route path="profile" element={<UserProfileSettingsPage />} />
               </Route>
             </Route>
 
-            {/* 404 Route */}
-            <Route path="*" element={<NotFoundPage />} />
+            <Route path="/video-meetings" element={<VideoMeetingPage />}>
+              <Route path=":societyId" element={<VideoMeetingPage />} />
+            </Route>
+
+            <Route path="/settings" element={<SocietySettingsLayout />}>
+              <Route index element={<SocietySettingsPage />} />
+              <Route path="profile" element={<ProfileSettingsPage />} />
+              <Route path="members" element={<MembersSettingsPage />} />
+
+              <Route path=":societyId" element={<SocietySettingsPage />} />
+              <Route
+                path=":societyId/profile"
+                element={<ProfileSettingsPage />}
+              />
+              <Route
+                path=":societyId/members"
+                element={<MembersSettingsPage />}
+              />
+            </Route>
+
+            {/* Add other private routes here */}
+            <Route path="/todo" element={<TodoListPage />} />
+            <Route path="/my-events" element={<MyEventsPage />} />
+
+            <Route path="/event/:id" element={<EventDetailPage />} />
+            <Route path="update-event/:eventid" element={<UpdateEventPage />} />
+            <Route
+              path="/edit-announcement/:id"
+              element={<EditAnnouncementPage />}
+            />
+
+            <Route path="/profile/:id" element={<UserProfilePage />} />
+            <Route path="/user-settings" element={<UserSettingsLayout />}>
+              <Route index element={<UserSettingsPage />} />
+              <Route path="profile" element={<UserProfileSettingsPage />} />
+            </Route>
           </Route>
-        </Routes>
-      </MeetingProvider>
+
+          {/* 404 Route */}
+          <Route path="*" element={<NotFoundPage />} />
+        </Route>
+      </Routes>
     </NotificationSocketProvider>
   );
 }

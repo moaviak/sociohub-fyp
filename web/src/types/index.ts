@@ -134,7 +134,9 @@ export interface Meeting {
   id: string;
   title: string;
   description?: string;
-  streamCallId?: string;
+  dailyRoomUrl?: string;
+  dailyRoomName?: string;
+  dailyRoomConfig?: unknown;
   meetingCode: string;
   scheduledAt: string;
   hostSocietyId: string;

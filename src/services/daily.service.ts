@@ -208,8 +208,17 @@ export class DailyService {
       const response = await this.client.get("/webhooks");
 
       if (response.data && response.data.length > 0) {
-        console.log("Daily webhooks already configured");
-        return;
+        if (
+          response.data[0].state === "FAILED" ||
+          response.data[0].state === "INACTIVE"
+        ) {
+          console.log("Deleting the Failed or Inactive webhook");
+          await this.client.delete(`/webhooks/${response.data[0].uuid}`);
+          console.log("Deleted the Failed or Inactive webhook");
+        } else {
+          console.log("Daily webhooks already configured");
+          return;
+        }
       }
 
       const webhookUrl =

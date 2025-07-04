@@ -99,6 +99,21 @@ export const MeetingApi = api.injectEndpoints({
         return createApiError(errorResponse.message);
       },
     }),
+    getMeetingById: builder.query<Meeting | ApiError, { meetingId: string }>({
+      query: ({ meetingId }) => ({
+        url: `/meetings/${meetingId}`,
+      }),
+      transformResponse: (response: ApiResponse<Meeting>) => {
+        if (response.success) {
+          return response.data;
+        }
+        return createApiError(response.message);
+      },
+      transformErrorResponse: (response) => {
+        const errorResponse = response.data as ApiErrorResponse;
+        return createApiError(errorResponse.message);
+      },
+    }),
   }),
 });
 
@@ -107,4 +122,5 @@ export const {
   useCreateMeetingMutation,
   useGetMyMeetingsQuery,
   useJoinMeetingMutation,
+  useGetMeetingByIdQuery,
 } = MeetingApi;

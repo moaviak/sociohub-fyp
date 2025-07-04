@@ -248,6 +248,14 @@ export class MeetingService {
     return this.joinMeeting(userId, meeting.id);
   }
 
+  async getMeetingById(meetingId: string): Promise<Meeting> {
+    const meeting = await prisma.meeting.findUnique({
+      where: { id: meetingId },
+    });
+    if (!meeting) throw new ApiError(404, "Meeting not found");
+    return meeting;
+  }
+
   private async createDailyRoomForMeeting(
     meeting: any,
     hostId: string
