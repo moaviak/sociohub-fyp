@@ -79,6 +79,34 @@ export const joinMeetingByCode = asyncHandler(
   }
 );
 
+export const cancelMeeting = asyncHandler(
+  async (req: Request, res: Response) => {
+    const meetingId = req.params.id;
+    if (!meetingId) {
+      return res
+        .status(400)
+        .json(new ApiResponse(400, null, "Meeting ID is required"));
+    }
+    const meeting = await meetingService.cancelMeeting(meetingId);
+    return res
+      .status(200)
+      .json(new ApiResponse(200, meeting, "Meeting successfully deleted."));
+  }
+);
+
+export const endMeeting = asyncHandler(async (req: Request, res: Response) => {
+  const meetingId = req.params.id;
+  if (!meetingId) {
+    return res
+      .status(400)
+      .json(new ApiResponse(400, null, "Meeting ID is required"));
+  }
+  const meeting = await meetingService.endMeeting(meetingId);
+  return res
+    .status(200)
+    .json(new ApiResponse(200, meeting, "Meeting successfully deleted."));
+});
+
 export const deleteMeeting = asyncHandler(
   async (req: Request, res: Response) => {
     const meetingId = req.params.id;

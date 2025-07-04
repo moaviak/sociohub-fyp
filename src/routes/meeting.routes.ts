@@ -6,6 +6,8 @@ import {
   joinMeetingByCode,
   deleteMeeting,
   getMeetingById,
+  cancelMeeting,
+  endMeeting,
 } from "../controllers/meeting.controller";
 // Import your authentication middleware
 import { verifyJWT } from "../middlewares/auth.middlewares";
@@ -28,6 +30,12 @@ router.get("/my-meetings", verifyJWT, getMeetingsForUser);
 
 // Join a meeting by id
 router.post("/:id/join", verifyJWT, joinMeeting);
+
+// Cancel a meeting
+router.post("/:id/cancel", verifyJWT, cancelMeeting);
+
+// End a meeting
+router.post("/:id/end", verifyJWT, endMeeting);
 
 // Join a meeting by code
 router.post(

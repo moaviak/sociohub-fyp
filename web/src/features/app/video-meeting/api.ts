@@ -114,6 +114,40 @@ export const MeetingApi = api.injectEndpoints({
         return createApiError(errorResponse.message);
       },
     }),
+    cancelMeeting: builder.mutation<Meeting | ApiError, { meetingId: string }>({
+      query: ({ meetingId }) => ({
+        url: `/meetings/${meetingId}/cancel`,
+        method: "POST",
+      }),
+      transformResponse: (response: ApiResponse<Meeting>) => {
+        if (response.success) {
+          return response.data;
+        }
+        return createApiError(response.message);
+      },
+      transformErrorResponse: (response) => {
+        const errorResponse = response.data as ApiErrorResponse;
+        return createApiError(errorResponse.message);
+      },
+      invalidatesTags: ["Meetings"],
+    }),
+    endMeeting: builder.mutation<Meeting | ApiError, { meetingId: string }>({
+      query: ({ meetingId }) => ({
+        url: `/meetings/${meetingId}/end`,
+        method: "POST",
+      }),
+      transformResponse: (response: ApiResponse<Meeting>) => {
+        if (response.success) {
+          return response.data;
+        }
+        return createApiError(response.message);
+      },
+      transformErrorResponse: (response) => {
+        const errorResponse = response.data as ApiErrorResponse;
+        return createApiError(errorResponse.message);
+      },
+      invalidatesTags: ["Meetings"],
+    }),
   }),
 });
 
@@ -123,4 +157,6 @@ export const {
   useGetMyMeetingsQuery,
   useJoinMeetingMutation,
   useGetMeetingByIdQuery,
+  useCancelMeetingMutation,
+  useEndMeetingMutation,
 } = MeetingApi;

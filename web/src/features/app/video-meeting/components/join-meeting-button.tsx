@@ -37,7 +37,7 @@ export const JoinMeetingButton: React.FC<JoinMeetingButtonProps> = ({
         const { dailyRoomUrl, dailyToken, meeting: meetingInfo } = response;
 
         // Set credentials in session storage
-        sessionStorage.setItem(
+        localStorage.setItem(
           `meeting-credentials-${meetingInfo.id}`,
           JSON.stringify({ dailyRoomUrl, dailyToken })
         );

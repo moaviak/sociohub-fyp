@@ -1,10 +1,11 @@
 import { DailyMeetingRoom } from "@/features/app/video-meeting/components/daily-meeting-room";
+import { useEffect } from "react";
 import { useParams } from "react-router";
 
 const MeetingRoomPage = () => {
   const { meetingId } = useParams();
 
-  const meetingCredentials = sessionStorage.getItem(
+  const meetingCredentials = localStorage.getItem(
     `meeting-credentials-${meetingId}`
   );
 
@@ -14,6 +15,14 @@ const MeetingRoomPage = () => {
   }: { dailyRoomUrl: string; dailyToken: string } = meetingCredentials
     ? JSON.parse(meetingCredentials)
     : {};
+
+  useEffect(() => {
+    return () => {
+      if (meetingId) {
+        localStorage.removeItem(`meeting-credentials-${meetingId}`);
+      }
+    };
+  }, [meetingId]);
 
   if (!dailyRoomUrl || !dailyToken) {
     return (

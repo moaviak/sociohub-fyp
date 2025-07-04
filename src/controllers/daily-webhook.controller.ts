@@ -261,8 +261,19 @@ async function handleMeetingEnded(event: DailyWebhookEvent): Promise<void> {
   if (!room || !end_ts) return;
 
   try {
-    await prisma.meeting.updateMany({
+    const meeting = await prisma.meeting.findFirst({
       where: { dailyRoomName: room },
+    });
+
+    if (!meeting) {
+      throw new Error("Meeting not found.");
+    }
+    if (meeting?.expiry && meeting.expiry > new Date()) {
+      console.log("Meeting expiry time didn't reach yet.");
+      return;
+    }
+    await prisma.meeting.update({
+      where: { id: meeting.id },
       data: {
         status: "ENDED",
         endedAt: new Date(end_ts),

@@ -133,13 +133,23 @@ export class MeetingService {
             OR: [{ hostStudentId: user.id }, { hostAdvisorId: user.id }],
           },
         ],
-        status: { in: ["SCHEDULED", "LIVE"] },
       },
       include: {
         hostAdvisor: true,
         hostStudent: true,
       },
       orderBy: { scheduledAt: "asc" },
+    });
+
+    // Custom sort for status: LIVE, SCHEDULED, ENDED, CANCELLED
+    const statusOrder = { LIVE: 0, SCHEDULED: 1, ENDED: 2, CANCELLED: 3 };
+    meetings.sort((a, b) => {
+      const statusDiff =
+        (statusOrder[a.status] ?? 99) - (statusOrder[b.status] ?? 99);
+      if (statusDiff !== 0) return statusDiff;
+      return (
+        new Date(a.scheduledAt).getTime() - new Date(b.scheduledAt).getTime()
+      );
     });
 
     return meetings;
@@ -274,7 +284,7 @@ export class MeetingService {
         start_video_off: true,
         enable_chat: true,
         enable_knocking: false,
-        enable_prejoin_ui: false,
+        enable_prejoin_ui: true,
         enable_network_ui: true,
         enable_screenshare: true,
         exp: Math.floor(expirationTime / 1000),
@@ -293,6 +303,7 @@ export class MeetingService {
         dailyRoomUrl: room.url,
         dailyRoomName: room.name,
         dailyRoomConfig: roomConfig.properties,
+        expiry: new Date(expirationTime),
       },
     });
 
@@ -387,6 +398,72 @@ export class MeetingService {
     if (notification) {
       sendNotificationToUsers(io, validRecipients, notification);
     }
+  }
+
+  async cancelMeeting(meetingId: string): Promise<Meeting | undefined> {
+    const meeting = await prisma.meeting.findUnique({
+      where: { id: meetingId },
+    });
+
+    if (!meeting) {
+      throw new ApiError(404, "Meeting not found");
+    }
+
+    if (meeting.status !== "SCHEDULED") {
+      throw new ApiError(400, "Only scheduled meetings can be cancelled.");
+    }
+
+    // Even though only scheduled meetings will be cancelled, for cautionary measures checking and deleting Daily.co room
+    if (meeting.dailyRoomName) {
+      try {
+        await this.dailyService.deleteRoom(meeting.dailyRoomName);
+      } catch (error) {
+        console.error("Error deleting Daily room:", error);
+        // Continue with database deletion even if room deletion fails
+      }
+    }
+
+    return await prisma.meeting.update({
+      where: { id: meeting.id },
+      data: {
+        status: "CANCELLED",
+      },
+    });
+  }
+
+  async endMeeting(meetingId: string): Promise<Meeting | undefined> {
+    const meeting = await prisma.meeting.findUnique({
+      where: { id: meetingId },
+    });
+
+    if (!meeting) {
+      throw new ApiError(404, "Meeting not found");
+    }
+
+    if (meeting.status !== "LIVE") {
+      throw new ApiError(400, "Only live meetings can be ended.");
+    }
+
+    // Even though only scheduled meetings will be cancelled, for cautionary measures checking and deleting Daily.co room
+    if (
+      meeting.dailyRoomName &&
+      meeting.expiry &&
+      meeting.expiry > new Date()
+    ) {
+      try {
+        await this.dailyService.deleteRoom(meeting.dailyRoomName);
+      } catch (error) {
+        console.error("Error deleting Daily room:", error);
+        // Continue with database deletion even if room deletion fails
+      }
+    }
+
+    return await prisma.meeting.update({
+      where: { id: meeting.id },
+      data: {
+        status: "ENDED",
+      },
+    });
   }
 
   async deleteMeeting(meetingId: string): Promise<void> {

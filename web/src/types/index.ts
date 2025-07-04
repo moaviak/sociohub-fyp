@@ -149,6 +149,7 @@ export interface Meeting {
   status: MeetingStatus;
   startedAt?: string;
   endedAt?: string;
+  expiry?: string;
   invitedUserIds: string[];
   invitedUsers: User[];
   createdAt: string;
