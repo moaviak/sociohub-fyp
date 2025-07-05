@@ -13,3 +13,9 @@ export const createMeetingSchema = z.object({
 });
 
 export type CreateMeetingData = z.infer<typeof createMeetingSchema>;
+
+export const joinWithCodeSchema = z.object({
+  code: z.string().length(8, "Code must be 8 characters long.").toUpperCase(),
+});
+
+export type JoinWithCodeData = z.infer<typeof joinWithCodeSchema>;

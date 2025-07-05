@@ -237,7 +237,7 @@ const StudentSignUp = () => {
                   <FormLabel>Email</FormLabel>
                   <FormControl>
                     <Input
-                      placeholder="john@example.com"
+                      placeholder="spxx-xxx-xxx@cuiatk.edu.pk"
                       {...field}
                       className="outline-1 outline-neutral-300"
                     />

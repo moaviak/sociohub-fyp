@@ -64,6 +64,7 @@ export const NotificationSocketProvider = ({
       socket.on("connect_error", (error) => {
         console.error("Socket connection error:", error.message);
         if (error.message.includes("Authentication error")) {
+          // TODO: Try refetching the tokens
           setConnectionError("Authentication failed. Please log in again.");
           authErrorRef.current = true;
           disconnectSocket();

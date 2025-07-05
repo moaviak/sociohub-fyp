@@ -94,6 +94,32 @@ export const cancelMeeting = asyncHandler(
   }
 );
 
+export const updateMeeting = asyncHandler(
+  async (req: Request, res: Response) => {
+    const meetingId = req.params.id;
+    if (!meetingId) {
+      return res
+        .status(400)
+        .json(new ApiResponse(400, null, "Meeting ID is required"));
+    }
+
+    const { title, description, scheduledAt, audienceType, invitedUserIds } =
+      req.body;
+    const updatedMeeting = await meetingService.updateMeeting(meetingId, {
+      title,
+      description,
+      scheduledAt,
+      audienceType,
+      invitedUserIds,
+    });
+    return res
+      .status(200)
+      .json(
+        new ApiResponse(200, updatedMeeting, "Meeting updated successfully")
+      );
+  }
+);
+
 export const endMeeting = asyncHandler(async (req: Request, res: Response) => {
   const meetingId = req.params.id;
   if (!meetingId) {

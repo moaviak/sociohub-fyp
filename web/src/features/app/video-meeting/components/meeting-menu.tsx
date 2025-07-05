@@ -6,7 +6,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Meeting, MeetingStatus } from "@/types";
-import { Ban, MoreHorizontal, PhoneMissed, ReceiptText } from "lucide-react";
+import {
+  Ban,
+  MoreHorizontal,
+  PhoneMissed,
+  ReceiptText,
+  SquarePen,
+} from "lucide-react";
 import { JoinMeetingButton } from "./join-meeting-button";
 import useLoadingOverlay from "@/components/loading-overlay";
 import { useAppSelector } from "@/app/hooks";
@@ -81,6 +87,22 @@ export const MeetingMenu: React.FC<MeetingMenuProps> = ({ meeting }) => {
             />
           </DropdownMenuItem>
         )}
+        {isHost &&
+          [MeetingStatus.LIVE, MeetingStatus.SCHEDULED].includes(
+            meeting.status
+          ) && (
+            <DropdownMenuItem className="b3-regular">
+              <Button
+                variant={"ghost"}
+                size={"inline"}
+                disabled={isEnding}
+                onClick={handleEnd}
+              >
+                <SquarePen className="text-inherit mr-2 h-4 w-4" />
+                Update Meeting
+              </Button>
+            </DropdownMenuItem>
+          )}
         {isHost && meeting.status === MeetingStatus.LIVE && (
           <DropdownMenuItem className="b3-regular">
             <Button

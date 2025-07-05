@@ -148,6 +148,23 @@ export const MeetingApi = api.injectEndpoints({
       },
       invalidatesTags: ["Meetings"],
     }),
+    joinByCode: builder.mutation<JoinData | ApiError, { code: string }>({
+      query: ({ code }) => ({
+        url: "/meetings/join-by-code",
+        method: "POST",
+        body: { meetingCode: code },
+      }),
+      transformResponse: (response: ApiResponse<JoinData>) => {
+        if (response.success) {
+          return response.data;
+        }
+        return createApiError(response.message);
+      },
+      transformErrorResponse: (response) => {
+        const errorResponse = response.data as ApiErrorResponse;
+        return createApiError(errorResponse.message);
+      },
+    }),
   }),
 });
 
@@ -159,4 +176,5 @@ export const {
   useGetMeetingByIdQuery,
   useCancelMeetingMutation,
   useEndMeetingMutation,
+  useJoinByCodeMutation,
 } = MeetingApi;

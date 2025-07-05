@@ -21,6 +21,7 @@ import useGetSocietyId from "@/hooks/useGetSocietyId";
 import { useCreateMeetingMutation } from "./api";
 import { toast } from "sonner";
 import ApiError from "@/features/api-error";
+import { Meeting } from "@/types";
 
 // Add CheckedUser type
 export type CheckedUser = {
@@ -31,6 +32,7 @@ export type CheckedUser = {
 };
 
 interface MeetingFormProps {
+  meeting?: Meeting;
   onSuccess?: () => void;
 }
 

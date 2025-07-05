@@ -1,4 +1,4 @@
-import { Router } from "express";
+import { NextFunction, Request, Response, Router } from "express";
 import {
   createMeeting,
   getMeetingsForUser,
@@ -8,6 +8,7 @@ import {
   getMeetingById,
   cancelMeeting,
   endMeeting,
+  updateMeeting,
 } from "../controllers/meeting.controller";
 // Import your authentication middleware
 import { verifyJWT } from "../middlewares/auth.middlewares";
@@ -46,6 +47,20 @@ router.post(
     validate,
   ],
   joinMeetingByCode
+);
+
+// Update a meeting details
+router.post(
+  "/:id",
+  [
+    verifyJWT,
+    (req: Request, _res: Response, next: NextFunction) => {
+      req.body.societyId = req.params.societyId;
+      next();
+    },
+    verifyMeetingsPrivilege,
+  ],
+  updateMeeting
 );
 
 // Get a meeting by id

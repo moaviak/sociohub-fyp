@@ -490,4 +490,80 @@ export class MeetingService {
       where: { id: meetingId },
     });
   }
+
+  async updateMeeting(
+    meetingId: string,
+    updateData: {
+      title?: string;
+      description?: string;
+      scheduledAt?: Date;
+      audienceType?: "ALL_SOCIETY_MEMBERS" | "SPECIFIC_MEMBERS";
+      invitedUserIds?: string[];
+    }
+  ): Promise<Meeting> {
+    const meeting = await prisma.meeting.findUnique({
+      where: { id: meetingId },
+      include: { invitations: true },
+    });
+    if (!meeting) {
+      throw new ApiError(404, "Meeting not found");
+    }
+
+    // Only allow update if meeting is not ENDED or CANCELLED
+    if (["ENDED", "CANCELLED"].includes(meeting.status)) {
+      throw new ApiError(
+        400,
+        "Cannot update a meeting that has ended or been cancelled."
+      );
+    }
+
+    // Don't allow to change scheduled datetime if meeting is live
+    if (meeting.status === "LIVE" && updateData.scheduledAt) {
+      throw new ApiError(400, "Cannot change scheduled date of live meeting.");
+    }
+
+    // Update meeting fields
+    const updatedMeeting = await prisma.meeting.update({
+      where: { id: meetingId },
+      data: {
+        title: updateData.title ?? meeting.title,
+        description: updateData.description ?? meeting.description,
+        scheduledAt: updateData.scheduledAt ?? meeting.scheduledAt,
+        audienceType: updateData.audienceType ?? meeting.audienceType,
+      },
+    });
+
+    // Handle invitations if audienceType is SPECIFIC_MEMBERS
+    if (
+      updateData.audienceType === "SPECIFIC_MEMBERS" &&
+      updateData.invitedUserIds
+    ) {
+      // Delete old invitations
+      await prisma.meetingInvitation.deleteMany({ where: { meetingId } });
+      // Create new invitations
+      await Promise.all(
+        updateData.invitedUserIds.map(async (userId: string) => {
+          const [student, advisor] = await prisma.$transaction([
+            prisma.student.findUnique({ where: { id: userId } }),
+            prisma.advisor.findUnique({ where: { id: userId } }),
+          ]);
+          return prisma.meetingInvitation.create({
+            data: {
+              meetingId,
+              studentId: student?.id || null,
+              advisorId: advisor?.id || null,
+              status: "PENDING",
+            },
+          });
+        })
+      );
+    } else if (updateData.audienceType === "ALL_SOCIETY_MEMBERS") {
+      // Remove all invitations if switching to ALL_SOCIETY_MEMBERS
+      await prisma.meetingInvitation.deleteMany({ where: { meetingId } });
+    }
+
+    this.sendMeetingNotifications(meeting.id);
+
+    return updatedMeeting;
+  }
 }
