@@ -68,7 +68,7 @@ export const JoinMeetingButton: React.FC<JoinMeetingButtonProps> = ({
         onClick={onJoin}
         disabled={isLoading}
       >
-        <LogIn className="h-4 w-4 mr-2" />
+        <LogIn className="text-inherit h-4 w-4 mr-2" />
         {isLoading ? "Joining..." : "Join Meeting"}
       </Button>
     </>

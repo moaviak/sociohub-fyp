@@ -10,6 +10,9 @@ interface HintProps {
   description: string;
   side?: "top" | "bottom" | "left" | "right";
   sideOffset?: number;
+  delay?: number | { open: number; close: number };
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
 export const Hint = ({
@@ -17,10 +20,16 @@ export const Hint = ({
   description,
   side = "bottom",
   sideOffset = 0,
+  delay,
+  open,
+  onOpenChange,
 }: HintProps) => {
   return (
-    <TooltipProvider>
-      <Tooltip>
+    <TooltipProvider
+      delayDuration={typeof delay === "number" ? delay : undefined}
+      skipDelayDuration={typeof delay === "object" ? delay.open : undefined}
+    >
+      <Tooltip open={open} onOpenChange={onOpenChange}>
         <TooltipTrigger asChild>{children}</TooltipTrigger>
         <TooltipContent
           sideOffset={sideOffset}

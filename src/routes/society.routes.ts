@@ -13,6 +13,7 @@ import {
   getSocieties,
   getSociety,
   getSocietyMembers,
+  getSocietyPeople,
   removeMember,
   updateSettings,
   updateSocietyProfile,
@@ -51,6 +52,8 @@ router
     validate,
     removeMember
   );
+
+router.route("/people/:societyId").get(verifyJWT, getSocietyPeople);
 
 router.use("/roles", RolesRouter);
 

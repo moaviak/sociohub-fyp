@@ -440,6 +440,177 @@ export const getSocietyMembers = asyncHandler(
   }
 );
 
+export const getSocietyPeople = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { societyId } = req.params;
+    const user = req.user as IUser;
+    const search = req.query.search as string | undefined;
+
+    if (!societyId) {
+      throw new ApiError(400, "Society ID is required.");
+    }
+
+    // 1. Check if the user is the advisor or a member of the society
+    const [isAdvisor, isMember] = await prisma.$transaction([
+      prisma.advisor.findFirst({
+        where: {
+          id: user.id,
+          societyId: societyId,
+        },
+        select: { id: true },
+      }),
+      prisma.studentSociety.findFirst({
+        where: {
+          studentId: user.id,
+          societyId: societyId,
+        },
+        select: { studentId: true },
+      }),
+    ]);
+
+    if (!isAdvisor && !isMember) {
+      throw new ApiError(
+        403,
+        "You are not authorized to view people of this society."
+      );
+    }
+
+    // 2. Fetch advisor (with search filter if search is provided)
+    let advisor = null;
+    if (search) {
+      advisor = await prisma.advisor.findFirst({
+        where: {
+          societyId,
+          OR: [
+            { firstName: { contains: search, mode: "insensitive" } },
+            { lastName: { contains: search, mode: "insensitive" } },
+            { email: { contains: search, mode: "insensitive" } },
+            { displayName: { contains: search, mode: "insensitive" } },
+            { phone: { contains: search, mode: "insensitive" } },
+          ],
+        },
+        select: {
+          id: true,
+          firstName: true,
+          lastName: true,
+          email: true,
+          avatar: true,
+          displayName: true,
+          phone: true,
+        },
+      });
+    } else {
+      advisor = await prisma.advisor.findFirst({
+        where: { societyId },
+        select: {
+          id: true,
+          firstName: true,
+          lastName: true,
+          email: true,
+          avatar: true,
+          displayName: true,
+          phone: true,
+        },
+      });
+    }
+
+    // 3. Fetch members with their roles and privileges
+    const where: any = { societyId };
+    if (search) {
+      where.AND = [
+        {
+          OR: [
+            {
+              student: { firstName: { contains: search, mode: "insensitive" } },
+            },
+            {
+              student: { lastName: { contains: search, mode: "insensitive" } },
+            },
+            { student: { email: { contains: search, mode: "insensitive" } } },
+            {
+              student: {
+                registrationNumber: { contains: search, mode: "insensitive" },
+              },
+            },
+          ],
+        },
+      ];
+    }
+
+    const members = await prisma.studentSociety.findMany({
+      where: Object.keys(where).length ? where : undefined,
+      select: {
+        societyId: true,
+        student: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            registrationNumber: true,
+            avatar: true,
+          },
+        },
+        roles: {
+          select: {
+            role: {
+              select: {
+                id: true,
+                name: true,
+                privileges: {
+                  select: {
+                    key: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+        interestedRole: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
+    });
+
+    // 4. Format the response
+    const formattedMembers = members.map((member) => {
+      const allRoles = member.roles.map((r) => r.role);
+      const filteredRoles =
+        allRoles.length > 1
+          ? allRoles.filter((role) => role.name !== "Member")
+          : allRoles;
+      return {
+        id: member.student.id,
+        societyId: member.societyId,
+        firstName: member.student.firstName,
+        lastName: member.student.lastName,
+        email: member.student.email,
+        registrationNumber: member.student.registrationNumber,
+        interestedRole: member.interestedRole,
+        roles: filteredRoles.map((role) => ({
+          id: role.id,
+          name: role.name,
+        })),
+        avatar: member.student.avatar,
+      };
+    });
+
+    return res.status(200).json(
+      new ApiResponse(
+        200,
+        {
+          advisor: advisor || undefined,
+          members: formattedMembers,
+        },
+        "Society people (advisor and members) fetched successfully."
+      )
+    );
+  }
+);
+
 export const removeMember = asyncHandler(
   async (req: Request, res: Response) => {
     const { societyId } = req.params;

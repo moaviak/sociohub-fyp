@@ -55,7 +55,7 @@ router.post(
   [
     verifyJWT,
     (req: Request, _res: Response, next: NextFunction) => {
-      req.body.societyId = req.params.societyId;
+      req.body.societyId = req.query.societyId;
       next();
     },
     verifyMeetingsPrivilege,

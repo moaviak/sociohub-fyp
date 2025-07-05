@@ -150,8 +150,8 @@ export interface Meeting {
   startedAt?: string;
   endedAt?: string;
   expiry?: string;
-  invitedUserIds: string[];
-  invitedUsers: User[];
+  invitations?: [MeetingInvitation];
+  participants?: [MeetingParticipant];
   createdAt: string;
   updatedAt: string;
 }
@@ -166,4 +166,20 @@ export enum MeetingStatus {
   LIVE = "LIVE",
   ENDED = "ENDED",
   CANCELLED = "CANCELLED",
+}
+
+export interface MeetingParticipant {
+  advisor?: Advisor;
+  student?: Student;
+  joinedAt: string;
+  leftAt?: string;
+  role: "HOST" | "PARTICIPANT";
+}
+
+export interface MeetingInvitation {
+  advisor?: Advisor;
+  advisorId?: string;
+  student?: Student;
+  studentId?: string;
+  status: "PENDING" | "ACCEPTED" | "DECLINED";
 }

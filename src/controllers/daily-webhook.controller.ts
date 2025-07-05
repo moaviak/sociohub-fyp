@@ -134,41 +134,61 @@ async function handleParticipantJoined(
     ]);
 
     if (student) {
-      await prisma.meetingParticipant.upsert({
-        where: {
-          meetingId_studentId: { meetingId: meeting.id, studentId: user_id },
-        },
-        update: {
-          joinedAt: new Date(joined_at),
-          dailySessionId: session_id,
-          leftAt: null, // Reset left time in case of rejoin
-        },
-        create: {
-          meetingId: meeting.id,
-          studentId: user_id,
-          joinedAt: new Date(joined_at),
-          dailySessionId: session_id,
-          role: user_id === meeting.hostStudentId ? "HOST" : "PARTICIPANT",
-        },
-      });
+      await Promise.all([
+        prisma.meetingParticipant.upsert({
+          where: {
+            meetingId_studentId: { meetingId: meeting.id, studentId: user_id },
+          },
+          update: {
+            joinedAt: new Date(joined_at),
+            dailySessionId: session_id,
+            leftAt: null, // Reset left time in case of rejoin
+          },
+          create: {
+            meetingId: meeting.id,
+            studentId: user_id,
+            joinedAt: new Date(joined_at),
+            dailySessionId: session_id,
+            role: user_id === meeting.hostStudentId ? "HOST" : "PARTICIPANT",
+          },
+        }),
+        prisma.meetingInvitation.update({
+          where: {
+            meetingId_studentId: { meetingId: meeting.id, studentId: user_id },
+          },
+          data: {
+            status: "ACCEPTED",
+          },
+        }),
+      ]);
     } else if (advisor) {
-      await prisma.meetingParticipant.upsert({
-        where: {
-          meetingId_advisorId: { meetingId: meeting.id, advisorId: user_id },
-        },
-        update: {
-          joinedAt: new Date(joined_at),
-          dailySessionId: session_id,
-          leftAt: null, // Reset left time in case of rejoin
-        },
-        create: {
-          meetingId: meeting.id,
-          advisorId: user_id,
-          joinedAt: new Date(joined_at),
-          dailySessionId: session_id,
-          role: user_id === meeting.hostAdvisorId ? "HOST" : "PARTICIPANT",
-        },
-      });
+      await Promise.all([
+        prisma.meetingParticipant.upsert({
+          where: {
+            meetingId_advisorId: { meetingId: meeting.id, advisorId: user_id },
+          },
+          update: {
+            joinedAt: new Date(joined_at),
+            dailySessionId: session_id,
+            leftAt: null, // Reset left time in case of rejoin
+          },
+          create: {
+            meetingId: meeting.id,
+            advisorId: user_id,
+            joinedAt: new Date(joined_at),
+            dailySessionId: session_id,
+            role: user_id === meeting.hostAdvisorId ? "HOST" : "PARTICIPANT",
+          },
+        }),
+        prisma.meetingInvitation.update({
+          where: {
+            meetingId_advisorId: { meetingId: meeting.id, advisorId: user_id },
+          },
+          data: {
+            status: "ACCEPTED",
+          },
+        }),
+      ]);
     }
 
     console.log(`Participant ${user_id} joined meeting ${meeting.id}`);
@@ -272,13 +292,21 @@ async function handleMeetingEnded(event: DailyWebhookEvent): Promise<void> {
       console.log("Meeting expiry time didn't reach yet.");
       return;
     }
-    await prisma.meeting.update({
-      where: { id: meeting.id },
-      data: {
-        status: "ENDED",
-        endedAt: new Date(end_ts),
-      },
-    });
+    await Promise.all([
+      prisma.meeting.update({
+        where: { id: meeting.id },
+        data: {
+          status: "ENDED",
+          endedAt: new Date(end_ts),
+        },
+      }),
+      prisma.meetingInvitation.updateMany({
+        where: { meetingId: meeting.id },
+        data: {
+          status: "DECLINED",
+        },
+      }),
+    ]);
     console.log(`Meeting ended for room: ${room}`);
   } catch (error) {
     console.error("Error handling meeting ended:", error);

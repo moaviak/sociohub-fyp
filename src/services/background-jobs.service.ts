@@ -14,7 +14,7 @@ const sentReminders = new Set<string>();
  */
 export const initializeBackgroundJobs = () => {
   // Schedule join request cleanup
-  scheduleJoinRequestCleanup();
+  scheduleCleanup();
   // Schedule event publishing
   schedulePublishing();
   // Schedule event status updates
@@ -29,7 +29,7 @@ export const initializeBackgroundJobs = () => {
  * - Deletes join requests that are older than 30 days and don't have "PENDING" status
  * - Also cleans up associated PDF files from Cloudinary
  */
-const scheduleJoinRequestCleanup = () => {
+const scheduleCleanup = () => {
   // Schedule to run at midnight (00:00) every day
   cron.schedule("0 0 * * *", async () => {
     try {
@@ -49,12 +49,23 @@ const scheduleJoinRequestCleanup = () => {
       });
 
       // Delete the records from database
-      const { count } = await prisma.joinRequest.deleteMany({
-        where: {
-          status: { not: "PENDING" },
-          createdAt: { lt: thirtyDaysAgo },
-        },
-      });
+      const [{ count: requestsCount }, { count: meetingCount }] =
+        await Promise.all([
+          prisma.joinRequest.deleteMany({
+            where: {
+              status: { not: "PENDING" },
+              createdAt: { lt: thirtyDaysAgo },
+            },
+          }),
+          prisma.meeting.deleteMany({
+            where: {
+              status: {
+                in: ["CANCELLED", "ENDED"],
+              },
+              createdAt: { lt: thirtyDaysAgo },
+            },
+          }),
+        ]);
 
       // Delete PDF files from Cloudinary
       const pdfDeletionPromises = oldRequests
@@ -64,7 +75,7 @@ const scheduleJoinRequestCleanup = () => {
       await Promise.all(pdfDeletionPromises);
 
       logger.info(
-        `Cleanup completed: Deleted ${count} join requests older than 30 days`
+        `Cleanup completed: Deleted ${requestsCount} join requests and ${meetingCount} meetings older than 30 days`
       );
     } catch (error) {
       logger.error("Error during join request cleanup:", error);

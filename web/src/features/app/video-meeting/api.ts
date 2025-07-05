@@ -67,6 +67,35 @@ export const MeetingApi = api.injectEndpoints({
       },
       invalidatesTags: ["Meetings"],
     }),
+    updateMeeting: builder.mutation<
+      Meeting | ApiError,
+      {
+        meetingId: string;
+        title: string;
+        description?: string;
+        scheduledAt: Date;
+        societyId: string;
+        audienceType: "ALL_SOCIETY_MEMBERS" | "SPECIFIC_MEMBERS";
+        invitedUserIds: string[];
+      }
+    >({
+      query: ({ meetingId, societyId, ...body }) => ({
+        url: `/meetings/${meetingId}?societyId=${societyId}`,
+        method: "POST",
+        body,
+      }),
+      transformResponse: (response: ApiResponse<Meeting>) => {
+        if (response.success) {
+          return response.data;
+        }
+        return createApiError(response.message);
+      },
+      transformErrorResponse: (response) => {
+        const errorResponse = response.data as ApiErrorResponse;
+        return createApiError(errorResponse.message);
+      },
+      invalidatesTags: ["Meetings"],
+    }),
     getMyMeetings: builder.query<Meeting[] | ApiError, { societyId: string }>({
       query: ({ societyId }) => ({
         url: `/meetings/my-meetings?societyId=${societyId}`,
@@ -112,6 +141,13 @@ export const MeetingApi = api.injectEndpoints({
       transformErrorResponse: (response) => {
         const errorResponse = response.data as ApiErrorResponse;
         return createApiError(errorResponse.message);
+      },
+      providesTags: (result) => {
+        if (result && !("error" in result)) {
+          return [{ type: "Meetings", id: result.id }];
+        } else {
+          return [];
+        }
       },
     }),
     cancelMeeting: builder.mutation<Meeting | ApiError, { meetingId: string }>({
@@ -177,4 +213,5 @@ export const {
   useCancelMeetingMutation,
   useEndMeetingMutation,
   useJoinByCodeMutation,
+  useUpdateMeetingMutation,
 } = MeetingApi;

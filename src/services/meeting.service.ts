@@ -137,6 +137,28 @@ export class MeetingService {
       include: {
         hostAdvisor: true,
         hostStudent: true,
+        invitations: {
+          select: {
+            advisorId: true,
+            studentId: true,
+            advisor: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                avatar: true,
+              },
+            },
+            student: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                avatar: true,
+              },
+            },
+          },
+        },
       },
       orderBy: { scheduledAt: "asc" },
     });
@@ -261,6 +283,66 @@ export class MeetingService {
   async getMeetingById(meetingId: string): Promise<Meeting> {
     const meeting = await prisma.meeting.findUnique({
       where: { id: meetingId },
+      include: {
+        hostAdvisor: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            avatar: true,
+          },
+        },
+        hostStudent: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            avatar: true,
+          },
+        },
+        participants: {
+          select: {
+            advisor: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+              },
+            },
+            student: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                registrationNumber: true,
+              },
+            },
+            joinedAt: true,
+            leftAt: true,
+            role: true,
+          },
+        },
+        invitations: {
+          select: {
+            advisor: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+              },
+            },
+            student: {
+              select: {
+                id: true,
+                firstName: true,
+                lastName: true,
+                registrationNumber: true,
+              },
+            },
+            status: true,
+          },
+        },
+      },
     });
     if (!meeting) throw new ApiError(404, "Meeting not found");
     return meeting;
@@ -462,6 +544,7 @@ export class MeetingService {
       where: { id: meeting.id },
       data: {
         status: "ENDED",
+        endedAt: new Date(),
       },
     });
   }

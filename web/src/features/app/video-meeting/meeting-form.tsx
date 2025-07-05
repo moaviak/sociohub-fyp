@@ -16,12 +16,12 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Button } from "@/components/ui/button";
 import { FlyoutSearch } from "./components/flyout-search";
 import { InvitedMembersChips } from "./components/invited-members-chips";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import useGetSocietyId from "@/hooks/useGetSocietyId";
-import { useCreateMeetingMutation } from "./api";
+import { useCreateMeetingMutation, useUpdateMeetingMutation } from "./api";
 import { toast } from "sonner";
 import ApiError from "@/features/api-error";
-import { Meeting } from "@/types";
+import { Meeting, MeetingStatus } from "@/types";
 
 // Add CheckedUser type
 export type CheckedUser = {
@@ -36,35 +36,89 @@ interface MeetingFormProps {
   onSuccess?: () => void;
 }
 
-export const MeetingForm: React.FC<MeetingFormProps> = ({ onSuccess }) => {
+export const MeetingForm: React.FC<MeetingFormProps> = ({
+  meeting,
+  onSuccess,
+}) => {
   const societyId = useGetSocietyId();
   const form = useForm<CreateMeetingData>({
     resolver: zodResolver(createMeetingSchema),
+    defaultValues: {
+      title: "",
+      description: "",
+    },
   });
 
   const [createMeeting, { isLoading }] = useCreateMeetingMutation();
+  const [updateMeeting, { isLoading: isUpdating }] = useUpdateMeetingMutation();
 
   const [checkedUsers, setCheckedUsers] = useState<CheckedUser[]>([]);
 
   const audience = form.watch("audienceType");
+
+  useEffect(() => {
+    if (meeting) {
+      form.reset({
+        title: meeting.title ?? "",
+        description: meeting.description ?? "",
+        startTime: new Date(meeting.scheduledAt),
+        audienceType: meeting.audienceType ?? undefined,
+        invitedUsers: meeting.invitations
+          ? meeting.invitations.map(
+              (invitation) => invitation.advisorId || invitation.studentId
+            )
+          : [],
+      });
+
+      const checked = (meeting.invitations ?? [])
+        .map((invitation) => {
+          const id = invitation.student?.id || invitation.advisor?.id;
+          if (!id) return undefined;
+          return {
+            id,
+            firstName:
+              invitation.student?.firstName ||
+              invitation.advisor?.firstName ||
+              "",
+            lastName:
+              invitation.student?.lastName ||
+              invitation.advisor?.lastName ||
+              "",
+            avatar: invitation.student?.avatar || invitation.advisor?.avatar,
+          };
+        })
+        .filter((u) => !!u);
+      setCheckedUsers(checked);
+    }
+  }, [form, meeting]);
 
   const onSubmit = async (data: CreateMeetingData) => {
     const invitedUserIds = checkedUsers.map((u) => u.id);
     const payload = {
       ...data,
       scheduledAt: data.startTime,
-      societyId: societyId || "",
+      societyId: societyId!,
       invitedUserIds,
     };
 
     try {
-      const response = await createMeeting(payload);
+      if (!meeting) {
+        const response = await createMeeting(payload).unwrap();
 
-      if (!("error" in response)) {
-        toast.success("Meeting created successfully");
-        if (onSuccess) onSuccess();
+        if (!("error" in response)) {
+          toast.success("Meeting created successfully");
+          if (onSuccess) onSuccess();
+        }
       } else {
-        throw response.error;
+        const response = await updateMeeting({
+          meetingId: meeting.id,
+          ...payload,
+        }).unwrap();
+
+        if (!("error" in response)) {
+          toast.success("Meeting updated successfully");
+          if (onSuccess) onSuccess();
+        }
       }
     } catch (error) {
       const message =
@@ -114,29 +168,31 @@ export const MeetingForm: React.FC<MeetingFormProps> = ({ onSuccess }) => {
             )}
           />
 
-          <FormField
-            control={form.control}
-            name="startTime"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>
-                  Start Time <span className="text-red-500">*</span>
-                </FormLabel>
-                <FormControl>
-                  <DateTimePicker
-                    value={field.value}
-                    onChange={field.onChange}
-                    disabled={(date) => {
-                      const today = new Date();
-                      today.setHours(0, 0, 0, 0);
-                      return date < today;
-                    }}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          {(!meeting || meeting.status === MeetingStatus.SCHEDULED) && (
+            <FormField
+              control={form.control}
+              name="startTime"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>
+                    Start Time <span className="text-red-500">*</span>
+                  </FormLabel>
+                  <FormControl>
+                    <DateTimePicker
+                      value={field.value}
+                      onChange={field.onChange}
+                      disabled={(date) => {
+                        const today = new Date();
+                        today.setHours(0, 0, 0, 0);
+                        return date < today;
+                      }}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          )}
 
           <FormField
             control={form.control}
@@ -195,8 +251,14 @@ export const MeetingForm: React.FC<MeetingFormProps> = ({ onSuccess }) => {
           )}
 
           <div className="mt-4 float-end">
-            <Button type="submit" disabled={isLoading}>
-              {isLoading ? "Creating..." : "Create"}
+            <Button type="submit" disabled={isLoading || isUpdating}>
+              {!meeting
+                ? isLoading
+                  ? "Creating..."
+                  : "Create"
+                : isUpdating
+                ? "Upating..."
+                : "Update"}
             </Button>
           </div>
         </Form>
