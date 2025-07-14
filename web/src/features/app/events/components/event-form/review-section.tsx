@@ -129,19 +129,6 @@ export const ReviewSection = ({ form }: ReviewSectionProps) => {
         label: "Ticket Price",
         value: values.ticketPrice ? `PKR ${values.ticketPrice}` : "-",
       },
-    values.isRegistrationRequired &&
-      values.isPaidEvent && {
-        label: "Payment Methods",
-        value: values.paymentGateways?.length ? (
-          <div className="flex flex-wrap gap-2">
-            {values.paymentGateways.map((pm: string) => (
-              <Badge key={pm}>{pm}</Badge>
-            ))}
-          </div>
-        ) : (
-          "-"
-        ),
-      },
   ];
 
   // Section: Announcement

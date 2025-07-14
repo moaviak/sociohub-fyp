@@ -1,10 +1,6 @@
 import { SearchInput } from "@/components/search-input";
 import { SearchFilter } from "@/components/search-filters";
-import {
-  useDeleteEventMutation,
-  useGetSocietyEventsQuery,
-  useRegisterForEventMutation,
-} from "./api";
+import { useDeleteEventMutation, useGetSocietyEventsQuery } from "./api";
 import useGetSocietyId from "@/hooks/useGetSocietyId";
 import { useEffect, useState } from "react";
 import { EmptyState } from "../explore/components/empty-state";
@@ -24,24 +20,16 @@ export const Events = () => {
     status: filters.status || "",
     categories: filters.categories.join(","),
   });
-  const [registerForEvent, { isLoading: isRegistering, isError }] =
-    useRegisterForEventMutation();
   const [deleteEvent, { isLoading: isDeleting, isError: isDeleteError }] =
     useDeleteEventMutation();
 
   useEffect(() => {
-    if (isError) {
-      toast.error(
-        "An unexpected error occurred when registering. Please try again!"
-      );
-    }
-
     if (isDeleteError) {
       toast.error(
         "Unexpected error occurred while deleting. Please try again!"
       );
     }
-  }, [isError, isDeleteError]);
+  }, [isDeleteError]);
 
   if (!isLoading && (!events || "error" in events)) {
     return (
@@ -51,14 +39,6 @@ export const Events = () => {
       />
     );
   }
-
-  const onRegister = async (eventId: string) => {
-    const response = await registerForEvent(eventId);
-
-    if (!("error" in response)) {
-      toast.success("You have been successfully registered for event.");
-    }
-  };
 
   const onDelete = async (eventId: string, societyId: string) => {
     const response = await deleteEvent({ eventId, societyId });
@@ -95,8 +75,6 @@ export const Events = () => {
               <EventCard
                 key={event.id}
                 event={event}
-                isRegistering={isRegistering}
-                onRegister={onRegister}
                 onDelete={onDelete}
                 isDeleting={isDeleting}
               />

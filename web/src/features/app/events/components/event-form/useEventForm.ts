@@ -60,7 +60,6 @@ export function useEventForm(event?: Event) {
       maximumParticipants: event?.maxParticipants ?? undefined,
       isPaidEvent: event?.paidEvent || false,
       ticketPrice: event?.ticketPrice ?? undefined,
-      paymentGateways: event?.paymentMethods || [],
       isAnnouncementEnabled: event?.announcementEnabled || false,
       announcement: event?.announcement ?? undefined,
       eventCategories: event?.categories || [],

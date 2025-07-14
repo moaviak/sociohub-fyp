@@ -5,6 +5,7 @@ import { ApiError } from "../utils/ApiError";
 import logger from "../logger/winston.logger";
 import { asyncHandler } from "../utils/asyncHandler";
 import { removeUnusedMulterImageFilesOnError } from "../utils/helpers";
+import Stripe from "stripe";
 
 interface CustomError extends Error {
   statusCode?: number;
@@ -67,6 +68,19 @@ const errorHandler: express.ErrorRequestHandler = (
       // Unknown Prisma Client error
       statusCode = 500;
       message = "Unexpected database error";
+    }
+
+    // Stripe errors
+    if (error instanceof Stripe.errors.StripeError) {
+      if (error.type === "StripeCardError") {
+        message = "Payment failed: " + err.message;
+        statusCode = 400;
+      }
+
+      if (error.type === "StripeInvalidRequestError") {
+        statusCode = 400;
+        message = "Invalid payment request";
+      }
     }
 
     error = new ApiError(

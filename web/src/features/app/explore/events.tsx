@@ -5,10 +5,7 @@ import { EmptyState } from "../explore/components/empty-state";
 import { Event } from "@/types";
 import { useGetEventsQuery } from "./api";
 import { EventCard } from "@/components/events/event-card";
-import {
-  useDeleteEventMutation,
-  useRegisterForEventMutation,
-} from "../events/api";
+import { useDeleteEventMutation } from "../events/api";
 import { toast } from "sonner";
 import { useDebounceCallback } from "usehooks-ts";
 
@@ -30,24 +27,16 @@ const Events = () => {
     status: filters.status || "",
     categories: filters.categories.join(","),
   });
-  const [registerForEvent, { isLoading: isRegistering, isError }] =
-    useRegisterForEventMutation();
   const [deleteEvent, { isLoading: isDeleting, isError: isDeleteError }] =
     useDeleteEventMutation();
 
   useEffect(() => {
-    if (isError) {
-      toast.error(
-        "An unexpected error occurred when registering. Please try again!"
-      );
-    }
-
     if (isDeleteError) {
       toast.error(
         "Unexpected error occurred while deleting. Please try again!"
       );
     }
-  }, [isError, isDeleteError]);
+  }, [isDeleteError]);
 
   if (!isLoading && (!events || "error" in events)) {
     return (
@@ -57,14 +46,6 @@ const Events = () => {
       />
     );
   }
-
-  const onRegister = async (eventId: string) => {
-    const response = await registerForEvent(eventId);
-
-    if (!("error" in response)) {
-      toast.success("You have been successfully registered for event.");
-    }
-  };
 
   const onDelete = async (eventId: string, societyId: string) => {
     const response = await deleteEvent({ eventId, societyId });
@@ -80,47 +61,47 @@ const Events = () => {
   };
 
   return (
-    <div className="flex flex-col px-4 pt-4 w-full">
-      {" "}
-      <div className="flex gap-x-4 py-2">
-        <SearchInput
-          placeholder="Search Events"
-          value={input}
-          onChange={handleInputChange}
-          isSearching={!isLoading && isFetching}
-        />
-        <SearchFilter
-          onFilterChange={(filters) =>
-            setFilters({
-              status: filters.status ?? undefined,
-              categories: filters.categories as string[],
-            })
-          }
-        />
+    <>
+      <div className="flex flex-col px-4 pt-4 w-full">
+        {" "}
+        <div className="flex gap-x-4 py-2">
+          <SearchInput
+            placeholder="Search Events"
+            value={input}
+            onChange={handleInputChange}
+            isSearching={!isLoading && isFetching}
+          />
+          <SearchFilter
+            onFilterChange={(filters) =>
+              setFilters({
+                status: filters.status ?? undefined,
+                categories: filters.categories as string[],
+              })
+            }
+          />
+        </div>
+        <div className="w-full p-4">
+          {isLoading ? (
+            <div className="grid grid-cols-3 gap-4">
+              <EventCard.Skeleton />
+              <EventCard.Skeleton />
+              <EventCard.Skeleton />
+            </div>
+          ) : (
+            <div className="grid grid-cols-3 gap-4">
+              {(events as Event[]).map((event) => (
+                <EventCard
+                  key={event.id}
+                  event={event}
+                  onDelete={onDelete}
+                  isDeleting={isDeleting}
+                />
+              ))}
+            </div>
+          )}
+        </div>
       </div>
-      <div className="w-full p-4">
-        {isLoading ? (
-          <div className="grid grid-cols-3 gap-4">
-            <EventCard.Skeleton />
-            <EventCard.Skeleton />
-            <EventCard.Skeleton />
-          </div>
-        ) : (
-          <div className="grid grid-cols-3 gap-4">
-            {(events as Event[]).map((event) => (
-              <EventCard
-                key={event.id}
-                event={event}
-                isRegistering={isRegistering}
-                onRegister={onRegister}
-                onDelete={onDelete}
-                isDeleting={isDeleting}
-              />
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
+    </>
   );
 };
 

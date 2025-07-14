@@ -5,6 +5,7 @@ import {
   haveEventsPrivilege,
   haveMeetingsPrivilege,
   haveMembersPrivilege,
+  havePaymentsPrivilege,
   haveSettingsPrivilege,
   haveTicketHandlingPrivilege,
 } from "../utils/helpers";
@@ -98,6 +99,23 @@ export const verifyMeetingsPrivilege = asyncHandler(
     }
 
     if (await haveMeetingsPrivilege(userId, societyId)) {
+      next();
+    } else {
+      throw new ApiError(403, "You don't have permission for this operation.");
+    }
+  }
+);
+
+export const verifyPaymentsPrivilege = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const userId = (req.user as IUser).id;
+    const { societyId } = req.body;
+
+    if (!societyId) {
+      throw new ApiError(403, "You don't have permission for this operation.");
+    }
+
+    if (await havePaymentsPrivilege(userId, societyId)) {
       next();
     } else {
       throw new ApiError(403, "You don't have permission for this operation.");

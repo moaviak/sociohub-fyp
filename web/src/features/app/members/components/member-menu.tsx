@@ -1,7 +1,7 @@
 import { Link } from "react-router";
 import { MoreHorizontal } from "lucide-react";
 
-import { Member } from "@/types";
+import { Advisor, Member } from "@/types";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -36,10 +36,10 @@ export const MemberMenu = ({ member }: MemberMenuProps) => {
   const isStudent = user && "registrationNumber" in user;
   const havePrivilege = isStudent
     ? haveMembersPrivilege(user.societies || [], societyId || "")
-    : true;
+    : member.societyId === (user as Advisor).societyId;
   const haveTaskPrivilege = isStudent
     ? haveTasksPrivilege(user.societies || [], societyId || "")
-    : true;
+    : member.societyId === (user as Advisor).societyId;
 
   const handleRemoveMember = (e: React.MouseEvent) => {
     e.preventDefault();

@@ -4,6 +4,7 @@ import { VideoMeeting } from "@/features/app/video-meeting";
 import { JoinWithCode } from "@/features/app/video-meeting/join-with-code";
 import { NewMeeting } from "@/features/app/video-meeting/new-meeting";
 import { haveMeetingsPrivilege } from "@/lib/utils";
+import { Advisor } from "@/types";
 
 const VideoMeetingPage = () => {
   const { user } = useAppSelector((state) => state.auth);
@@ -17,7 +18,7 @@ const VideoMeetingPage = () => {
 
   const havePrivilege = isStudent
     ? haveMeetingsPrivilege(user.societies || [], societyId || "")
-    : true;
+    : !societyId || societyId === (user as Advisor).societyId;
 
   return (
     <div className="flex flex-col px-4 py-2">

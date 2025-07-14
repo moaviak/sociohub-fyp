@@ -148,31 +148,6 @@ export const createEventValidator = () => [
       return typeof value === "number" && value > 0;
     })
     .withMessage("Ticket price must be a positive integer"),
-  body("paymentMethods")
-    .optional()
-    .custom((value, { req }) => {
-      if (value === undefined || value === null || value === "") {
-        req.body.paymentMethods = [];
-        return true;
-      }
-      if (typeof value === "string") {
-        try {
-          const parsedValue = JSON.parse(value);
-          if (Array.isArray(parsedValue)) {
-            req.body.paymentMethods = parsedValue;
-            return true;
-          }
-        } catch (e) {
-          // Invalid JSON string
-        }
-        return false;
-      }
-      if (Array.isArray(value)) {
-        return true;
-      }
-      return false;
-    })
-    .withMessage("Payment methods must be an array"),
 
   // Section 6: Announcement
   body("announcementEnabled")
@@ -543,31 +518,6 @@ export const updateEventValidator = () => [
       return typeof value === "number" && value > 0;
     })
     .withMessage("Ticket price must be a positive integer"),
-  body("paymentMethods")
-    .optional()
-    .custom((value, { req }) => {
-      if (value === undefined || value === null || value === "") {
-        req.body.paymentMethods = [];
-        return true;
-      }
-      if (typeof value === "string") {
-        try {
-          const parsedValue = JSON.parse(value);
-          if (Array.isArray(parsedValue)) {
-            req.body.paymentMethods = parsedValue;
-            return true;
-          }
-        } catch (e) {
-          // Invalid JSON string
-        }
-        return false;
-      }
-      if (Array.isArray(value)) {
-        return true;
-      }
-      return false;
-    })
-    .withMessage("Payment methods must be an array"),
 
   // Section 6: Announcement
   body("announcementEnabled")

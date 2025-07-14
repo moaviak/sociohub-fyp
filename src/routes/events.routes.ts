@@ -23,8 +23,11 @@ import {
   cancelEvent,
   getUserRegisteredEvents,
   scanTicket,
+  completeRegistration,
+  cancelRegistration,
 } from "../controllers/event.controller";
 import { verifyEventsPrivilege } from "../middlewares/privilege.middlewares";
+import { body } from "express-validator";
 
 const router = Router();
 
@@ -122,5 +125,9 @@ router.post(
   },
   registerForEvent
 );
+
+router.post("/:registrationId/complete", verifyJWT, completeRegistration);
+
+router.post("/:registrationId/cancel", verifyJWT, cancelRegistration);
 
 export default router;

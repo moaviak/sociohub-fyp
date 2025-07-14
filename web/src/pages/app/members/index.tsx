@@ -4,6 +4,7 @@ import { useAppSelector } from "@/app/hooks";
 import Members from "@/features/app/members";
 import { Button } from "@/components/ui/button";
 import { haveMembersPrivilege } from "@/lib/utils";
+import { Advisor } from "@/types";
 
 function MembersPage() {
   const { user } = useAppSelector((state) => state.auth);
@@ -18,7 +19,7 @@ function MembersPage() {
 
   const havePrivilege = isStudent
     ? haveMembersPrivilege(user.societies || [], societyId || "")
-    : true;
+    : !societyId || societyId === (user as Advisor).societyId;
 
   if (
     !(location.pathname === "/members") &&

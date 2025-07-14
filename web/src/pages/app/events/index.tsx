@@ -5,6 +5,7 @@ import { haveEventsPrivilege } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { Events } from "@/features/app/events";
+import { Advisor } from "@/types";
 
 const EventsPage = () => {
   const { user } = useAppSelector((state) => state.auth);
@@ -19,7 +20,7 @@ const EventsPage = () => {
 
   const havePrivilege = isStudent
     ? haveEventsPrivilege(user.societies || [], societyId || "")
-    : true;
+    : !societyId || societyId === (user as Advisor).societyId;
 
   if (
     !(location.pathname === "/events") &&

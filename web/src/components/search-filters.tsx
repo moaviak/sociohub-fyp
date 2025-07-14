@@ -25,6 +25,7 @@ import { useAppSelector } from "@/app/hooks";
 import { useParams } from "react-router";
 import { haveEventsPrivilege } from "@/lib/utils";
 import { EventCategories } from "@/features/app/events/schema";
+import { Advisor } from "@/types";
 
 const FilterSchema = z.object({
   status: z.enum(["upcoming", "past", "draft"]).optional(),
@@ -52,7 +53,7 @@ export const SearchFilter = ({ onFilterChange }: SearchFilterProps) => {
   const isStudent = user && "registrationNumber" in user;
   const havePrivilege = isStudent
     ? haveEventsPrivilege(user.societies || [], societyId || "")
-    : true;
+    : !societyId || societyId === (user as Advisor).societyId;
   const onSubmit = (data: FilterData) => {
     onFilterChange(data);
     setIsOpen(false);

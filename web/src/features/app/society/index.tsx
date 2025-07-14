@@ -13,6 +13,7 @@ import { SocietyPosts } from "./components/society-posts";
 import { SocietyEvents } from "./components/society-events";
 import { SocietyInfo } from "./components/society-info";
 import { haveSettingsPrivilege } from "@/lib/utils";
+import { Advisor } from "@/types";
 
 interface SocietyProps {
   id: string;
@@ -41,7 +42,7 @@ export const Society = ({ id }: SocietyProps) => {
   const isStudent = user && "registrationNumber" in user;
   const havePermissionToEdit = isStudent
     ? haveSettingsPrivilege(user.societies || [], society.id)
-    : true;
+    : id === (user as Advisor).societyId;
 
   const onCancelRequest = async () => {
     try {

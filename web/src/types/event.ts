@@ -1,10 +1,5 @@
 import { Society, Student } from ".";
 
-export enum PaymentMethods {
-  CreditCard = "CreditCard",
-  Easypaisa = "Easypaisa",
-}
-
 export enum EventStatus {
   Upcoming = "Upcoming",
   Ongoing = "Ongoing",
@@ -65,7 +60,6 @@ export interface Event {
   maxParticipants?: number;
   paidEvent?: boolean;
   ticketPrice?: number;
-  paymentMethods?: PaymentMethods[];
   announcementEnabled?: boolean;
   announcement?: string;
   status?: EventStatus;

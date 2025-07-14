@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Payment Confirmation</title>
+    <style>
+      body {
+        font-family: "Segoe UI", "Helvetica Neue", Arial, "sans-serif";
+        background: #f7f7f9;
+        color: #222;
+        margin: 0;
+        padding: 0;
+      }
+      .container {
+        max-width: 600px;
+        margin: 40px auto;
+        background: #fff;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        padding: 32px 24px;
+      }
+      .header {
+        text-align: center;
+        margin-bottom: 32px;
+      }
+      .header h1 {
+        color: #2a7be4;
+        margin: 0 0 8px 0;
+      }
+      .details {
+        margin: 24px 0;
+        background: #f1f5fb;
+        border-radius: 6px;
+        padding: 20px;
+      }
+      .details p {
+        margin: 8px 0;
+      }
+      .footer {
+        margin-top: 32px;
+        text-align: center;
+        color: #888;
+        font-size: 13px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>Payment Confirmed</h1>
+        <p>Thank you for your payment!</p>
+      </div>
+      <p>Hi <strong><%= studentName %></strong>,</p>
+      <p>
+        We have received your payment for the event
+        <strong><%= eventTitle %></strong>.
+        <br />
+      </p>
+      <div class="details">
+        <p><strong>Amount Paid:</strong> <%= amountPaid %></p>
+        <p><strong>Payment Date:</strong> <%= paymentDate %></p>
+        <% if (eventDate) { %>
+        <p><strong>Event Date:</strong> <%= eventDate %></p>
+        <% } %> <% if (eventVenue) { %>
+        <p><strong>Venue:</strong> <%= eventVenue %></p>
+        <% } %>
+      </div>
+      <p>
+        If you have any questions or need further assistance, feel free to reply
+        to this email.
+      </p>
+      <p>We look forward to seeing you at the event!</p>
+      <div class="footer">
+        &copy; <%= new Date().getFullYear() %> SocioHub. All rights reserved.
+      </div>
+    </div>
+  </body>
+</html>

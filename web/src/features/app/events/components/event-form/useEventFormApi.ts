@@ -99,8 +99,6 @@ export function useEventFormApi(
         formData.append("paidEvent", data.isPaidEvent.toString());
       if (typeof data.ticketPrice !== "undefined" && data.ticketPrice !== null)
         formData.append("ticketPrice", data.ticketPrice.toString());
-      if (data.paymentGateways && data.paymentGateways.length > 0)
-        formData.append("paymentMethods", JSON.stringify(data.paymentGateways));
       if (typeof data.isAnnouncementEnabled !== "undefined")
         formData.append(
           "announcementEnabled",
@@ -213,7 +211,6 @@ export function useEventFormApi(
       maximumParticipants: "maximumParticipants",
       isPaidEvent: "paidEvent",
       ticketPrice: "ticketPrice",
-      paymentGateways: "paymentMethods",
       isAnnouncementEnabled: "announcementEnabled",
       announcement: "announcement",
     } as const;
@@ -226,7 +223,7 @@ export function useEventFormApi(
         key in fieldMap
       ) {
         const apiKey = fieldMap[key as keyof typeof fieldMap];
-        if (key === "eventCategories" || key === "paymentGateways") {
+        if (key === "eventCategories") {
           if (Array.isArray(data[key]) && data[key].length > 0) {
             formData.append(apiKey, JSON.stringify(data[key]));
           }

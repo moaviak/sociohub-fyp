@@ -37,7 +37,8 @@ export function DatePicker({ value, onChange, disabled }: DatePickerProps) {
           selected={value}
           onSelect={(date) => date && onChange?.(date)}
           disabled={disabled}
-          initialFocus
+          autoFocus
+          classNames={{ day_button: "hover:bg-primary-600 hover:text-white" }}
         />
       </PopoverContent>
     </Popover>

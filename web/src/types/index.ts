@@ -118,6 +118,8 @@ export * from "./event";
 
 export * from "./announcement";
 
+export * from "./payment";
+
 export interface Task {
   id: string;
   description: string;

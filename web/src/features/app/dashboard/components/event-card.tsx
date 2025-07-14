@@ -15,7 +15,7 @@ export const EventCard = ({ event }: EventCardProps) => {
       <div className="flex gap-2 py-2 items-center">
         <div className="w-[108px] rounded-md overflow-hidden aspect-[3/2]">
           <img
-            src={event.banner || "/assets/image-placeholder.png"}
+            src={event.banner || "/assets/images/image-placeholder.png"}
             alt="event-banner"
             className="w-full h-full object-cover"
           />

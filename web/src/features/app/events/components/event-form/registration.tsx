@@ -13,24 +13,54 @@ import { EventFormData } from "../../schema";
 import { Switch } from "@/components/ui/switch";
 import { DateTimePicker } from "@/components/date-time-picker";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
+import { usePaymentGuard } from "@/hooks/usePaymentGuard";
 
 interface RegistrationProps {
   form: UseFormReturn<EventFormData>;
+  societyId: string;
 }
 
-export const Registration = ({ form }: RegistrationProps) => {
+export const Registration = ({ form, societyId }: RegistrationProps) => {
+  const {
+    canCreatePaidEvents,
+    isLoading,
+    isOnboardingPending,
+    needsOnboarding,
+  } = usePaymentGuard(societyId);
+
   const isRegistrationRequired = form.watch("isRegistrationRequired");
   const isPaidEvent = form.watch("isPaidEvent");
-
-  console.log(form.formState.errors);
 
   return (
     <div className="space-y-4">
       <h3 className="h6-semibold">Registration & Tickets</h3>
 
       <div className="space-y-4">
+        {isLoading ? null : needsOnboarding ? (
+          <Alert>
+            <AlertCircle className="h-4 w-4 text-red-600!" />
+            <AlertTitle className="text-red-600">
+              Payment setup is required
+            </AlertTitle>
+            <AlertDescription className="text-red-600">
+              You can't publish paid events until you create your payment
+              account.
+            </AlertDescription>
+          </Alert>
+        ) : isOnboardingPending ? (
+          <Alert>
+            <AlertCircle className="h-4 w-4 text-yellow-600!" />
+            <AlertTitle className="text-yellow-600">
+              Your payment account is being reviewed.
+            </AlertTitle>
+            <AlertDescription className="text-yellow-600">
+              You can't publish paid events until your payment account is
+              verified and active.
+            </AlertDescription>
+          </Alert>
+        ) : null}
         <FormField
           control={form.control}
           name="isRegistrationRequired"
@@ -106,28 +136,30 @@ export const Registration = ({ form }: RegistrationProps) => {
               )}
             />
 
-            <FormField
-              control={form.control}
-              name="isPaidEvent"
-              render={({ field }) => (
-                <FormItem className="flex flex-row items-center justify-between rounded-md outline outline-neutral-300 p-3">
-                  <div className="space-y-0.5">
-                    <FormLabel>Is this a Paid Event?</FormLabel>
-                    <FormDescription>
-                      Enable this option if you want to charge a fee for
-                      registration.
-                    </FormDescription>
-                  </div>
-                  <FormControl>
-                    <Switch
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                      className="cursor-pointer"
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
+            {canCreatePaidEvents && (
+              <FormField
+                control={form.control}
+                name="isPaidEvent"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center justify-between rounded-md outline outline-neutral-300 p-3">
+                    <div className="space-y-0.5">
+                      <FormLabel>Is this a Paid Event?</FormLabel>
+                      <FormDescription>
+                        Enable this option if you want to charge a fee for
+                        registration.
+                      </FormDescription>
+                    </div>
+                    <FormControl>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                        className="cursor-pointer"
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+            )}
 
             {isPaidEvent && (
               <div className="grid grid-cols-2 gap-4">
@@ -156,78 +188,6 @@ export const Registration = ({ form }: RegistrationProps) => {
                         </div>
                       </FormControl>
                       <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="paymentGateways"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>
-                        Payment Methods <span className="text-red-500">*</span>
-                      </FormLabel>
-                      <FormControl>
-                        <div className="flex flex-wrap flex-1 p-2 gap-4">
-                          <div className="flex items-center justify-center gap-2">
-                            <Checkbox
-                              checked={field.value?.includes("CreditCard")}
-                              onCheckedChange={(checked) => {
-                                const currentValue = field.value || [];
-                                if (checked) {
-                                  field.onChange([
-                                    ...currentValue,
-                                    "CreditCard",
-                                  ]);
-                                } else {
-                                  field.onChange(
-                                    currentValue.filter(
-                                      (value) => value !== "CreditCard"
-                                    )
-                                  );
-                                }
-                              }}
-                              className="data-[state=checked]:bg-primary-600 data-[state=checked]:border-primary-600"
-                              id={"CreditCard"}
-                            />
-                            <Label
-                              className="b3-medium leading-none"
-                              htmlFor={"CreditCard"}
-                            >
-                              Credit Card
-                            </Label>
-                          </div>
-                          <div className="flex items-center justify-center gap-2">
-                            <Checkbox
-                              checked={field.value?.includes("Easypaisa")}
-                              onCheckedChange={(checked) => {
-                                const currentValue = field.value || [];
-                                if (checked) {
-                                  field.onChange([
-                                    ...currentValue,
-                                    "Easypaisa",
-                                  ]);
-                                } else {
-                                  field.onChange(
-                                    currentValue.filter(
-                                      (value) => value !== "Easypaisa"
-                                    )
-                                  );
-                                }
-                              }}
-                              className="data-[state=checked]:bg-primary-600 data-[state=checked]:border-primary-600"
-                              id={"Easypaisa"}
-                            />
-                            <Label
-                              className="b3-medium leading-none"
-                              htmlFor={"Easypaisa"}
-                            >
-                              Easypaisa
-                            </Label>
-                          </div>
-                        </div>
-                      </FormControl>
                     </FormItem>
                   )}
                 />

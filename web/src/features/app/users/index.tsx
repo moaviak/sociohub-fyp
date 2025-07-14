@@ -57,7 +57,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({ id }) => {
             </div>
           </div>
           {currentUser?.id === user.id ? (
-            <Button variant={"outline"} asChild>
+            <Button variant={"outline"} size={"sm"} asChild>
               <Link to="/user-settings/profile">
                 <Edit className="h-4 w-4" />
                 Edit Profile

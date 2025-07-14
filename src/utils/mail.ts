@@ -62,6 +62,15 @@ interface EventRegistrationConfirmationEmailData {
   accessInstructions?: string;
 }
 
+interface PaymentConfirmationEmailData {
+  studentName: string;
+  eventTitle: string;
+  amountPaid: string;
+  paymentDate: string;
+  eventDate?: string;
+  eventVenue?: string;
+}
+
 /**
  * @param options Email configuration options
  */
@@ -169,6 +178,18 @@ export const sendEventRegistrationConfirmationEmail = async (
     email,
     subject: `Registration Confirmed: ${data.eventTitle}`,
     template: "event-registration-confirmation.ejs",
+    data,
+  });
+};
+
+export const sendPaymentConfirmationEmail = async (
+  email: string,
+  data: PaymentConfirmationEmailData
+) => {
+  await sendEmail({
+    email,
+    subject: `Payment Confirmation for ${data.eventTitle}`,
+    template: "payment-confirmation.ejs",
     data,
   });
 };

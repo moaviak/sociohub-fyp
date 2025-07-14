@@ -4,13 +4,11 @@ import { ApiResponse } from "../utils/ApiResponse";
 import { ApiError } from "../utils/ApiError";
 import { getLocalPath, isSocietyMember } from "../utils/helpers";
 import { EventService } from "../services/event.service";
-import type { DraftEventInput } from "../services/event.service";
 import {
   EventCategories,
   EventType,
   EventAudience,
   EventVisibility,
-  PaymentMethods,
   Event,
   EventStatus,
 } from "@prisma/client";
@@ -21,6 +19,7 @@ import {
 import { haveEventsPrivilege } from "../utils/helpers";
 import { IUser, UserType } from "../types";
 import prisma from "../db";
+import { EventRegistrationService } from "../services/event-registration.service";
 
 export const createEvent = asyncHandler(async (req: Request, res: Response) => {
   // Get the local path for the uploaded banner if it exists
@@ -30,9 +29,6 @@ export const createEvent = asyncHandler(async (req: Request, res: Response) => {
   const categories = req.body.categories
     ? (JSON.parse(req.body.categories) as EventCategories[])
     : [];
-  const paymentMethods = req.body.paymentMethods
-    ? (JSON.parse(req.body.paymentMethods) as PaymentMethods[])
-    : undefined;
 
   // Convert string booleans to actual booleans
   const registrationRequired = req.body.registrationRequired === "true";
@@ -73,7 +69,6 @@ export const createEvent = asyncHandler(async (req: Request, res: Response) => {
     ticketPrice: req.body.ticketPrice
       ? parseInt(req.body.ticketPrice, 10)
       : undefined,
-    paymentMethods,
     announcementEnabled,
     announcement: req.body.announcement,
     isDraft: false,
@@ -101,14 +96,6 @@ export const saveDraft = asyncHandler(async (req: Request, res: Response) => {
       }
     }
 
-    let paymentMethods: PaymentMethods[] | undefined;
-    if (req.body.paymentMethods) {
-      try {
-        paymentMethods = JSON.parse(req.body.paymentMethods);
-      } catch (e) {
-        // If parsing fails, leave paymentMethods as undefined
-      }
-    }
     // Get time strings if they exist
     const startTime = req.body.startTime || undefined;
     const endTime = req.body.endTime || undefined;
@@ -117,7 +104,7 @@ export const saveDraft = asyncHandler(async (req: Request, res: Response) => {
     const nullIfEmpty = (val: any) => (val === "" ? null : val);
     const undefinedIfEmpty = (val: any) => (val === "" ? undefined : val);
 
-    const draftData: DraftEventInput = {
+    const draftData = {
       societyId: req.body.societyId,
       ...("title" in req.body && { title: nullIfEmpty(req.body.title) }),
       ...("tagline" in req.body && { tagline: nullIfEmpty(req.body.tagline) }),
@@ -188,7 +175,6 @@ export const saveDraft = asyncHandler(async (req: Request, res: Response) => {
           ? parseInt(req.body.ticketPrice, 10)
           : undefined,
       }),
-      ...(paymentMethods && paymentMethods.length > 0 && { paymentMethods }),
       ...(typeof req.body.announcementEnabled !== "undefined" && {
         announcementEnabled: req.body.announcementEnabled === "true",
       }),
@@ -447,14 +433,6 @@ export const updateEvent = asyncHandler(async (req: Request, res: Response) => {
         // If parsing fails, leave as is
       }
     }
-    let paymentMethods;
-    if (req.body.paymentMethods) {
-      try {
-        paymentMethods = JSON.parse(req.body.paymentMethods);
-      } catch (e) {
-        // If parsing fails, leave as is
-      }
-    }
 
     // Helper to convert empty string to null or undefined for dates/numbers
     const nullIfEmpty = (val: any) => (val === "" ? null : val);
@@ -550,7 +528,6 @@ export const updateEvent = asyncHandler(async (req: Request, res: Response) => {
           ? parseInt(req.body.ticketPrice, 10)
           : undefined,
       }),
-      ...(paymentMethods && { paymentMethods }),
       ...(typeof announcementEnabled !== "undefined" && {
         announcementEnabled,
       }),
@@ -578,15 +555,51 @@ export const updateEvent = asyncHandler(async (req: Request, res: Response) => {
 export const registerForEvent = asyncHandler(async (req, res) => {
   const user = req.user as IUser;
   const { eventId } = req.body;
+
   if (!eventId) throw new ApiError(400, "Event ID is required");
-  const registration = await EventService.registerForEvent({
+
+  if (user.userType === UserType.ADVISOR) {
+    throw new ApiError(403, "Advisor can't register in an event.");
+  }
+
+  const result = await new EventRegistrationService().registerForEvent(
     eventId,
-    studentId: user.id,
-  });
+    user.id
+  );
   return res
     .status(201)
-    .json(new ApiResponse(201, registration, "Registration successful"));
+    .json(new ApiResponse(201, result, "Registration successful"));
 });
+
+export const completeRegistration = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { registrationId } = req.params;
+
+    const result = await EventService.completeRegistrationAfterPayment(
+      registrationId
+    );
+
+    return res
+      .status(200)
+      .json(
+        new ApiResponse(200, result, "Registration successfully completed")
+      );
+  }
+);
+
+export const cancelRegistration = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { registrationId } = req.params;
+    const { reason } = req.body;
+
+    const result = await EventService.cancelRegistration(
+      registrationId,
+      reason
+    );
+
+    res.status(200).json(new ApiResponse(200, null, "Registration cancelled."));
+  }
+);
 
 export const deleteEvent = asyncHandler(async (req: Request, res: Response) => {
   try {

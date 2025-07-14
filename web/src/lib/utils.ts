@@ -220,3 +220,15 @@ export const haveMeetingsPrivilege = (
     society.society.privileges.includes(PRIVILEGES.MEETING_MANAGEMENT)
   );
 };
+
+export const havePaymentsPrivilege = (
+  societies: { society: Society & { privileges: string[] } }[],
+  societyId: string
+) => {
+  const society = societies.find(({ society }) => society.id === societyId);
+
+  return (
+    society &&
+    society.society.privileges.includes(PRIVILEGES.PAYMENT_FINANCE_MANAGEMENT)
+  );
+};

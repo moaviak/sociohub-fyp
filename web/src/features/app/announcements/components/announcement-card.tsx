@@ -1,5 +1,5 @@
 import { Skeleton } from "@/components/ui/skeleton";
-import { Announcement } from "@/types";
+import { Advisor, Announcement } from "@/types";
 import { formatDistanceToNow } from "date-fns";
 import { AnnouncementOptions } from "./announcement-options";
 import { useAppSelector } from "@/app/hooks";
@@ -24,7 +24,7 @@ export const AnnouncementCard = ({
         user.societies || [],
         announcement.society?.id || ""
       )
-    : true;
+    : announcement.societyId === (user as Advisor).societyId;
 
   // See more/less logic
   const [expanded, setExpanded] = useState(false);

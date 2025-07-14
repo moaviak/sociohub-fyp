@@ -2,6 +2,7 @@ import { useAppSelector } from "@/app/hooks";
 import { Button } from "@/components/ui/button";
 import { Announcements } from "@/features/app/announcements";
 import { haveAnnouncementsPrivilege } from "@/lib/utils";
+import { Advisor } from "@/types";
 import { Plus } from "lucide-react";
 import { Link, Navigate, Outlet, useLocation, useParams } from "react-router";
 
@@ -18,7 +19,7 @@ const AnnouncementsPage = () => {
 
   const havePrivilege = isStudent
     ? haveAnnouncementsPrivilege(user.societies || [], societyId || "")
-    : true;
+    : !societyId || societyId === (user as Advisor).societyId;
 
   if (
     !(location.pathname === "/announcements") &&

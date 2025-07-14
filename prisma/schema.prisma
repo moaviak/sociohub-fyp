@@ -31,15 +31,16 @@ model Student {
   createdAt               DateTime  @default(now())
   updatedAt               DateTime  @updatedAt
 
-  joinRequests       JoinRequest[]           @relation
-  societies          StudentSociety[]        @relation
-  notifications      NotificationRecipient[] @relation("StudentNotifications")
-  eventRegistrations EventRegistration[]
-  scannedTickets     EventTicket[]           @relation("ScannedByStudent")
-  tasks              Task[]                  @relation
-  MeetingParticipant MeetingParticipant[]
-  MeetingInvitation  MeetingInvitation[]
-  Meeting            Meeting[]               @relation("MeetingHostStudent")
+  joinRequests        JoinRequest[]           @relation
+  societies           StudentSociety[]        @relation
+  notifications       NotificationRecipient[] @relation("StudentNotifications")
+  eventRegistrations  EventRegistration[]
+  scannedTickets      EventTicket[]           @relation("ScannedByStudent")
+  tasks               Task[]                  @relation
+  MeetingParticipant  MeetingParticipant[]
+  MeetingInvitation   MeetingInvitation[]
+  Meeting             Meeting[]               @relation("MeetingHostStudent")
+  paymentTransactions PaymentTransaction[]
 }
 
 model Advisor {
@@ -94,6 +95,27 @@ model Society {
 
   tasksAssigned Task[]
   Meeting       Meeting[]
+  paymentConfig SocietyPaymentConfig?
+}
+
+// Society Payment Configuration
+model SocietyPaymentConfig {
+  id                    String    @id @default(uuid())
+  societyId             String    @unique
+  stripeAccountId       String    @unique // Stripe Connect Account ID
+  isOnboarded           Boolean   @default(false)
+  onboardingCompletedAt DateTime?
+  accountType           String? // "standard" or "express"
+  chargesEnabled        Boolean   @default(false)
+  payoutsEnabled        Boolean   @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  society Society @relation(fields: [societyId], references: [id], onDelete: Cascade)
+
+  @@index([societyId])
 }
 
 enum JoinRequestStatus {
@@ -260,11 +282,6 @@ enum EventVisibility {
   Schedule
 }
 
-enum PaymentMethods {
-  CreditCard
-  Easypaisa
-}
-
 enum EventStatus {
   Upcoming
   Ongoing
@@ -297,7 +314,6 @@ model Event {
   maxParticipants      Int?
   paidEvent            Boolean?          @default(false)
   ticketPrice          Int?
-  paymentMethods       PaymentMethods[]
   announcementEnabled  Boolean?          @default(false)
   announcement         String?
   status               EventStatus?
@@ -310,22 +326,31 @@ model Event {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  eventRegistrations EventRegistration[]
-  eventAnnouncement  Announcement?       @relation("EventAnnouncement")
+  eventRegistrations  EventRegistration[]
+  eventAnnouncement   Announcement?        @relation("EventAnnouncement")
+  paymentTransactions PaymentTransaction[]
 
   @@index([societyId])
 }
 
+enum RegistrationStatus {
+  PENDING
+  APPROVED
+  DECLINED
+}
+
 model EventRegistration {
-  id           String   @id @default(uuid())
+  id           String             @id @default(uuid())
   studentId    String
   eventId      String
-  registeredAt DateTime @default(now())
+  registeredAt DateTime?
+  status       RegistrationStatus @default(PENDING)
 
   // Relations
-  student Student      @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  event   Event        @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  ticket  EventTicket?
+  student            Student             @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  event              Event               @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  ticket             EventTicket?
+  paymentTransaction PaymentTransaction?
 
   @@unique([studentId, eventId]) // Prevent duplicate registration
   @@index([eventId])
@@ -346,6 +371,76 @@ model EventTicket {
   scannedByStudent Student?          @relation("ScannedByStudent", fields: [scannedBy], references: [id])
 
   @@index([isScanned])
+}
+
+// Payment related enums
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+enum PaymentMethod {
+  CARD
+  BANK_TRANSFER
+}
+
+// Payment Transactions
+model PaymentTransaction {
+  id             String @id @default(uuid())
+  eventId        String
+  studentId      String
+  registrationId String @unique
+
+  // Stripe Details
+  stripeCheckoutSessionId String? @unique
+  stripePaymentIntentId   String? @unique
+  stripeTransferId        String?
+
+  // Payment Details
+  amount        Int
+  currency      String        @default("PKR")
+  paymentMethod PaymentMethod @default(CARD)
+  status        PaymentStatus @default(PENDING)
+
+  // Metadata
+  description  String?
+  receiptEmail String?
+  metadata     Json?
+
+  // Fees and Transfers
+  applicationFeeAmount Int?
+  transferAmount       Int? // Amount transferred to society
+
+  // Timestamps
+  paidAt    DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  // Relations
+  event        Event              @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  student      Student            @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  registration EventRegistration? @relation(fields: [registrationId], references: [id], onDelete: Cascade)
+
+  @@index([eventId])
+  @@index([studentId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+// Payment Webhooks Log
+model PaymentWebhookLog {
+  id            String   @id @default(uuid())
+  eventType     String
+  stripeEventId String   @unique
+  processed     Boolean  @default(false)
+  data          Json
+  error         String?
+  createdAt     DateTime @default(now())
+
+  @@index([eventType])
+  @@index([processed])
 }
 
 enum AnnouncementAudience {
@@ -408,7 +503,6 @@ model Meeting {
   startedAt   DateTime?
   endedAt     DateTime?
 
-  // Replace streamCallId with dailyRoomUrl and dailyRoomName
   dailyRoomUrl  String? // Daily room URL
   dailyRoomName String? // Daily room name
 

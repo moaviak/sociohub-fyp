@@ -46,9 +46,9 @@ const navItems = [
     href: "/announcements",
   },
   {
-    label: "Finance",
+    label: "Payments & Finance",
     icon: <CircleDollarSign className="w-4 h-4" />,
-    href: "/finance",
+    href: "/payments",
   },
   {
     label: "Inbox",

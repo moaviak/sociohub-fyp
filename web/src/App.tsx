@@ -42,6 +42,13 @@ import UserSettingsPage from "./pages/app/user/settings-page";
 import UserProfileSettingsPage from "./pages/app/user/profile-settings-page";
 import VideoMeetingPage from "./pages/app/video-meeting-page";
 import MeetingRoomPage from "./pages/app/meeting-room-page";
+import PaymentSettingsPage from "./pages/app/society-settings/payment-settings-page";
+import OnboardingCompletePage from "./pages/app/society-settings/onboarding-complete-page";
+import OnboardingRefreshPage from "./pages/app/society-settings/onboarding-refresh-page";
+import { PaymentSuccessPage } from "./pages/app/payments/payment-success-page";
+import { PaymentCancelledPage } from "./pages/app/payments/payment-cancelled-page";
+import PaymentsPage from "./pages/app/payments";
+import TransactionsPage from "./pages/app/payments/transactions-page";
 
 function App() {
   return (
@@ -105,6 +112,13 @@ function App() {
               </Route>
             </Route>
 
+            <Route path="/payments" element={<PaymentsPage />}>
+              <Route path="transactions" element={<TransactionsPage />} />
+              <Route path=":societyId" element={<PaymentsPage />}>
+                <Route path="transactions" element={<TransactionsPage />} />
+              </Route>
+            </Route>
+
             <Route path="/announcements" element={<AnnouncementsPage />}>
               <Route
                 path="create-announcement"
@@ -127,6 +141,10 @@ function App() {
               <Route index element={<SocietySettingsPage />} />
               <Route path="profile" element={<ProfileSettingsPage />} />
               <Route path="members" element={<MembersSettingsPage />} />
+              <Route path="payments" element={<PaymentSettingsPage />}>
+                <Route path="complete" element={<OnboardingCompletePage />} />
+                <Route path="refresh" element={<OnboardingRefreshPage />} />
+              </Route>
 
               <Route path=":societyId" element={<SocietySettingsPage />} />
               <Route
@@ -137,6 +155,13 @@ function App() {
                 path=":societyId/members"
                 element={<MembersSettingsPage />}
               />
+              <Route
+                path=":societyId/payments"
+                element={<PaymentSettingsPage />}
+              >
+                <Route path="complete" element={<OnboardingCompletePage />} />
+                <Route path="refresh" element={<OnboardingRefreshPage />} />
+              </Route>
             </Route>
 
             {/* Add other private routes here */}
@@ -155,6 +180,9 @@ function App() {
               <Route index element={<UserSettingsPage />} />
               <Route path="profile" element={<UserProfileSettingsPage />} />
             </Route>
+
+            <Route path="/payment-success" element={<PaymentSuccessPage />} />
+            <Route path="/payment-cancel" element={<PaymentCancelledPage />} />
           </Route>
 
           {/* 404 Route */}

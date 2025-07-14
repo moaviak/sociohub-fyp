@@ -1,5 +1,5 @@
 import prisma from "../db";
-import { AnnouncementAudience } from "@prisma/client";
+import { AnnouncementAudience, Event } from "@prisma/client";
 import {
   createNotification,
   getSocietyAdvisor,
@@ -9,6 +9,7 @@ import { sendEmail } from "../utils/mail";
 import { haveAnnouncementsPrivilege } from "../utils/helpers";
 import { sendNotificationToUsers } from "../socket";
 import { io } from "../app";
+import { CreateEventInput } from "./event.service";
 
 export interface CreateAnnouncementInput {
   societyId: string;
@@ -196,5 +197,87 @@ export class AnnouncementService {
       include: { society: true },
     });
     return announcements;
+  }
+
+  static async createEventAnnouncement(event: Event) {
+    const existingAnnouncement = await prisma.announcement.findUnique({
+      where: { eventId: event.id },
+    });
+    if (!existingAnnouncement && event.announcement) {
+      // Create announcement
+      await AnnouncementService.createAnnouncement({
+        societyId: event.societyId,
+        title: event.title,
+        content: event.announcement,
+        publishDateTime: event.publishDateTime ?? undefined,
+        audience: event.audience === "Members" ? "Members" : "All",
+        sendEmail: false, // or true if you want to send email
+        eventId: event.id,
+      });
+    }
+  }
+
+  static async handleEventAnnouncementUpdate(
+    event: Event,
+    updatedEvent: Event,
+    update: Partial<
+      CreateEventInput & {
+        banner?: string;
+      }
+    >
+  ) {
+    const prevVisibility = event.visibility;
+    const newVisibility = update.visibility ?? event.visibility;
+    if (
+      prevVisibility === "Draft" &&
+      (newVisibility === "Publish" || newVisibility === "Schedule")
+    ) {
+      if (
+        (update.announcementEnabled || event.announcementEnabled) &&
+        (update.announcement || event.announcement)
+      ) {
+        // Check if announcement exists for this event
+        let announcement = await prisma.announcement.findUnique({
+          where: { eventId: event.id },
+        });
+        if (!announcement) {
+          // Create announcement if not exists
+          await this.createAnnouncement({
+            societyId: event.societyId,
+            title: update.title || event.title,
+            content: update.announcement || event.announcement!,
+            publishDateTime:
+              update.publishDateTime || event.publishDateTime || undefined,
+            audience:
+              (update.audience || event.audience) === "Members"
+                ? "Members"
+                : "All",
+            sendEmail: false, // or true if you want to send email
+            eventId: event.id,
+          });
+        } else {
+          // Update announcement if content or relevant fields changed
+          const shouldUpdate =
+            (update.announcement &&
+              update.announcement !== announcement.content) ||
+            (update.title && update.title !== announcement.title) ||
+            (update.publishDateTime &&
+              update.publishDateTime !== announcement.publishDateTime) ||
+            (update.audience && update.audience !== announcement.audience);
+          if (shouldUpdate) {
+            await this.updateAnnouncement(announcement.id, {
+              title: update.title || event.title,
+              content: update.announcement || event.announcement!,
+              publishDateTime:
+                update.publishDateTime || event.publishDateTime || undefined,
+              audience:
+                (update.audience || event.audience) === "Members"
+                  ? "Members"
+                  : "All",
+            });
+          }
+        }
+      }
+    }
   }
 }

@@ -18,11 +18,20 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { useAppSelector } from "@/app/hooks";
-import { EventStatus, EventVisibility, UserType } from "@/types";
-import { useEffect } from "react";
+import { Advisor, EventStatus, EventVisibility, UserType } from "@/types";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { EventOptions } from "@/components/events/event-options";
 import { CountdownTimer } from "./components/countdown-timer";
+import { useCreateCheckoutSessionMutation } from "../payments/api";
+import {
+  generateCancelUrl,
+  generateSuccessUrl,
+  handleCheckoutError,
+  logCheckoutEvent,
+  redirectToCheckout,
+  validateCheckoutResponse,
+} from "@/lib/checkout-utils";
 
 interface EventDetailProps {
   eventId: string;
@@ -30,38 +39,49 @@ interface EventDetailProps {
 
 export const EventDetail = ({ eventId }: EventDetailProps) => {
   const navigate = useNavigate();
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
 
-  const { data: event, isLoading } = useGetEventByIdQuery(eventId);
-  const [registerForEvent, { isLoading: isRegistering, isError }] =
+  const { data: event, isLoading: isFetchingEvent } =
+    useGetEventByIdQuery(eventId);
+  const [registerForEvent, { isLoading: isRegistering }] =
     useRegisterForEventMutation();
+  const [createCheckoutSession, { isLoading: isCreatingCheckout }] =
+    useCreateCheckoutSessionMutation();
   const [deleteEvent, { isLoading: isDeleting, isError: isDeleteError }] =
     useDeleteEventMutation();
 
   const { userType, user } = useAppSelector((state) => state.auth);
 
   useEffect(() => {
-    if (isError) {
-      toast.error(
-        "Unexpected error occurred while registering. Please try again!"
-      );
-    }
-
     if (isDeleteError) {
       toast.error(
         "Unexpected error occurred while deleting. Please try again!"
       );
     }
-  }, [isError, isDeleteError]);
+  }, [isDeleteError]);
 
   // Handle event fetch error or missing event
   useEffect(() => {
-    if (!isLoading && (!event || "error" in event)) {
+    if (!isFetchingEvent && (!event || "error" in event)) {
       navigate(-1);
     }
-  }, [isLoading, event, navigate]);
+  }, [isFetchingEvent, event, navigate]);
+
+  // Check for payment cancellation in URL
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const paymentCancelled = urlParams.get("payment_cancelled");
+
+    if (paymentCancelled === "true") {
+      toast.info("Payment was cancelled. You can try again.");
+      // Clean up URL
+      const newUrl = window.location.pathname;
+      window.history.replaceState({}, document.title, newUrl);
+    }
+  }, []);
 
   // Show loader while loading or redirecting
-  if (isLoading || !event || "error" in event) {
+  if (isFetchingEvent || !event || "error" in event) {
     return (
       <div className="flex w-full h-full items-center justify-center">
         <SpinnerLoader size="md" />
@@ -89,13 +109,58 @@ export const EventDetail = ({ eventId }: EventDetailProps) => {
   const isStudent = user && "registrationNumber" in user;
   const havePrivilege = isStudent
     ? haveEventsPrivilege(user.societies || [], event?.societyId || "")
-    : true;
+    : event.societyId === (user as Advisor).societyId;
 
   const onRegister = async () => {
-    const response = await registerForEvent(event?.id);
+    if (!canRegister) return;
 
-    if (!("error" in response)) {
-      toast.success("successfully registered for event.");
+    setIsProcessingPayment(true);
+    logCheckoutEvent("Registration started", { eventId: event.id });
+
+    try {
+      const registrationResponse = await registerForEvent(event.id).unwrap();
+
+      if ("error" in registrationResponse) {
+        throw new Error(registrationResponse.errorMessage);
+      }
+
+      // If payment is required, create checkout session
+      if (registrationResponse.paymentRequired) {
+        logCheckoutEvent("Payment required", {
+          registrationId: registrationResponse.registration.id,
+        });
+
+        // Create checkout session
+        const checkoutResponse = await createCheckoutSession({
+          eventId: event.id,
+          registrationId: registrationResponse.registration.id,
+          successUrl: generateSuccessUrl(),
+          cancelUrl: generateCancelUrl(event.id),
+        }).unwrap();
+
+        if (!validateCheckoutResponse(checkoutResponse)) {
+          throw new Error("Invalid checkout response");
+        }
+
+        logCheckoutEvent("Checkout session created", {
+          sessionId: checkoutResponse.sessionId,
+        });
+
+        // Redirect to Stripe Checkout
+        redirectToCheckout(checkoutResponse.checkoutUrl);
+      } else {
+        // Free event - registration completed
+        toast.success("Successfully registered for the event!");
+        logCheckoutEvent("Free registration completed", {
+          registrationId: registrationResponse.registration.id,
+        });
+      }
+    } catch (error) {
+      const errorMessage = handleCheckoutError(error);
+      toast.error(errorMessage);
+      logCheckoutEvent("Registration failed", { error: errorMessage });
+    } finally {
+      setIsProcessingPayment(false);
     }
   };
 
@@ -111,6 +176,8 @@ export const EventDetail = ({ eventId }: EventDetailProps) => {
     }
   };
 
+  const isLoading = isRegistering || isCreatingCheckout || isProcessingPayment;
+
   return (
     <div className="flex flex-col px-4 py-2">
       <div className="flex items-center justify-between mb-6">
@@ -119,9 +186,31 @@ export const EventDetail = ({ eventId }: EventDetailProps) => {
           <p className="b3-regular">{event?.tagline}</p>
         </div>
         <div className="flex items-center gap-x-2">
-          {canRegister && !event?.isRegistered && (
-            <Button disabled={isRegistering} onClick={onRegister}>
-              Register
+          {canRegister && !event.isRegistered && (
+            <Button
+              onClick={onRegister}
+              className="w-full"
+              variant="default"
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  {isRegistering
+                    ? "Registering..."
+                    : isCreatingCheckout
+                    ? "Creating Checkout..."
+                    : "Processing..."}
+                </>
+              ) : (
+                <>Register Now</>
+              )}
+            </Button>
+          )}
+
+          {event.isRegistered && (
+            <Button variant="outline" className="w-full" disabled>
+              Already Registered
             </Button>
           )}
           {(havePrivilege ||

@@ -4,8 +4,16 @@ import ApiError, {
   createApiError,
 } from "@/features/api-error";
 import { ApiResponse } from "@/features/api-response";
-import { Event, Registration } from "@/types";
+import { Event, Registration, Ticket } from "@/types";
 import { EventAnnouncementInput } from "./types";
+
+export interface EventRegistrationResponse {
+  registration: Registration;
+  paymentRequired: boolean;
+  ticket?: Ticket | null;
+  clientSecret?: string | null;
+  paymentIntentId?: string;
+}
 
 export const eventApi = api.injectEndpoints({
   endpoints: (builder) => ({
@@ -165,12 +173,15 @@ export const eventApi = api.injectEndpoints({
         }
       },
     }),
-    registerForEvent: builder.mutation<Registration | ApiError, string>({
+    registerForEvent: builder.mutation<
+      EventRegistrationResponse | ApiError,
+      string
+    >({
       query: (arg) => ({
         url: `/events/${arg}/register`,
         method: "POST",
       }),
-      transformResponse: (response: ApiResponse<Registration>) => {
+      transformResponse: (response: ApiResponse<EventRegistrationResponse>) => {
         if (response.success) {
           return response.data;
         }
@@ -182,7 +193,7 @@ export const eventApi = api.injectEndpoints({
       },
       invalidatesTags: (result) => {
         if (result && !("error" in result)) {
-          return [{ type: "Events", id: result.eventId }];
+          return [{ type: "Events", id: result.registration.eventId }];
         } else {
           return [];
         }

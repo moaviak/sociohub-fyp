@@ -107,9 +107,9 @@ export function DateTimePicker({
     (i + 1).toString().padStart(2, "0")
   );
 
-  // Create 5-minute interval options
-  const minutesOptions = Array.from({ length: 12 }, (_, i) =>
-    (i * 5).toString().padStart(2, "0")
+  // Create 1-minute interval options
+  const minutesOptions = Array.from({ length: 60 }, (_, i) =>
+    (i * 1).toString().padStart(2, "0")
   );
 
   // Determine if a specific hour is disabled
@@ -246,7 +246,12 @@ export function DateTimePicker({
             selected={tempDate}
             onSelect={handleDateSelect}
             disabled={disabled}
-            initialFocus
+            captionLayout={"dropdown"}
+            classNames={{
+              day_button: "hover:bg-primary-600 hover:text-white",
+              selected: "[&._*]:bg-primary-600",
+            }}
+            autoFocus
           />
         </div>
         <div className="p-3 border-t md:border-t-0 md:border-l border-gray-200 flex flex-col items-center justify-center space-y-3">

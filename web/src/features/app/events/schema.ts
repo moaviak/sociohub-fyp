@@ -29,9 +29,6 @@ const OnlinePlatform = z.enum([
   "Other",
 ]);
 
-// Define payment gateway options as an enum
-const PaymentGateway = z.enum(["CreditCard", "Easypaisa"]);
-
 // Section 1: Basic Event Information Schema
 const basicInfoSchema = z.object({
   eventTitle: z.string().min(1, "Event title is required"),
@@ -104,7 +101,6 @@ export const registrationSchema = z.object({
   maximumParticipants: z.number().int().positive().optional(),
   isPaidEvent: z.boolean().optional().default(false),
   ticketPrice: z.number().positive().optional(),
-  paymentGateways: z.array(PaymentGateway).optional(),
 });
 // Removed refine here
 
@@ -160,7 +156,6 @@ export const eventFormSchema = z
     maximumParticipants: z.number().int().positive().optional(),
     isPaidEvent: z.boolean().optional(),
     ticketPrice: z.number().positive().optional(),
-    paymentGateways: z.array(PaymentGateway).optional(),
 
     // Announcement fields (flat structure)
     isAnnouncementEnabled: z.boolean(),
@@ -308,22 +303,12 @@ export const eventFormSchema = z
 
       if (data.isRegistrationRequired && data.isPaidEvent === true) {
         const hasPrice = !!data.ticketPrice && data.ticketPrice > 0;
-        const hasGateways =
-          !!data.paymentGateways && data.paymentGateways.length > 0;
 
         if (!hasPrice) {
           ctx.addIssue({
             code: z.ZodIssueCode.custom,
             message: "Ticket price is required for paid events.",
             path: ["ticketPrice"],
-          });
-        }
-
-        if (!hasGateways) {
-          ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            message: "At least one payment method is required for paid events.",
-            path: ["paymentGateways"],
           });
         }
       }
@@ -337,12 +322,6 @@ export const eventFormSchema = z
       if (data.isRegistrationRequired && data.isPaidEvent === false) {
         if (data.ticketPrice !== undefined && data.ticketPrice !== null)
           return false; // Should not have price
-        if (
-          data.paymentGateways !== undefined &&
-          data.paymentGateways !== null &&
-          data.paymentGateways.length > 0
-        )
-          return false; // Should not have gateways
       }
       return true;
     },
@@ -429,7 +408,6 @@ export const registrationSchemaPartial = z.object({
   maximumParticipants: z.number().int().positive().optional(),
   isPaidEvent: z.boolean().optional(),
   ticketPrice: z.number().positive().optional(),
-  paymentGateways: z.array(PaymentGateway).optional(),
 });
 
 export const announcementSchemaPartial = z.object({

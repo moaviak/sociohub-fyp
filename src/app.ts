@@ -64,6 +64,10 @@ const limiter = rateLimit({
 
 app.use(limiter);
 
+// Webhooks routes
+import webhooksRoutes from "./routes/webhooks.routes.js";
+app.use("/api/webhooks", webhooksRoutes);
+
 app.use(express.json({ limit: "16kb" }));
 app.use(express.urlencoded({ extended: true, limit: "16kb" }));
 app.use(express.static("public")); // configure static file to save images locally
@@ -96,10 +100,7 @@ import eventRoutes from "./routes/events.routes.js";
 import userRoutes from "./routes/user.routes.js";
 import announcementRoutes from "./routes/announcements.routes.js";
 import tasksRoutes from "./routes/tasks.routes.js";
-
-// Add Daily webhook route
-import { handleDailyWebhook } from "./controllers/daily-webhook.controller.js";
-app.post("/api/webhooks/daily", handleDailyWebhook);
+import paymentRoutes from "./routes/payment.routes.js";
 
 // Register meeting routes
 import meetingRoutes from "./routes/meeting.routes.js";
@@ -114,6 +115,7 @@ app.use("/api/users", userRoutes);
 app.use("/api/announcements", announcementRoutes);
 app.use("/api/tasks", tasksRoutes);
 app.use("/api/meetings", meetingRoutes);
+app.use("/api/payments", paymentRoutes);
 
 // common error handling middleware
 app.use(errorHandler);

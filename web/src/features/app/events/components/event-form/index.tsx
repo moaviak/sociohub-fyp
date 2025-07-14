@@ -42,7 +42,12 @@ export const EventForm = ({ event }: EventFormProps) => {
       case 4:
         return <Audience form={form} />;
       case 5:
-        return <Registration form={form} />;
+        return (
+          <Registration
+            form={form}
+            societyId={(societyId || event?.societyId)!}
+          />
+        );
       case 6:
         return <Announcement form={form} />;
       default:

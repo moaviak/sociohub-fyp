@@ -98,7 +98,8 @@ const getSocietyItems = (society: Society & { privileges: string[] }) => {
           },
         ]
       : []),
-    ...(society.privileges.includes(PRIVILEGES.SOCIETY_SETTINGS_MANAGEMENT)
+    ...(society.privileges.includes(PRIVILEGES.SOCIETY_SETTINGS_MANAGEMENT) ||
+    society.privileges.includes(PRIVILEGES.PAYMENT_FINANCE_MANAGEMENT)
       ? [
           {
             label: "Settings",
