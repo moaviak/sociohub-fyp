@@ -4,6 +4,7 @@ import { setupListeners } from "@reduxjs/toolkit/query";
 import AuthReducer from "@/features/auth/slice";
 import NotificationsReducer from "@/features/app/topbar/slice";
 import PaymentsReducer from "@/features/app/payments/slice";
+import ChatsReducer from "@/features/app/chats/slice";
 
 export const store = configureStore({
   reducer: {
@@ -11,6 +12,7 @@ export const store = configureStore({
     auth: AuthReducer,
     notifications: NotificationsReducer,
     payments: PaymentsReducer,
+    chats: ChatsReducer,
   },
 
   middleware: (getDefaultMiddleware) =>

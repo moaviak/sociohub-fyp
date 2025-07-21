@@ -1,6 +1,8 @@
 import React, { useState, useRef } from "react";
 import { Camera, X, Upload } from "lucide-react";
 
+type PhotoUploadSize = "sm" | "md" | "lg" | "xl";
+
 interface PhotoUploadProps {
   onFileSelect?: (file: File) => void;
   onFileRemove?: () => void;
@@ -12,6 +14,7 @@ interface PhotoUploadProps {
   dragText?: string;
   initialImage?: string;
   onInitialImageRemove?: () => void;
+  size?: PhotoUploadSize;
 }
 
 export const PhotoUpload: React.FC<PhotoUploadProps> = ({
@@ -25,6 +28,7 @@ export const PhotoUpload: React.FC<PhotoUploadProps> = ({
   dragText = "Drop your photo here",
   initialImage,
   onInitialImageRemove,
+  size = "md",
 }) => {
   const [dragActive, setDragActive] = useState<boolean>(false);
   const [preview, setPreview] = useState<string | null>(null);
@@ -37,6 +41,48 @@ export const PhotoUpload: React.FC<PhotoUploadProps> = ({
       setHasInitialImage(true);
     }
   }, [initialImage]);
+
+  // Size configurations
+  const sizeConfig = {
+    sm: {
+      container: "w-16 h-16",
+      camera: "w-4 h-4",
+      cameraContainer: "p-2",
+      upload: "w-6 h-6",
+      removeButton: "p-1 -top-1 -right-1",
+      removeIcon: "w-3 h-3",
+      changeIcon: "w-4 h-4",
+    },
+    md: {
+      container: "w-24 h-24",
+      camera: "w-6 h-6",
+      cameraContainer: "p-3",
+      upload: "w-8 h-8",
+      removeButton: "p-1 -top-2 -right-2",
+      removeIcon: "w-4 h-4",
+      changeIcon: "w-6 h-6",
+    },
+    lg: {
+      container: "w-32 h-32",
+      camera: "w-8 h-8",
+      cameraContainer: "p-4",
+      upload: "w-10 h-10",
+      removeButton: "p-1.5 -top-2 -right-2",
+      removeIcon: "w-5 h-5",
+      changeIcon: "w-8 h-8",
+    },
+    xl: {
+      container: "w-40 h-40",
+      camera: "w-10 h-10",
+      cameraContainer: "p-5",
+      upload: "w-12 h-12",
+      removeButton: "p-2 -top-3 -right-3",
+      removeIcon: "w-6 h-6",
+      changeIcon: "w-10 h-10",
+    },
+  };
+
+  const currentSizeConfig = sizeConfig[size];
 
   const handleFiles = (files: FileList): void => {
     const file = files[0]; // Only handle single file
@@ -130,9 +176,11 @@ export const PhotoUpload: React.FC<PhotoUploadProps> = ({
       {/* Upload Area */}
       <div
         className={`
-          relative border-2 border-dashed rounded-full w-24 h-24 mx-auto
+          relative border-2 border-dashed rounded-full ${
+            currentSizeConfig.container
+          } mx-auto
           flex flex-col items-center justify-center cursor-pointer
-          transition-all duration-200 ease-in-out overflow-hidden
+          transition-all duration-200 ease-in-out
           ${
             dragActive
               ? "border-blue-400 bg-blue-50"
@@ -171,11 +219,11 @@ export const PhotoUpload: React.FC<PhotoUploadProps> = ({
                 e.stopPropagation();
                 removePhoto();
               }}
-              className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 
-                       text-white rounded-full p-1 transition-colors duration-200
-                       shadow-lg z-10"
+              className={`absolute ${currentSizeConfig.removeButton} bg-red-500 hover:bg-red-600 
+                       text-white rounded-full transition-colors duration-200
+                       shadow-lg z-10`}
             >
-              <X className="w-4 h-4" />
+              <X className={currentSizeConfig.removeIcon} />
             </button>
 
             {/* Change photo indicator */}
@@ -183,21 +231,27 @@ export const PhotoUpload: React.FC<PhotoUploadProps> = ({
               className="absolute inset-0 bg-black opacity-0 hover:bg-opacity-30 
                           rounded-full transition-all duration-200 flex items-center justify-center"
             >
-              <Camera className="w-6 h-6 text-white opacity-0 hover:opacity-100 transition-opacity duration-200" />
+              <Camera
+                className={`${currentSizeConfig.changeIcon} text-white opacity-0 hover:opacity-100 transition-opacity duration-200`}
+              />
             </div>
           </>
         ) : (
           // Display upload placeholder
           <>
             <div className="flex flex-col items-center justify-center text-center">
-              <div className="bg-gray-600 rounded-lg p-3 mb-2">
-                <Camera className="w-6 h-6 text-white" />
+              <div
+                className={`bg-gray-600 rounded-lg ${currentSizeConfig.cameraContainer} mb-2`}
+              >
+                <Camera className={`${currentSizeConfig.camera} text-white`} />
               </div>
             </div>
 
             {dragActive && (
               <div className="absolute inset-0 bg-blue-100 bg-opacity-50 rounded-full flex items-center justify-center">
-                <Upload className="w-8 h-8 text-blue-500" />
+                <Upload
+                  className={currentSizeConfig.upload + " text-blue-500"}
+                />
               </div>
             )}
           </>

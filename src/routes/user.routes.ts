@@ -2,6 +2,7 @@ import { Router } from "express";
 import {
   getAllUsers,
   getUserById,
+  searchUsers,
   updateUserProfile,
 } from "../controllers/user.controller";
 import { verifyJWT } from "../middlewares/auth.middlewares";
@@ -11,12 +12,14 @@ import { validate } from "../validators/validate";
 
 const router = Router();
 
-router.route("/").get(verifyJWT, getAllUsers);
-router.route("/:id").get(verifyJWT, getUserById);
+router.use(verifyJWT);
+
+router.route("/").get(getAllUsers);
+router.route("/search").get(searchUsers);
+router.route("/:id").get(getUserById);
 router
   .route("/profile")
   .patch(
-    verifyJWT,
     upload.single("avatar"),
     userProfileUpdateValidator(),
     validate,

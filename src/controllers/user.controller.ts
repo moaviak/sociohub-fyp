@@ -4,6 +4,7 @@ import { ApiResponse } from "../utils/ApiResponse";
 import {
   getAllUsersService,
   getUserByIdService,
+  searchUsersService,
   updateUserProfileService,
 } from "../services/user.service";
 import { ApiError } from "../utils/ApiError";
@@ -26,6 +27,23 @@ export const getAllUsers = asyncHandler(async (req: Request, res: Response) => {
       new ApiResponse(200, { ...result, users: filteredUsers }, "Users fetched successfully")
     );
 });
+
+export const searchUsers = asyncHandler(async (req: Request, res: Response) => {
+  const query = (req.query.q as string) || "";
+  const currentUserId = (req.user as import("../types").IUser)?.id;
+
+  if (!query) {
+    return res
+      .status(200)
+      .json(new ApiResponse(200, [], "Users fetched successfully"));
+  }
+
+  const users = await searchUsersService(query, currentUserId);
+  return res
+    .status(200)
+    .json(new ApiResponse(200, users, "Users fetched successfully"));
+});
+
 
 export const getUserById = asyncHandler(async (req: Request, res: Response) => {
   const { id } = req.params;

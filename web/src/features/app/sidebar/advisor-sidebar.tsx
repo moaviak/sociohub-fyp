@@ -53,7 +53,7 @@ const navItems = [
   {
     label: "Inbox",
     icon: <MessageSquare className="w-4 h-4" />,
-    href: "/inbox",
+    href: "/chats",
   },
   {
     label: "Video Meetings",

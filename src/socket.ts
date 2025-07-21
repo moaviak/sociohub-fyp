@@ -2,9 +2,42 @@ import { Server, Socket } from "socket.io";
 import jwt, { UserJwtPayload } from "jsonwebtoken";
 import prisma from "./db";
 import { Notification } from "./services/notification.service";
+import { Request } from "express";
 
 // Keep track of connected users by their ID
 const connectedUsers = new Map<string, Set<string>>();
+
+const getChatPartners = async (userId: string) => {
+  const userChats = await prisma.chat.findMany({
+    where: {
+      participants: {
+        some: {
+          OR: [{ studentId: userId }, { advisorId: userId }],
+        },
+      },
+    },
+    select: {
+      participants: {
+        select: {
+          studentId: true,
+          advisorId: true,
+        },
+      },
+    },
+  });
+
+  const partnerIds = new Set<string>();
+  userChats.forEach((chat) => {
+    chat.participants.forEach((participant) => {
+      const partnerId = participant.studentId || participant.advisorId;
+      if (partnerId && partnerId !== userId) {
+        partnerIds.add(partnerId);
+      }
+    });
+  });
+
+  return Array.from(partnerIds);
+};
 
 export const setupSocketIO = (io: Server) => {
   // Middleware for authentication
@@ -39,18 +72,68 @@ export const setupSocketIO = (io: Server) => {
     const { userId, userType } = socket.data;
 
     if (userId) {
-      // Add user to connected users map
+      const wasOffline =
+        !connectedUsers.has(userId) || connectedUsers.get(userId)!.size === 0;
       if (!connectedUsers.has(userId)) {
         connectedUsers.set(userId, new Set());
       }
-      connectedUsers.get(userId)?.add(socket.id);
+      connectedUsers.get(userId)!.add(socket.id);
 
-      // Join user-specific room
+      if (wasOffline) {
+        // Notify partners that this user is now online
+        getChatPartners(userId).then((partners) => {
+          partners.forEach((partnerId) => {
+            const socketIds = connectedUsers.get(partnerId);
+            socketIds?.forEach((socketId) => {
+              io.to(socketId).emit("user-online", { userId });
+            });
+          });
+        });
+      }
+
+      // Join user-specific room for personal notifications
       socket.join(`${userType}-${userId}`);
 
-      console.log(
-        `User connected: ${userType}-${userId}, Socket ID: ${socket.id}`
-      );
+      // User joins rooms for each of their chats
+      prisma.chat
+        .findMany({
+          where: {
+            participants: {
+              some: {
+                OR: [{ studentId: userId }, { advisorId: userId }],
+              },
+            },
+          },
+          select: {
+            id: true,
+          },
+        })
+        .then((chats) => {
+          chats.forEach((chat) => {
+            socket.join(chat.id);
+          });
+        });
+
+      socket.on("get-chat-partners-status", async () => {
+        try {
+          const partners = await getChatPartners(userId);
+          const statuses: { [key: string]: boolean } = {};
+          partners.forEach((partnerId) => {
+            statuses[partnerId] = connectedUsers.has(partnerId);
+          });
+          socket.emit("chat-partners-status", statuses);
+        } catch (error) {
+          console.error("Error getting chat partners status:", error);
+        }
+      });
+
+      socket.on("typing", ({ chatId }) => {
+        socket.to(chatId).emit("typing", { chatId, userId });
+      });
+
+      socket.on("stop-typing", ({ chatId }) => {
+        socket.to(chatId).emit("stop-typing", { chatId, userId });
+      });
 
       // Handle client requesting their unread notification count
       socket.on("get-notification-count", async () => {
@@ -187,11 +270,17 @@ export const setupSocketIO = (io: Server) => {
           userSockets.delete(socket.id);
           if (userSockets.size === 0) {
             connectedUsers.delete(userId);
+            // Notify partners that this user is now offline
+            getChatPartners(userId).then((partners) => {
+              partners.forEach((partnerId) => {
+                const socketIds = connectedUsers.get(partnerId);
+                socketIds?.forEach((socketId) => {
+                  io.to(socketId).emit("user-offline", { userId });
+                });
+              });
+            });
           }
         }
-        console.log(
-          `User disconnected: ${userType}-${userId}, Socket ID: ${socket.id}`
-        );
       });
     }
   });
@@ -212,4 +301,45 @@ export const sendNotificationToUsers = (
     const roomId = `${recipient.recipientType}-${recipient.recipientId}`;
     io.to(roomId).emit("new-notification", notification);
   });
+};
+
+export const getReceiverSocketIds = (receiverId: string) => {
+  return connectedUsers.get(receiverId);
+};
+
+export const emitSocketEvent = (
+  req: Request,
+  roomId: string,
+  event: string,
+  payload: any,
+  participants: { studentId: string | null; advisorId: string | null }[],
+  senderId?: string
+) => {
+  const io: Server = req.app.get("io");
+
+  // Ensure all participants are in the room for real-time events
+  participants.forEach((p) => {
+    const participantId = p.studentId || p.advisorId;
+    if (participantId) {
+      const socketIds = getReceiverSocketIds(participantId);
+      socketIds?.forEach((socketId) => {
+        const socket = io.sockets.sockets.get(socketId);
+        // If the socket exists and is not already in the room, join it.
+        if (socket && !socket.rooms.has(roomId)) {
+          socket.join(roomId);
+        }
+      });
+    }
+  });
+
+  let roomEmitter: any = io.to(roomId);
+
+  if (senderId) {
+    const senderSocketIds = getReceiverSocketIds(senderId);
+    if (senderSocketIds && senderSocketIds.size > 0) {
+      roomEmitter = roomEmitter.except(Array.from(senderSocketIds));
+    }
+  }
+
+  roomEmitter.emit(event, payload);
 };

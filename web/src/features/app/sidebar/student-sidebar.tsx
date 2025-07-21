@@ -24,7 +24,7 @@ const navItems = [
   {
     label: "Chat",
     icon: <MessageSquare className="w-4 h-4" />,
-    href: "/inbox",
+    href: "/chats",
   },
   {
     label: "Calendar",

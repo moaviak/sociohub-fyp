@@ -30,6 +30,8 @@ const io = new Server(httpServer, {
 import { setupSocketIO } from "./socket";
 setupSocketIO(io);
 
+app.set("io", io);
+
 // global middlewares
 app.use(
   cors({
@@ -101,6 +103,8 @@ import userRoutes from "./routes/user.routes.js";
 import announcementRoutes from "./routes/announcements.routes.js";
 import tasksRoutes from "./routes/tasks.routes.js";
 import paymentRoutes from "./routes/payment.routes.js";
+import chatRoutes from "./routes/chat.routes.js";
+import messageRoutes from "./routes/message.routes.js";
 
 // Register meeting routes
 import meetingRoutes from "./routes/meeting.routes.js";
@@ -116,6 +120,8 @@ app.use("/api/announcements", announcementRoutes);
 app.use("/api/tasks", tasksRoutes);
 app.use("/api/meetings", meetingRoutes);
 app.use("/api/payments", paymentRoutes);
+app.use("/api/chats", chatRoutes);
+app.use("/api/messages", messageRoutes);
 
 // common error handling middleware
 app.use(errorHandler);

@@ -21,38 +21,40 @@ import SocietyFormPage from "@/pages/society-form-page";
 import VerifyEmailPage from "@/pages/verify-email-page";
 import RequestsPage from "@/pages/app/members/requests-page";
 import RequestsHistoryPage from "./pages/app/members/requests-history-page";
-import { NotificationSocketProvider } from "./features/app/notifications/socket-provider";
+import { SocketProvider } from "./providers/socket-provider";
+import ChatsPage from "./pages/app/chats";
+import MeetingRoomPage from "./pages/app/meeting-room-page";
+import SocietyPage from "./pages/app/society-page";
 import EventsPage from "./pages/app/events";
 import CreateEventPage from "./pages/app/events/create-event-page";
-import UpdateEventPage from "./pages/app/events/update-event-page";
-import EventDetailPage from "./pages/app/events/event-detail-page";
-import MyEventsPage from "./pages/app/events/my-events-page";
-import AnnouncementsPage from "./pages/app/announcements";
-import CreateAnnouncementPage from "./pages/app/announcements/create-announcement";
-import EditAnnouncementPage from "./pages/app/announcements/edit-announcement";
-import TodoListPage from "./pages/app/todo-list-page";
-import SocietyPage from "./pages/app/society-page";
-import SocietySettingsLayout from "./layouts/app/society-settings-layout";
-import SocietySettingsPage from "./pages/app/society-settings";
-import ProfileSettingsPage from "./pages/app/society-settings/profile-settings-page";
-import MembersSettingsPage from "./pages/app/society-settings/members-settings-page";
-import UserProfilePage from "./pages/app/user";
-import UserSettingsLayout from "./layouts/app/user-settings-layout";
-import UserSettingsPage from "./pages/app/user/settings-page";
-import UserProfileSettingsPage from "./pages/app/user/profile-settings-page";
-import VideoMeetingPage from "./pages/app/video-meeting-page";
-import MeetingRoomPage from "./pages/app/meeting-room-page";
-import PaymentSettingsPage from "./pages/app/society-settings/payment-settings-page";
-import OnboardingCompletePage from "./pages/app/society-settings/onboarding-complete-page";
-import OnboardingRefreshPage from "./pages/app/society-settings/onboarding-refresh-page";
-import { PaymentSuccessPage } from "./pages/app/payments/payment-success-page";
-import { PaymentCancelledPage } from "./pages/app/payments/payment-cancelled-page";
 import PaymentsPage from "./pages/app/payments";
 import TransactionsPage from "./pages/app/payments/transactions-page";
+import AnnouncementsPage from "./pages/app/announcements";
+import CreateAnnouncementPage from "./pages/app/announcements/create-announcement";
+import VideoMeetingPage from "./pages/app/video-meeting-page";
+import SocietySettingsLayout from "./layouts/app/society-settings-layout";
+import UserSettingsLayout from "./layouts/app/user-settings-layout";
+import EditAnnouncementPage from "./pages/app/announcements/edit-announcement";
+import EventDetailPage from "./pages/app/events/event-detail-page";
+import MyEventsPage from "./pages/app/events/my-events-page";
+import UpdateEventPage from "./pages/app/events/update-event-page";
+import { PaymentCancelledPage } from "./pages/app/payments/payment-cancelled-page";
+import { PaymentSuccessPage } from "./pages/app/payments/payment-success-page";
+import SocietySettingsPage from "./pages/app/society-settings";
+import MembersSettingsPage from "./pages/app/society-settings/members-settings-page";
+import OnboardingCompletePage from "./pages/app/society-settings/onboarding-complete-page";
+import OnboardingRefreshPage from "./pages/app/society-settings/onboarding-refresh-page";
+import PaymentSettingsPage from "./pages/app/society-settings/payment-settings-page";
+import ProfileSettingsPage from "./pages/app/society-settings/profile-settings-page";
+import TodoListPage from "./pages/app/todo-list-page";
+import UserProfilePage from "./pages/app/user";
+import UserProfileSettingsPage from "./pages/app/user/profile-settings-page";
+import UserSettingsPage from "./pages/app/user/settings-page";
+import ChatViewPage from "./pages/app/chats/chat-view-page";
 
 function App() {
   return (
-    <NotificationSocketProvider>
+    <SocketProvider>
       <Routes>
         <Route element={<MainLayout />}>
           <Route
@@ -167,6 +169,9 @@ function App() {
             {/* Add other private routes here */}
             <Route path="/todo" element={<TodoListPage />} />
             <Route path="/my-events" element={<MyEventsPage />} />
+            <Route path="/chats" element={<ChatsPage />}>
+              <Route path=":chatId" element={<ChatViewPage />} />
+            </Route>
 
             <Route path="/event/:id" element={<EventDetailPage />} />
             <Route path="update-event/:eventid" element={<UpdateEventPage />} />
@@ -189,7 +194,7 @@ function App() {
           <Route path="*" element={<NotFoundPage />} />
         </Route>
       </Routes>
-    </NotificationSocketProvider>
+    </SocketProvider>
   );
 }
 export default App;

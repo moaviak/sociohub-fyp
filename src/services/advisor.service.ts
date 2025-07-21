@@ -47,29 +47,39 @@ export const registerAdvisorService = async ({
   const hashedPassword = await bcrypt.hash(password, 10);
   const { code, codeExpiry } = prisma.advisor.generateVerificationCode();
 
-  const advisor = await prisma.advisor.create({
-    data: {
-      firstName,
-      lastName,
-      email,
-      displayName,
-      phone: phone || null,
-      password: hashedPassword,
-      avatar,
-      emailVerificationCode: code,
-      emailVerificationExpiry: new Date(codeExpiry),
-    },
-    select: {
-      id: true,
-      firstName: true,
-      lastName: true,
-      email: true,
-      avatar: true,
-      societyId: true,
-      displayName: true,
-      createdAt: true,
-      updatedAt: true,
-    },
+  const advisor = await prisma.$transaction(async (tx) => {
+    const newAdvisor = await tx.advisor.create({
+      data: {
+        firstName,
+        lastName,
+        email,
+        displayName,
+        phone: phone || null,
+        password: hashedPassword,
+        avatar,
+        emailVerificationCode: code,
+        emailVerificationExpiry: new Date(codeExpiry),
+      },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        email: true,
+        avatar: true,
+        societyId: true,
+        displayName: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+
+    await tx.user.create({
+      data: {
+        advisorId: newAdvisor.id,
+      },
+    });
+
+    return newAdvisor;
   });
 
   // Send verification email

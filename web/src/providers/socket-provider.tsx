@@ -1,18 +1,28 @@
 import { useEffect, useState, useCallback, useRef } from "react";
-import { useDispatch } from "react-redux";
-import { useAppSelector } from "@/app/hooks";
+import { useAppDispatch, useAppSelector } from "@/app/hooks";
+import { useNavigate } from "react-router";
 
 import { initializeSocket, getSocket, disconnectSocket } from "@/lib/socket";
 import { addNotification, setUnreadCount } from "@/features/app/topbar/slice";
 import { Notification } from "@/types";
-import { toast } from "./components/notification-toast";
+import { toast } from "@/features/app/notifications/components/notification-toast";
+import { Message } from "@/features/app/chats/types";
+import {
+  addMessageWithRefresh,
+  setOnlineUsers,
+  setUserOffline,
+  setUserOnline,
+  startTyping,
+  stopTyping,
+  deleteMessage,
+  handleChatDeletionOrLeave,
+  removeChatParticipant,
+} from "@/features/app/chats/slice";
 
-export const NotificationSocketProvider = ({
-  children,
-}: {
-  children: React.ReactNode;
-}) => {
-  const dispatch = useDispatch();
+export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
+  const dispatch = useAppDispatch();
+  const { activeChat } = useAppSelector((state) => state.chats);
+  const navigate = useNavigate();
   const [socketInitialized, setSocketInitialized] = useState(false);
   const [, setConnectionError] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
@@ -60,6 +70,53 @@ export const NotificationSocketProvider = ({
         toast(notification);
       });
 
+      // Listen for new message event
+      socket.on("new-message", (message: Message) => {
+        dispatch(addMessageWithRefresh(message));
+      });
+
+      socket.on("delete-message", ({ messageId, chatId }) => {
+        dispatch(deleteMessage({ messageId, chatId }));
+      });
+
+      socket.on("chat-deleted", ({ chatId }) => {
+        if (activeChat?.id === chatId) {
+          navigate("/chats");
+        }
+        dispatch(handleChatDeletionOrLeave());
+      });
+
+      socket.on("group-deleted", ({ chatId }) => {
+        if (activeChat?.id === chatId) {
+          navigate("/chats");
+        }
+        dispatch(handleChatDeletionOrLeave());
+      });
+
+      socket.on("group-left", ({ chatId, userId }) => {
+        dispatch(removeChatParticipant({ chatId, userId }));
+      });
+
+      socket.on("chat-partners-status", (statuses) => {
+        dispatch(setOnlineUsers(statuses));
+      });
+
+      socket.on("user-online", ({ userId }) => {
+        dispatch(setUserOnline(userId));
+      });
+
+      socket.on("user-offline", ({ userId }) => {
+        dispatch(setUserOffline(userId));
+      });
+
+      socket.on("typing", ({ chatId, userId }) => {
+        dispatch(startTyping({ chatId, userId }));
+      });
+
+      socket.on("stop-typing", ({ chatId, userId }) => {
+        dispatch(stopTyping({ chatId, userId }));
+      });
+
       // Listen for connection errors
       socket.on("connect_error", (error) => {
         console.error("Socket connection error:", error.message);
@@ -78,6 +135,7 @@ export const NotificationSocketProvider = ({
         authErrorRef.current = false;
         // Request notification count on connect
         socket.emit("get-notification-count");
+        socket.emit("get-chat-partners-status");
       });
 
       return () => {
@@ -85,8 +143,14 @@ export const NotificationSocketProvider = ({
         if (socket) {
           socket.off("notification-count");
           socket.off("new-notification");
+          socket.off("new-message");
           socket.off("connect_error");
           socket.off("connect");
+          socket.off("chat-partners-status");
+          socket.off("user-online");
+          socket.off("user-offline");
+          socket.off("typing");
+          socket.off("stop-typing");
         }
       };
     } catch (error) {

@@ -3,7 +3,7 @@ import prisma from "../../src/db";
 
 export const seedStudentSocietyMemberships = async () => {
   // Get all students and societies
-  const students = await prisma.student.findMany();
+  const students = await prisma.student.findMany({ include: { user: true } });
   const societies = await prisma.society.findMany();
 
   // Shuffle students array for random assignment
@@ -92,6 +92,12 @@ export const seedStudentSocietyMemberships = async () => {
         },
       });
 
+      // Add student to society group chat - THIS WAS MISSING
+      await prisma.chat.update({
+        where: { societyId: society.id },
+        data: { participants: { connect: { id: student.user!.id } } },
+      });
+
       studentsWithPrivilegedRoles.add(student.id);
       studentSocietyCount.set(
         student.id,
@@ -159,6 +165,12 @@ export const seedStudentSocietyMemberships = async () => {
           },
         });
 
+        // Add student to society group
+        await prisma.chat.update({
+          where: { societyId: society.id },
+          data: { participants: { connect: { id: student.user!.id } } },
+        });
+
         studentSocietyCount.set(
           student.id,
           studentSocietyCount.get(student.id) + 1
@@ -167,3 +179,13 @@ export const seedStudentSocietyMemberships = async () => {
     }
   }
 };
+
+seedStudentSocietyMemberships()
+  .then(async () => {
+    await prisma.$disconnect();
+  })
+  .catch(async (e) => {
+    console.error(e);
+    await prisma.$disconnect();
+    process.exit(1);
+  });

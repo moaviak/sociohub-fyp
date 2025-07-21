@@ -216,7 +216,7 @@ export const handleRequest = asyncHandler(
     const { studentId, action, reason } = req.body;
 
     // Fetch join request
-    const [society, request] = await prisma.$transaction([
+    const [society, request, student] = await Promise.all([
       prisma.society.findUnique({
         where: { id: societyId },
         select: {
@@ -230,6 +230,12 @@ export const handleRequest = asyncHandler(
       prisma.joinRequest.findFirst({
         where: { societyId, studentId, status: "PENDING" },
       }),
+      prisma.student.findUnique({
+        where: { id: studentId },
+        include: {
+          user: true,
+        },
+      }),
     ]);
 
     if (!society) {
@@ -238,6 +244,10 @@ export const handleRequest = asyncHandler(
 
     if (!request) {
       throw new ApiError(400, "No pending join request found.");
+    }
+
+    if (!student || !student.user) {
+      throw new ApiError(404, "Student not found.");
     }
 
     if (action === RequestAction.ACCEPT) {
@@ -294,6 +304,10 @@ export const handleRequest = asyncHandler(
             status: "APPROVED",
             rejectionReason: null,
           },
+        }),
+        prisma.chat.update({
+          where: { societyId: request.societyId },
+          data: { participants: { connect: { id: student.user.id } } },
         }),
       ]);
 

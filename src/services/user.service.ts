@@ -2,6 +2,57 @@ import { Advisor, Student } from "@prisma/client";
 import prisma from "../db";
 import { UserType, IUser } from "../types";
 
+export const searchUsersService = async (query: string, currentUserId: string) => {
+  const searchTerm = `%${query.trim().toLowerCase()}%`;
+
+  const users = await prisma.$queryRaw<any[]>`
+    SELECT * FROM (
+      (
+        SELECT 
+          id, email, "firstName", "lastName", avatar, "isEmailVerified", 
+          "registrationNumber", NULL as "displayName", NULL as "societyId",
+          'STUDENT' as "userType", "createdAt", "updatedAt"
+        FROM "Student"
+        WHERE (
+          LOWER("firstName") LIKE ${searchTerm} OR 
+          LOWER("lastName") LIKE ${searchTerm} OR 
+          LOWER("email") LIKE ${searchTerm} OR
+          LOWER("registrationNumber") LIKE ${searchTerm} OR
+          LOWER(CONCAT("firstName", ' ', "lastName")) LIKE ${searchTerm}
+        ) AND id != ${currentUserId}
+      )
+      UNION ALL
+      (
+        SELECT 
+          id, email, "firstName", "lastName", avatar, "isEmailVerified",
+          NULL as "registrationNumber", "displayName", "societyId",
+          'ADVISOR' as "userType", "createdAt", "updatedAt"
+        FROM "Advisor"
+        WHERE (
+          LOWER("firstName") LIKE ${searchTerm} OR 
+          LOWER("lastName") LIKE ${searchTerm} OR 
+          LOWER("email") LIKE ${searchTerm} OR
+          LOWER("displayName") LIKE ${searchTerm} OR
+          LOWER(CONCAT("firstName", ' ', "lastName")) LIKE ${searchTerm}
+        ) AND id != ${currentUserId}
+      )
+    ) combined_users
+    ORDER BY "firstName" ASC
+    LIMIT 10
+  `;
+
+  return users.map((user) => ({
+    id: user.id,
+    email: user.email,
+    firstName: user.firstName,
+    lastName: user.lastName,
+    avatar: user.avatar || undefined,
+    userType: user.userType as UserType,
+    registrationNumber: user.registrationNumber || undefined,
+    displayName: user.displayName || undefined,
+  }));
+};
+
 export const getAllUsersService = async ({
   page = 1,
   limit = 10,

@@ -47,27 +47,37 @@ export const registerStudentService = async ({
   const avatar = generateAvatarUrlFromInitials(firstName, lastName);
   const { code, codeExpiry } = prisma.student.generateVerificationCode();
 
-  const student = await prisma.student.create({
-    data: {
-      firstName,
-      lastName,
-      email,
-      registrationNumber,
-      avatar,
-      password: hashedPassword,
-      emailVerificationCode: code,
-      emailVerificationExpiry: new Date(codeExpiry),
-    },
-    select: {
-      id: true,
-      firstName: true,
-      lastName: true,
-      email: true,
-      avatar: true,
-      registrationNumber: true,
-      createdAt: true,
-      updatedAt: true,
-    },
+  const student = await prisma.$transaction(async (tx) => {
+    const newStudent = await tx.student.create({
+      data: {
+        firstName,
+        lastName,
+        email,
+        registrationNumber,
+        avatar,
+        password: hashedPassword,
+        emailVerificationCode: code,
+        emailVerificationExpiry: new Date(codeExpiry),
+      },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        email: true,
+        avatar: true,
+        registrationNumber: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+
+    await tx.user.create({
+      data: {
+        studentId: newStudent.id,
+      },
+    });
+
+    return newStudent;
   });
 
   await sendVerificationEmail(student.email, {

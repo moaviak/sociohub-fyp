@@ -168,17 +168,17 @@ async function main() {
     ],
   });
 
-  if (process.env.NODE_ENV === "development") {
-    await seedSocietiesAndAdvisors();
-    await seedRoles();
-    await seedStudents();
-    await seedStudentSocietyMemberships();
-    await seedEvents();
-    await seedEventRegistrations();
-    await seedPaymentTransactions();
-    await seedAnnouncements();
-    await seedTasks();
-  }
+  // if (process.env.NODE_ENV === "development") {
+  //   await seedSocietiesAndAdvisors();
+  //   await seedRoles();
+  //   await seedStudents();
+  //   await seedStudentSocietyMemberships();
+  //   await seedEvents();
+  //   await seedEventRegistrations();
+  //   await seedPaymentTransactions();
+  //   await seedAnnouncements();
+  //   await seedTasks();
+  // }
 }
 
 main()

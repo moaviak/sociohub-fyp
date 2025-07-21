@@ -11,9 +11,9 @@ import {
 import { NotificationItem } from "./notification-item";
 import { useAppDispatch, useAppSelector } from "@/app/hooks";
 import { useGetNotificationsQuery } from "../api";
-import { markNotificationRead } from "@/features/app/notifications/socket-provider";
 import { markNotificationAsRead } from "../slice";
 import { useState } from "react";
+import { markNotificationRead } from "@/providers/socket-provider";
 
 export const Notifications = () => {
   const [isOpen, setIsOpen] = useState(false);

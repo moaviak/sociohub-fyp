@@ -86,3 +86,13 @@ export const seedRoles = async () => {
     }
   }
 };
+
+seedRoles()
+  .then(async () => {
+    await prisma.$disconnect();
+  })
+  .catch(async (e) => {
+    console.error(e);
+    await prisma.$disconnect();
+    process.exit(1);
+  });

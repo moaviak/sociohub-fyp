@@ -1,9 +1,9 @@
 import { Notification } from "@/types";
 import { useNavigate } from "react-router";
 import { toast as sonnerToast } from "sonner";
-import { markNotificationRead } from "../socket-provider";
 import { markNotificationAsRead } from "../../topbar/slice";
 import { useAppDispatch } from "@/app/hooks";
+import { markNotificationRead } from "@/providers/socket-provider";
 
 // Custom toast function that abstracts sonner toast API
 export function toast(notification: Notification) {

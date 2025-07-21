@@ -107,8 +107,81 @@ export const verifyEmails = async () => {
   });
 };
 
+export const removeAllStudentsFromChatsEfficient = async () => {
+  try {
+    // Get all student user IDs
+    const studentUserIds = await prisma.user.findMany({
+      where: {
+        studentId: {
+          not: null,
+        },
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    console.log(
+      `Found ${studentUserIds.length} student users to remove from chats`
+    );
+
+    // Update all chats to disconnect these students
+    // Note: This approach requires updating each chat individually
+    // as Prisma doesn't support bulk disconnect operations across multiple records
+
+    const chatsWithStudents = await prisma.chat.findMany({
+      where: {
+        participants: {
+          some: {
+            studentId: {
+              not: null,
+            },
+          },
+        },
+      },
+      include: {
+        participants: {
+          where: {
+            studentId: {
+              not: null,
+            },
+          },
+          select: {
+            id: true,
+          },
+        },
+      },
+    });
+
+    console.log(
+      `Found ${chatsWithStudents.length} chats with student participants`
+    );
+
+    // Remove students from each chat
+    for (const chat of chatsWithStudents) {
+      if (chat.participants.length > 0) {
+        await prisma.chat.update({
+          where: { id: chat.id },
+          data: {
+            participants: {
+              disconnect: chat.participants.map((student) => ({
+                id: student.id,
+              })),
+            },
+          },
+        });
+      }
+    }
+
+    console.log("Successfully removed all students from all chats");
+  } catch (error) {
+    console.error("Error removing students from chats:", error);
+    throw error;
+  }
+};
+
 async function main() {
-  await verifyEmails();
+  await removeAllStudentsFromChatsEfficient();
 }
 
 main()

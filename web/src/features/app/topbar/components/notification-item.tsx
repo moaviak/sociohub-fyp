@@ -16,8 +16,8 @@ import { useDeleteNotificationMutation } from "../api";
 import { toast } from "sonner";
 import React, { useEffect, useState } from "react";
 import ApiError from "@/features/api-error";
-import { markNotificationRead } from "@/features/app/notifications/socket-provider";
 import { Hint } from "@/components/hint";
+import { markNotificationRead } from "@/providers/socket-provider";
 
 interface NotificationItemProps {
   notification: Notification;

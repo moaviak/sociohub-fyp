@@ -41,6 +41,8 @@ model Student {
   MeetingInvitation   MeetingInvitation[]
   Meeting             Meeting[]               @relation("MeetingHostStudent")
   paymentTransactions PaymentTransaction[]
+
+  user User?
 }
 
 model Advisor {
@@ -67,6 +69,9 @@ model Advisor {
   Meeting                 Meeting[]               @relation("MeetingHostAdvisor")
   MeetingParticipant      MeetingParticipant[]
   MeetingInvitation       MeetingInvitation[]
+
+  user   User?
+  userId String? @unique
 
   @@index([societyId])
 }
@@ -96,6 +101,7 @@ model Society {
   tasksAssigned Task[]
   Meeting       Meeting[]
   paymentConfig SocietyPaymentConfig?
+  chat          Chat?
 }
 
 // Society Payment Configuration
@@ -606,4 +612,97 @@ enum InvitationStatus {
   PENDING
   ACCEPTED
   DECLINED
+}
+
+// =================================================================================
+// CHAT FEATURE MODELS
+// =================================================================================
+
+enum AttachmentType {
+  IMAGE
+  VIDEO
+  AUDIO
+  DOCUMENT
+}
+
+enum ChatType {
+  ONE_ON_ONE
+  GROUP
+}
+
+model User {
+  id        String   @id @default(cuid())
+  student   Student? @relation(fields: [studentId], references: [id])
+  studentId String?  @unique
+  advisor   Advisor? @relation(fields: [advisorId], references: [id])
+  advisorId String?  @unique
+
+  // For chat
+  chats        Chat[]    @relation("ChatParticipants")
+  messages     Message[]
+  adminOfChats Chat[]    @relation("AdminOfChats")
+  readMessages Message[] @relation("ReadMessages")
+
+  // Fields for online status and last seen
+  isOnline Boolean   @default(false)
+  lastSeen DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Chat {
+  id        String   @id @default(cuid())
+  name      String?
+  type      ChatType @default(ONE_ON_ONE)
+  chatImage String?
+
+  // The society this chat belongs to (for primary society chats)
+  society   Society? @relation(fields: [societyId], references: [id])
+  societyId String?  @unique // A society can only have one primary chat
+
+  participants User[]    @relation("ChatParticipants")
+  messages     Message[]
+
+  // The user who created the chat (especially for group chats)
+  admin   User?   @relation("AdminOfChats", fields: [adminId], references: [id])
+  adminId String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([societyId])
+}
+
+model Message {
+  id          String       @id @default(cuid())
+  content     String?
+  chat        Chat         @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  chatId      String
+  sender      User         @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  senderId    String
+  attachments Attachment[]
+
+  // For unread message tracking
+  readBy User[] @relation("ReadMessages")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([chatId])
+}
+
+model Attachment {
+  id        String         @id @default(cuid())
+  message   Message        @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  messageId String
+  name      String?
+  size      Int?
+  url       String
+  type      AttachmentType
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([messageId])
 }

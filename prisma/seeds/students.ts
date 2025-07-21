@@ -33,11 +33,11 @@ export const seedStudents = async () => {
     const degree = DEGREES[Math.floor(Math.random() * DEGREES.length)].value;
     const semester = Math.random() < 0.5 ? "SP" : "FA"; // Randomly choose SP or FA
     const year = faker.number
-      .int({ min: 20, max: 25 })
+      .int({ min: 21, max: 25 })
       .toString()
       .padStart(2, "0"); // Random year between 20-25
     const studentNumber = faker.number
-      .int({ min: 1, max: 999 })
+      .int({ min: 1, max: 99 })
       .toString()
       .padStart(3, "0"); // Random 3-digit number
 
@@ -60,19 +60,39 @@ export const seedStudents = async () => {
   }
 
   for (const student of students) {
-    await prisma.student.upsert({
-      where: { email: student.email },
-      update: {},
-      create: {
-        firstName: student.firstName,
-        lastName: student.lastName,
-        email: student.email,
-        registrationNumber: student.registrationNumber,
-        password: student.password,
-        createdAt: student.createdAt,
-        isEmailVerified: true,
-        avatar: `https://avatar.iran.liara.run/username?username=${student.firstName}+${student.lastName}`,
-      },
+    await prisma.$transaction(async (tx) => {
+      const newStudent = await tx.student.upsert({
+        where: { email: student.email },
+        update: {},
+        create: {
+          firstName: student.firstName,
+          lastName: student.lastName,
+          email: student.email,
+          registrationNumber: student.registrationNumber,
+          password: student.password,
+          createdAt: student.createdAt,
+          isEmailVerified: true,
+          avatar: `https://avatar.iran.liara.run/username?username=${student.firstName}+${student.lastName}`,
+        },
+      });
+
+      await tx.user.upsert({
+        where: { studentId: newStudent.id },
+        update: {},
+        create: {
+          studentId: newStudent.id,
+        },
+      });
     });
   }
 };
+
+seedStudents()
+  .then(async () => {
+    await prisma.$disconnect();
+  })
+  .catch(async (e) => {
+    console.error(e);
+    await prisma.$disconnect();
+    process.exit(1);
+  });

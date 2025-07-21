@@ -8,7 +8,8 @@
     "build": "tsc && node dist/index.js"
   },
   "prisma": {
-    "seed": "ts-node prisma/seeds/index.ts"
+    "seed": "ts-node prisma/seeds/index.ts",
+    "seed-advisors": "ts-node prisma/seeds/society-advisor.ts"
   },
   "author": "Moavia",
   "license": "ISC",
