@@ -102,6 +102,7 @@ model Society {
   Meeting       Meeting[]
   paymentConfig SocietyPaymentConfig?
   chat          Chat?
+  posts         Post[]
 }
 
 // Society Payment Configuration
@@ -335,6 +336,7 @@ model Event {
   eventRegistrations  EventRegistration[]
   eventAnnouncement   Announcement?        @relation("EventAnnouncement")
   paymentTransactions PaymentTransaction[]
+  galleryPosts        Post[]
 
   @@index([societyId])
 }
@@ -649,6 +651,10 @@ model User {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  posts    Post[]
+  likes    PostLike[]
+  comments PostComment[]
 }
 
 model Chat {
@@ -705,4 +711,82 @@ model Attachment {
   updatedAt DateTime @updatedAt
 
   @@index([messageId])
+}
+
+// =================================================================================
+// CMS (Content Management System) FEATURE MODELS
+// =================================================================================
+
+enum PostType {
+  NORMAL
+  EVENT_GALLERY
+}
+
+model Post {
+  id        String   @id @default(cuid())
+  content   String?
+  type      PostType @default(NORMAL)
+  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  authorId  String
+  society   Society  @relation(fields: [societyId], references: [id], onDelete: Cascade)
+  societyId String
+  event     Event?   @relation(fields: [eventId], references: [id], onDelete: SetNull)
+  eventId   String?
+
+  media    PostMedia[]
+  likes    PostLike[]
+  comments PostComment[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([authorId])
+  @@index([societyId])
+  @@index([eventId])
+}
+
+model PostMedia {
+  id     String @id @default(cuid())
+  url    String
+  type   String // e.g., "IMAGE", "VIDEO"
+  post   Post   @relation(fields: [postId], references: [id], onDelete: Cascade)
+  postId String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([postId])
+}
+
+model PostLike {
+  id     String @id @default(cuid())
+  post   Post   @relation(fields: [postId], references: [id], onDelete: Cascade)
+  postId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String
+
+  createdAt DateTime @default(now())
+
+  @@unique([postId, userId])
+  @@index([postId])
+  @@index([userId])
+}
+
+model PostComment {
+  id        String       @id @default(cuid())
+  content   String
+  post      Post         @relation(fields: [postId], references: [id], onDelete: Cascade)
+  postId    String
+  author    User         @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  authorId  String
+  parent    PostComment? @relation("Replies", fields: [parentId], references: [id], onDelete: Cascade)
+  parentId  String?
+  replies   PostComment[] @relation("Replies")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([postId])
+  @@index([authorId])
+  @@index([parentId])
 }

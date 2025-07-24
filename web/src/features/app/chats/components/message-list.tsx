@@ -1,5 +1,5 @@
 import { useChatScroll } from "@/hooks/useChatScroll";
-import { Message, Participant } from "../types";
+import { Message, IUser } from "../types";
 import { MessagesGroup, MessagesGroupSkeleton } from "./messages-group";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -12,7 +12,7 @@ interface MessageListProps {
 }
 
 export interface MessagesGroup {
-  sender: Participant;
+  sender: IUser;
   messages: Message[];
 }
 

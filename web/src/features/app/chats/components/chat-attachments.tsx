@@ -25,7 +25,7 @@ import {
 } from "lucide-react";
 import { useSendMessageMutation } from "../api";
 import { useAppDispatch, useAppSelector } from "@/app/hooks";
-import { Participant, Message, Attachment } from "../types";
+import { IUser, Message, Attachment } from "../types";
 import { addMessage, updateMessage } from "../slice";
 import { v4 as uuid } from "uuid";
 import { getDocumentIcon } from "./document-icon";
@@ -48,7 +48,7 @@ const formatFileSize = (bytes: number): string => {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
 };
 
-export const ChatAttachments: React.FC<{ currentSender: Participant }> = ({
+export const ChatAttachments: React.FC<{ currentSender: IUser }> = ({
   currentSender,
 }) => {
   const [sendMessage] = useSendMessageMutation();

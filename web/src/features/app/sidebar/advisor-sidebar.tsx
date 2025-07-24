@@ -3,6 +3,7 @@ import {
   CalendarCheck,
   CalendarDays,
   CircleDollarSign,
+  ImagePlus,
   LayoutDashboard,
   ListTodo,
   Megaphone,
@@ -59,6 +60,11 @@ const navItems = [
     label: "Video Meetings",
     icon: <Video className="w-4 h-4" />,
     href: "/video-meetings",
+  },
+  {
+    label: "Create Post",
+    icon: <ImagePlus className="w-4 h-4" />,
+    href: `/create-post`,
   },
   {
     label: "Calendar",

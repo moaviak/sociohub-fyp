@@ -1,6 +1,6 @@
 import { Advisor, Student } from "@/types";
 
-export interface Participant {
+export interface IUser {
   id: string;
   studentId?: string;
   advisorId?: string;
@@ -16,10 +16,10 @@ export interface Chat {
   type: "ONE_ON_ONE" | "GROUP";
   societyId?: string;
   chatImage?: string;
-  participants: Participant[];
+  participants: IUser[];
   messages: Message[];
   adminId?: string;
-  admin?: Participant;
+  admin?: IUser;
   unreadCount: number;
   createdAt: string;
   updatedAt: string;
@@ -29,10 +29,10 @@ export interface Message {
   id: string;
   content: string;
   chatId: string;
-  sender: Participant;
+  sender: IUser;
   senderId: string;
   attachments?: Attachment[];
-  readBy: Participant[];
+  readBy: IUser[];
   isSending?: boolean;
   isError?: boolean;
   createdAt: string;

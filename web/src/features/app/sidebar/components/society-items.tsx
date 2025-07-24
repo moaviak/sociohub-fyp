@@ -3,6 +3,7 @@ import {
   CalendarCheck,
   ChevronDown,
   CircleDollarSign,
+  ImagePlus,
   Megaphone,
   Settings,
   Users,
@@ -95,6 +96,15 @@ const getSocietyItems = (society: Society & { privileges: string[] }) => {
             label: "Payments and Finance",
             icon: <CircleDollarSign className="w-4 h-4" />,
             href: `/payments/${society.id}`,
+          },
+        ]
+      : []),
+    ...(society.privileges.includes(PRIVILEGES.CONTENT_MANAGEMENT)
+      ? [
+          {
+            label: "Create Post",
+            icon: <ImagePlus className="w-4 h-4" />,
+            href: `/create-post/${society.id}`,
           },
         ]
       : []),

@@ -19,7 +19,7 @@ export const SearchInput = ({
   isSearching,
 }: SearchInputProps) => {
   return (
-    <div className="relative max-w-fit">
+    <div className="relative min-w-fit">
       <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-neutral-500" />
       <Input
         className={cn(

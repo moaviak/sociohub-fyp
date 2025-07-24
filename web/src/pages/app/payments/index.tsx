@@ -18,7 +18,7 @@ const PaymentsPage = () => {
   }
 
   return (
-    <div className="flex flex-col px-4 py-2 ">
+    <div className="flex flex-col px-4 py-2">
       <div>
         <h3 className="h3-semibold">Payments & Finance</h3>
         <p className="b3-regular">

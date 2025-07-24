@@ -82,6 +82,7 @@ export const api = createApi({
     "OnboardingStatus",
     "PaymentIntent",
     "Chat",
+    "Posts",
   ],
   endpoints: (builder) => ({
     refreshAuth: builder.mutation<RefreshTokenResponse | ApiError, void>({

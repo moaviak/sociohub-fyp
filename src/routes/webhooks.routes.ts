@@ -10,6 +10,6 @@ router.post(
   stripeWebhookController.handleStripeWebhook.bind(stripeWebhookController)
 );
 
-router.post("/daily", handleDailyWebhook);
+router.post("/daily", express.json(), handleDailyWebhook);
 
 export default router;

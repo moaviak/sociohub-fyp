@@ -51,6 +51,8 @@ import UserProfilePage from "./pages/app/user";
 import UserProfileSettingsPage from "./pages/app/user/profile-settings-page";
 import UserSettingsPage from "./pages/app/user/settings-page";
 import ChatViewPage from "./pages/app/chats/chat-view-page";
+import CreatePostPage from "./pages/app/posts/create-post-page";
+import PostDetailPage from "./pages/app/posts/post-detail-page";
 
 function App() {
   return (
@@ -91,6 +93,10 @@ function App() {
             {/* Society specific  routes*/}
             <Route path="/society" element={<SocietyPage />}>
               <Route path=":societyId" element={<SocietyPage />} />
+            </Route>
+
+            <Route path="/create-post" element={<CreatePostPage />}>
+              <Route path=":societyId" element={<CreatePostPage />} />
             </Route>
 
             <Route path="/members" element={<MembersPage />}>
@@ -179,6 +185,7 @@ function App() {
               path="/edit-announcement/:id"
               element={<EditAnnouncementPage />}
             />
+            <Route path="/posts/:postId" element={<PostDetailPage />} />
 
             <Route path="/profile/:id" element={<UserProfilePage />} />
             <Route path="/user-settings" element={<UserSettingsLayout />}>

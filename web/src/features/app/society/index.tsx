@@ -9,11 +9,11 @@ import ApiError from "@/features/api-error";
 import { useAppSelector } from "@/app/hooks";
 import { CalendarCheck, ClipboardList, Edit, Images } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { SocietyPosts } from "./components/society-posts";
 import { SocietyEvents } from "./components/society-events";
 import { SocietyInfo } from "./components/society-info";
 import { haveSettingsPrivilege } from "@/lib/utils";
 import { Advisor } from "@/types";
+import { SocietyPosts } from "../posts/society-posts";
 
 interface SocietyProps {
   id: string;
@@ -175,7 +175,7 @@ export const Society = ({ id }: SocietyProps) => {
           </TabsTrigger>
         </TabsList>
         <TabsContent value="posts" className="flex-1">
-          <SocietyPosts />
+          <SocietyPosts societyId={society.id} />
         </TabsContent>
         <TabsContent value="events" className="flex-1">
           <SocietyEvents society={society} />

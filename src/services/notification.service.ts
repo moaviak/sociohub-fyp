@@ -18,6 +18,13 @@ export interface Notification {
   updatedAt?: string;
 }
 
+export interface NotificationRecipient {
+  recipientType: "student" | "advisor";
+  recipientId: string;
+  webRedirectUrl?: string;
+  mobileRedirectUrl?: string;
+}
+
 /**
  * Format notification data to match the Notification interface
  */

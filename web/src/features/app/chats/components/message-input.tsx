@@ -4,14 +4,14 @@ import { Mic, Send } from "lucide-react";
 import { useSendMessageMutation } from "../api";
 import { useAppDispatch } from "@/app/hooks";
 import { addMessage, updateMessage } from "../slice";
-import { Message, Participant } from "../types";
+import { Message, IUser } from "../types";
 import { v4 as uuid } from "uuid";
 import { getSocket } from "@/lib/socket";
 import { ChatAttachments } from "./chat-attachments";
 
 interface MessageInputProps {
   chatId: string;
-  currentSender: Participant;
+  currentSender: IUser;
 }
 
 export const MessageInput = ({ chatId, currentSender }: MessageInputProps) => {
