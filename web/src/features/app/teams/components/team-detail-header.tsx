@@ -129,8 +129,8 @@ export const TeamDetailHeader: React.FC<{ team: Team }> = ({ team }) => {
                       <Avatar className="h-12 w-12 ring-2 ring-white shadow-md">
                         <AvatarImage src={team.lead.avatar} />
                         <AvatarFallback className="bg-gradient-to-br from-amber-400 to-orange-500 text-white font-semibold">
-                          {team.lead.firstName[0]}
-                          {team.lead.lastName[0]}
+                          {team.lead.firstName![0]}
+                          {team.lead.lastName![0]}
                         </AvatarFallback>
                       </Avatar>
                       <div className="absolute -top-1 -right-1 bg-white rounded-full p-1 shadow-sm">
