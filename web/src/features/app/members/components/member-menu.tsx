@@ -19,6 +19,7 @@ import { RemoveMemberDialog } from "./remove-member-dialog";
 import { useState } from "react";
 import { ManageRoles } from "./manage-roles";
 import { AssignTask } from "./assign-task";
+import { SendChat } from "../../chats/components/send-chat";
 
 interface MemberMenuProps {
   member: Member;
@@ -127,9 +128,11 @@ export const MemberMenu = ({ member }: MemberMenuProps) => {
             </DropdownMenuItem>
           )}
           {member.id !== user?.id && (
-            <DropdownMenuItem className="b3-regular">
-              Send Message
-            </DropdownMenuItem>
+            <SendChat userId={member.id}>
+              <DropdownMenuItem className="b3-regular">
+                Send Message
+              </DropdownMenuItem>
+            </SendChat>
           )}
           {haveTaskPrivilege && member.id !== user?.id && (
             <DropdownMenuItem

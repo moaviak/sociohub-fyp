@@ -42,6 +42,13 @@ model Student {
   Meeting             Meeting[]               @relation("MeetingHostStudent")
   paymentTransactions PaymentTransaction[]
 
+  // Team-related relations
+  teamLeaderships   Team[]            @relation("TeamLead")
+  teamMemberships   TeamMember[]      @relation("TeamMemberships")
+  teamJoinRequests  TeamJoinRequest[] @relation("TeamJoinRequests")
+  teamInvitations   TeamInvitation[]  @relation("TeamInvitations")
+  assignedTeamTasks TeamTask[]        @relation("AssignedTeamTasks")
+
   user User?
 }
 
@@ -70,8 +77,9 @@ model Advisor {
   MeetingParticipant      MeetingParticipant[]
   MeetingInvitation       MeetingInvitation[]
 
-  user   User?
-  userId String? @unique
+  user     User?
+  userId   String?    @unique
+  TeamTask TeamTask[]
 
   @@index([societyId])
 }
@@ -103,6 +111,7 @@ model Society {
   paymentConfig SocietyPaymentConfig?
   chat          Chat?
   posts         Post[]
+  teams         Team[]
 }
 
 // Society Payment Configuration
@@ -454,6 +463,7 @@ model PaymentWebhookLog {
 enum AnnouncementAudience {
   All
   Members
+  Teams
 }
 
 enum AnnouncementStatus {
@@ -470,6 +480,7 @@ model Announcement {
   audience        AnnouncementAudience @default(All)
   sendEmail       Boolean              @default(false)
   societyId       String
+  targetTeamIds   String[]             @default([])
 
   society Society @relation(fields: [societyId], references: [id], onDelete: Cascade)
 
@@ -496,10 +507,13 @@ model Task {
 
   assignedBySocietyId String?
   assignedBySociety   Society? @relation(fields: [assignedBySocietyId], references: [id])
+  assignedByTeamId    String?
+  assignedByTeam      Team?    @relation(fields: [assignedByTeamId], references: [id])
 
   @@index([createdByStudentId])
   @@index([createdByAdvisorId])
   @@index([assignedBySocietyId])
+  @@index([assignedByTeamId])
 }
 
 model Meeting {
@@ -667,6 +681,9 @@ model Chat {
   society   Society? @relation(fields: [societyId], references: [id])
   societyId String?  @unique // A society can only have one primary chat
 
+  Team   Team?   @relation(fields: [teamId], references: [id], onDelete: SetNull)
+  teamId String? @unique // A team can have one chat
+
   participants User[]    @relation("ChatParticipants")
   messages     Message[]
 
@@ -678,6 +695,7 @@ model Chat {
   updatedAt DateTime @updatedAt
 
   @@index([societyId])
+  @@index([teamId])
 }
 
 model Message {
@@ -773,15 +791,15 @@ model PostLike {
 }
 
 model PostComment {
-  id        String       @id @default(cuid())
-  content   String
-  post      Post         @relation(fields: [postId], references: [id], onDelete: Cascade)
-  postId    String
-  author    User         @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  authorId  String
-  parent    PostComment? @relation("Replies", fields: [parentId], references: [id], onDelete: Cascade)
-  parentId  String?
-  replies   PostComment[] @relation("Replies")
+  id       String        @id @default(cuid())
+  content  String
+  post     Post          @relation(fields: [postId], references: [id], onDelete: Cascade)
+  postId   String
+  author   User          @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  authorId String
+  parent   PostComment?  @relation("Replies", fields: [parentId], references: [id], onDelete: Cascade)
+  parentId String?
+  replies  PostComment[] @relation("Replies")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -789,4 +807,148 @@ model PostComment {
   @@index([postId])
   @@index([authorId])
   @@index([parentId])
+}
+
+// =================================================================================
+// TEAM MODULE ADDITIONS - Add these models to your existing schema
+// =================================================================================
+
+enum TeamJoinRequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum TeamTaskStatus {
+  TO_DO
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum TeamVisibility {
+  PUBLIC // Anyone in society can see and request to join
+  PRIVATE // Only invited members can see and join
+}
+
+// Core Team Model
+model Team {
+  id          String         @id @default(uuid())
+  name        String
+  description String?
+  logo        String? // Team logo/avatar
+  visibility  TeamVisibility @default(PUBLIC)
+  societyId   String
+  leadId      String? // Team Lead (Student ID)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  society      Society           @relation(fields: [societyId], references: [id], onDelete: Cascade)
+  lead         Student?          @relation("TeamLead", fields: [leadId], references: [id], onDelete: SetNull)
+  members      TeamMember[]
+  joinRequests TeamJoinRequest[]
+  invitations  TeamInvitation[]
+  teamTasks    TeamTask[]
+  Task         Task[]
+  chat         Chat?
+
+  @@unique([societyId, name]) // Team names must be unique within a society
+  @@index([societyId])
+  @@index([leadId])
+}
+
+// Team Membership
+model TeamMember {
+  id        String @id @default(uuid())
+  teamId    String
+  studentId String
+
+  joinedAt DateTime @default(now())
+
+  // Relations
+  team    Team    @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  student Student @relation("TeamMemberships", fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([teamId, studentId]) // Prevent duplicate memberships
+  @@index([teamId])
+  @@index([studentId])
+}
+
+// Team Join Requests
+model TeamJoinRequest {
+  id        String                @id @default(uuid())
+  teamId    String
+  studentId String
+  status    TeamJoinRequestStatus @default(PENDING)
+  message   String? // Optional message from student
+
+  // Response details
+  respondedById String? // Who approved/rejected (Student or Advisor)
+  responseNote  String? // Optional note from responder
+  respondedAt   DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  team    Team    @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  student Student @relation("TeamJoinRequests", fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([teamId, studentId]) // One active request per student per team
+  @@index([teamId])
+  @@index([studentId])
+  @@index([status])
+}
+
+// Team Invitations (sent by Team Lead or Society Admin)
+model TeamInvitation {
+  id          String                @id @default(uuid())
+  teamId      String
+  studentId   String
+  invitedById String // Who sent the invitation (Student or Advisor)
+  status      TeamJoinRequestStatus @default(PENDING)
+  message     String? // Optional message from inviter
+
+  respondedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  team    Team    @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  student Student @relation("TeamInvitations", fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([teamId, studentId]) // One active invitation per student per team
+  @@index([teamId])
+  @@index([studentId])
+  @@index([status])
+}
+
+// Team-Level Tasks (Assigned by Society Advisor/Privileged Members)
+model TeamTask {
+  id          String         @id @default(uuid())
+  title       String
+  description String?
+  dueDate     DateTime?
+  status      TeamTaskStatus @default(TO_DO)
+
+  teamId              String
+  assignedById        String? // Student ID (Privileged Member)
+  assignedByAdvisorId String? // Advisor ID if assigned by advisor
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  team       Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  assignedBy Student? @relation("AssignedTeamTasks", fields: [assignedById], references: [id], onDelete: SetNull)
+  Advisor    Advisor? @relation(fields: [advisorId], references: [id])
+  advisorId  String?
+
+  @@index([teamId])
+  @@index([assignedById])
+  @@index([assignedByAdvisorId])
+  @@index([status])
 }

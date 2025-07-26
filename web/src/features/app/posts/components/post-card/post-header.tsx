@@ -90,7 +90,7 @@ export const PostHeader: React.FC<PostHeaderProps> = ({
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuItem asChild>
-              <Link to={`/create-post`} state={{ post }}>
+              <Link to={`/create-post/${post.societyId}`} state={{ post }}>
                 <Edit className="size-4 mr-2" />
                 Edit Post
               </Link>

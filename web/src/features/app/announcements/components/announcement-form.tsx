@@ -107,7 +107,7 @@ export const AnnouncementForm = ({
   };
 
   return (
-    <div className="mx-20 p-4">
+    <div className="w-2xl mx-auto p-4">
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <FormField

@@ -542,6 +542,74 @@ export const haveContentPrivilege = async (
 };
 
 /**
+ * Checks if the user have teams_management privilege
+ * @param userId - User id
+ * @param societyId - id of the society
+ * @returns A URL string for the avatar
+ */
+export const haveTeamsPrivlege = async (userId: string, societyId: string) => {
+  // Check if the user is the advisor of the society
+  const society = await prisma.society.findUnique({
+    where: { id: societyId },
+    select: { advisor: { select: { id: true } } },
+  });
+
+  if (society?.advisor?.id === userId) {
+    return true;
+  }
+
+  // Check if the user has the "member_management" privilege
+  const studentWithPrivilege = await prisma.studentSocietyRole.findFirst({
+    where: {
+      studentId: userId,
+      societyId,
+      role: {
+        privileges: {
+          some: { key: "teams_management" },
+        },
+      },
+    },
+    select: { studentId: true },
+  });
+
+  return !!studentWithPrivilege;
+};
+
+/**
+ * Checks if the user have teams_management privilege
+ * @param userId - User id
+ * @param societyId - id of the society
+ * @returns A URL string for the avatar
+ */
+export const haveTaskPrivilege = async (userId: string, societyId: string) => {
+  // Check if the user is the advisor of the society
+  const society = await prisma.society.findUnique({
+    where: { id: societyId },
+    select: { advisor: { select: { id: true } } },
+  });
+
+  if (society?.advisor?.id === userId) {
+    return true;
+  }
+
+  // Check if the user has the "member_management" privilege
+  const studentWithPrivilege = await prisma.studentSocietyRole.findFirst({
+    where: {
+      studentId: userId,
+      societyId,
+      role: {
+        privileges: {
+          some: { key: "task_management" },
+        },
+      },
+    },
+    select: { studentId: true },
+  });
+
+  return !!studentWithPrivilege;
+};
+
+/**
  * Checks if the user is member of society
  * @param userId - User id
  * @param societyId - id of the society
@@ -562,38 +630,4 @@ export const extractRegistrationNo = (registrationNo: string) => {
   const rollNo = registrationNo.substring(9, 12);
 
   return { session, year, degree, rollNo };
-};
-
-/**
- * Checks if the user has task_management privilege
- * @param userId - User id
- * @param societyId - id of the society
- * @returns boolean
- */
-export const haveTaskPrivilege = async (userId: string, societyId: string) => {
-  // Check if the user is the advisor of the society
-  const society = await prisma.society.findUnique({
-    where: { id: societyId },
-    select: { advisor: { select: { id: true } } },
-  });
-
-  if (society?.advisor?.id === userId) {
-    return true;
-  }
-
-  // Check if the user has the "task_management" privilege
-  const studentWithPrivilege = await prisma.studentSocietyRole.findFirst({
-    where: {
-      studentId: userId,
-      societyId,
-      role: {
-        privileges: {
-          some: { key: "task_management" },
-        },
-      },
-    },
-    select: { studentId: true },
-  });
-
-  return !!studentWithPrivilege;
 };

@@ -106,6 +106,7 @@ import paymentRoutes from "./routes/payment.routes.js";
 import chatRoutes from "./routes/chat.routes.js";
 import messageRoutes from "./routes/message.routes.js";
 import cmsRoutes from "./routes/cms.routes.js";
+import teamRoutes from "./routes/team.routes.js";
 
 // Register meeting routes
 import meetingRoutes from "./routes/meeting.routes.js";
@@ -124,6 +125,7 @@ app.use("/api/payments", paymentRoutes);
 app.use("/api/chats", chatRoutes);
 app.use("/api/messages", messageRoutes);
 app.use("/api/cms", cmsRoutes);
+app.use("/api/teams", teamRoutes);
 
 // common error handling middleware
 app.use(errorHandler);

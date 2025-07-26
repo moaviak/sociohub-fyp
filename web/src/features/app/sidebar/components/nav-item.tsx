@@ -22,7 +22,7 @@ export const NavItem = ({ item }: NavItemProps) => {
     >
       <span
         className={cn(
-          "h-13 w-[8px] rounded-r-sm",
+          "h-13 w-[8px] rounded-r-sm shrink-0",
           isActive && "bg-primary-600"
         )}
       />

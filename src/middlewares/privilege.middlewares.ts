@@ -8,6 +8,8 @@ import {
   haveMembersPrivilege,
   havePaymentsPrivilege,
   haveSettingsPrivilege,
+  haveTaskPrivilege,
+  haveTeamsPrivlege,
   haveTicketHandlingPrivilege,
 } from "../utils/helpers";
 import { IUser } from "../types";
@@ -134,6 +136,40 @@ export const verifyContentPrivilege = asyncHandler(
     }
 
     if (await haveContentPrivilege(userId, societyId)) {
+      next();
+    } else {
+      throw new ApiError(403, "You don't have permission for this operation.");
+    }
+  }
+);
+
+export const verifyTeamsPrivilege = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const userId = (req.user as IUser).id;
+    const { societyId } = req.body;
+
+    if (!societyId) {
+      throw new ApiError(403, "You don't have permission for this operation.");
+    }
+
+    if (await haveTeamsPrivlege(userId, societyId)) {
+      next();
+    } else {
+      throw new ApiError(403, "You don't have permission for this operation.");
+    }
+  }
+);
+
+export const verifyTasksPrivilege = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const userId = (req.user as IUser).id;
+    const { societyId } = req.body;
+
+    if (!societyId) {
+      throw new ApiError(403, "You don't have permission for this operation.");
+    }
+
+    if (await haveTaskPrivilege(userId, societyId)) {
       next();
     } else {
       throw new ApiError(403, "You don't have permission for this operation.");

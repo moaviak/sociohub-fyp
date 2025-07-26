@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { Link } from "react-router";
 import { Advisor, Student } from "@/types";
+import { SendChat } from "../../chats/components/send-chat";
 
 interface UserMenuProps {
   user: Student | Advisor;
@@ -38,10 +39,12 @@ export const UserMenu = ({ user, variant = "explore" }: UserMenuProps) => {
             <Link to={`/profile/${user.id}`}>View Profile</Link>
           </DropdownMenuItem>
         )}
-        <DropdownMenuItem className="b3-regular">
-          <MessageCircleMore className="h-4 w-4 mr-2" />
-          <Link to={``}>Send Message</Link>
-        </DropdownMenuItem>
+        <SendChat userId={user.id}>
+          <DropdownMenuItem className="b3-regular">
+            <MessageCircleMore className="h-4 w-4 mr-2" />
+            Send Message
+          </DropdownMenuItem>
+        </SendChat>
       </DropdownMenuContent>
     </DropdownMenu>
   );

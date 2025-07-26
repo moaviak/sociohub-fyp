@@ -321,3 +321,14 @@ export const haveContentsPrivilege = (
     society.society.privileges.includes(PRIVILEGES.CONTENT_MANAGEMENT)
   );
 };
+
+export const haveTeamsPrivilege = (
+  societies: { society: Society & { privileges: string[] } }[],
+  societyId: string
+) => {
+  const society = societies.find(({ society }) => society.id === societyId);
+
+  return (
+    society && society.society.privileges.includes(PRIVILEGES.TEAMS_MANAGEMENT)
+  );
+};

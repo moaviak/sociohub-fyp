@@ -83,6 +83,8 @@ export const api = createApi({
     "PaymentIntent",
     "Chat",
     "Posts",
+    "Teams",
+    "TeamRequests",
   ],
   endpoints: (builder) => ({
     refreshAuth: builder.mutation<RefreshTokenResponse | ApiError, void>({

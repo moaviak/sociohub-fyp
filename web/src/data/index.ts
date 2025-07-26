@@ -157,6 +157,11 @@ export const ROLES_PRIVILEGES = [
     title: "Meeting Management",
     description: "Can initiate and manage video meetings.",
   },
+  {
+    key: "teams_management",
+    title: "Teams Management",
+    description: "Can create and manage society teams.",
+  },
 ];
 
 export const PRIVILEGES = {
@@ -169,6 +174,7 @@ export const PRIVILEGES = {
   SOCIETY_SETTINGS_MANAGEMENT: "society_settings_management",
   TASK_MANAGEMENT: "task_management",
   MEETING_MANAGEMENT: "meeting_management",
+  TEAMS_MANAGEMENT: "teams_management",
 };
 
 export const REJECT_REASONS = [

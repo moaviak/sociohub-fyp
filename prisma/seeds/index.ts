@@ -165,6 +165,11 @@ async function main() {
         title: "Meeting Management",
         description: "Can initiate and manage video meetings.",
       },
+      {
+        key: "teams_management",
+        title: "Teams Management",
+        description: "Can create and manage society teams.",
+      },
     ],
   });
 

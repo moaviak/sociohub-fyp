@@ -1,6 +1,6 @@
 import { Link } from "react-router";
 
-import { Avatar, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Advisor, Student, UserType } from "@/types";
 import { cn } from "@/lib/utils";
 
@@ -27,6 +27,10 @@ export const AvatarGroup = ({
           src={user.avatar ?? "/assets/images/avatar-placeholder.png"}
           className="object-cover"
         />
+        <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white font-semibold">
+          {user.firstName![0]}
+          {user.lastName![0]}
+        </AvatarFallback>
       </Avatar>
       <div className="flex flex-col overflow-hidden text-ellipsis whitespace-nowrap">
         <p className="b3-medium truncate">{`${user.firstName} ${user.lastName}`}</p>

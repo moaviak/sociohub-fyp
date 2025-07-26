@@ -9,6 +9,7 @@ import {
   Megaphone,
   MessageSquare,
   Settings,
+  ShieldHalf,
   Users,
   Video,
 } from "lucide-react";
@@ -20,6 +21,11 @@ const navItems = [
     label: "Dashboard",
     icon: <LayoutDashboard className="w-4 h-4" />,
     href: "/dashboard",
+  },
+  {
+    label: "Inbox",
+    icon: <MessageSquare className="w-4 h-4" />,
+    href: "/chats",
   },
   {
     label: "Society Profile",
@@ -52,9 +58,9 @@ const navItems = [
     href: "/payments",
   },
   {
-    label: "Inbox",
-    icon: <MessageSquare className="w-4 h-4" />,
-    href: "/chats",
+    label: "Teams",
+    icon: <ShieldHalf className="w-4 h-4" />,
+    href: "/teams",
   },
   {
     label: "Video Meetings",

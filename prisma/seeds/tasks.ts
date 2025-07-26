@@ -177,7 +177,7 @@ export const seedTasks = async () => {
         : createdAt;
 
       // Decide if task is assigned by society (40% chance) or personal task
-      let assignedBySocietyId = null;
+      let assignedBySocietyId: string | null = null;
       let description = faker.helpers.arrayElement(ADVISOR_TASK_DESCRIPTIONS);
 
       if (faker.datatype.boolean({ probability: 0.4 })) {

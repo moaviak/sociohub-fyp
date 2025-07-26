@@ -53,6 +53,9 @@ import UserSettingsPage from "./pages/app/user/settings-page";
 import ChatViewPage from "./pages/app/chats/chat-view-page";
 import CreatePostPage from "./pages/app/posts/create-post-page";
 import PostDetailPage from "./pages/app/posts/post-detail-page";
+import TeamsPage from "./pages/app/teams";
+import CreateTeamPage from "./pages/app/teams/create-team";
+import TeamDetailPage from "./pages/app/teams/team-detail";
 
 function App() {
   return (
@@ -141,6 +144,13 @@ function App() {
               </Route>
             </Route>
 
+            <Route path="/teams" element={<TeamsPage />}>
+              <Route path="create-team" element={<CreateTeamPage />} />
+              <Route path=":societyId" element={<TeamsPage />}>
+                <Route path="create-team" element={<CreateTeamPage />} />
+              </Route>
+            </Route>
+
             <Route path="/video-meetings" element={<VideoMeetingPage />}>
               <Route path=":societyId" element={<VideoMeetingPage />} />
             </Route>
@@ -186,6 +196,7 @@ function App() {
               element={<EditAnnouncementPage />}
             />
             <Route path="/posts/:postId" element={<PostDetailPage />} />
+            <Route path="/team-detail/:teamId" element={<TeamDetailPage />} />
 
             <Route path="/profile/:id" element={<UserProfilePage />} />
             <Route path="/user-settings" element={<UserSettingsLayout />}>

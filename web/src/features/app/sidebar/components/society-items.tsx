@@ -6,6 +6,7 @@ import {
   ImagePlus,
   Megaphone,
   Settings,
+  ShieldHalf,
   Users,
   Video,
 } from "lucide-react";
@@ -89,6 +90,11 @@ const getSocietyItems = (society: Society & { privileges: string[] }) => {
       label: "Video Meetings",
       icon: <Video className="w-4 h-4" />,
       href: `/video-meetings/${society.id}`,
+    },
+    {
+      label: "Teams",
+      icon: <ShieldHalf className="w-4 h-4" />,
+      href: `/teams/${society.id}`,
     },
     ...(society.privileges.includes(PRIVILEGES.PAYMENT_FINANCE_MANAGEMENT)
       ? [
