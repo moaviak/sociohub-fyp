@@ -50,6 +50,7 @@ const JoinRequests = () => {
           columns={requestsColumns}
           data={requests || []}
           isLoading={isLoading}
+          disableInternalPagination
         />
       </div>
     </div>

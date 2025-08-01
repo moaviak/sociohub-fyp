@@ -28,6 +28,7 @@ export const Participants: React.FC<{ meeting: Meeting }> = ({ meeting }) => {
           <DataTable
             data={meeting.participants || []}
             columns={meetingParticipantsColumns}
+            disableInternalPagination
           />
         </div>
       </CollapsibleContent>

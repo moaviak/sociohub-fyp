@@ -23,6 +23,7 @@ export const RecentTransactions: React.FC<{ societyId: string }> = ({
           isLoading={isLoading}
           columns={transactionsColumns}
           data={data?.transactions || []}
+          disableInternalPagination
         />
       </div>
     </div>

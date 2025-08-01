@@ -94,6 +94,7 @@ export const RolesFormMembers = ({ form }: RolesFormMembersProps) => {
           isLoading={isLoading}
           onRowSelectionChange={handleRowSelectionChange}
           initialRowSelection={initialRowSelection}
+          disableInternalPagination
         />
       </div>
     </div>

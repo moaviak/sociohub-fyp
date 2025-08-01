@@ -16,12 +16,12 @@ import {
 } from "../api";
 import { useEffect, useState } from "react";
 import { useDebounceValue } from "usehooks-ts";
-import { User } from "@/types";
 import { ArrowLeft, Edit, UsersRound } from "lucide-react";
 import { useNavigate } from "react-router";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PhotoUpload } from "@/components/photo-upload";
+import { User } from "@/types";
 
 export const NewChatDialog = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -119,42 +119,44 @@ export const NewChatDialog = () => {
       );
     }
 
-    return userList.map((user) => (
-      <div
-        key={user.id}
-        className="px-4 flex gap-x-3 items-center p-2 rounded-md cursor-pointer hover:bg-primary-600/10"
-        onClick={() => handleUserClick(user)}
-      >
-        <Avatar className="h-9 w-9">
-          <AvatarImage src={user.avatar} />
-          <AvatarFallback>
-            {user.firstName?.[0]}
-            {user.lastName?.[0]}
-          </AvatarFallback>
-        </Avatar>
-        <div className="flex-1">
-          <p className="font-semibold">
-            {user.firstName} {user.lastName}
-          </p>
-          <p className="text-sm text-muted-foreground">{user.email}</p>
-        </div>
-        <Checkbox
-          className="rounded-full size-5 cursor-pointer data-[state=checked]:bg-primary-600 data-[state=checked]:border-primary-600"
-          checked={
-            view === "newGroup"
-              ? selectedUsers.some((u) => u.id === user.id)
-              : selectedUser?.id === user.id
-          }
-          onCheckedChange={(checked) => {
-            if (view === "newGroup") {
-              toggleUserSelection(user);
-            } else {
-              setSelectedUser(checked ? user : undefined);
+    return userList.map((user) => {
+      return (
+        <div
+          key={user.id}
+          className="px-4 flex gap-x-3 items-center p-2 rounded-md cursor-pointer hover:bg-primary-600/10"
+          onClick={() => handleUserClick(user)}
+        >
+          <Avatar className="h-9 w-9">
+            <AvatarImage src={user.avatar} />
+            <AvatarFallback>
+              {user.firstName?.[0]}
+              {user.lastName?.[0]}
+            </AvatarFallback>
+          </Avatar>
+          <div className="flex-1">
+            <p className="font-semibold">
+              {user.firstName} {user.lastName}
+            </p>
+            <p className="text-sm text-muted-foreground">{user.email}</p>
+          </div>
+          <Checkbox
+            className="rounded-full size-5 cursor-pointer data-[state=checked]:bg-primary-600 data-[state=checked]:border-primary-600"
+            checked={
+              view === "newGroup"
+                ? selectedUsers.some((u) => u.id === user.id)
+                : selectedUser?.id === user.id
             }
-          }}
-        />
-      </div>
-    ));
+            onCheckedChange={(checked) => {
+              if (view === "newGroup") {
+                toggleUserSelection(user);
+              } else {
+                setSelectedUser(checked ? user : undefined);
+              }
+            }}
+          />
+        </div>
+      );
+    });
   };
 
   // Clear search when switching views
@@ -213,7 +215,11 @@ export const NewChatDialog = () => {
                     <p className="px-4 text-muted-foreground b2-medium">
                       Suggested
                     </p>
-                    {renderUserList(suggestedUsers)}
+                    {renderUserList(
+                      suggestedUsers.map(
+                        (iUser) => iUser.student || iUser.advisor!
+                      )
+                    )}
                   </>
                 )}
               </div>
@@ -250,22 +256,24 @@ export const NewChatDialog = () => {
                   Selected ({selectedUsers.length})
                 </p>
                 <div className="flex flex-wrap gap-2 max-h-24 overflow-y-auto">
-                  {selectedUsers.map((user) => (
-                    <div
-                      key={user.id}
-                      className="flex items-center gap-1 bg-primary-100 text-primary-700 px-2 py-1 rounded-full text-xs"
-                    >
-                      <span>
-                        {user.firstName} {user.lastName}
-                      </span>
-                      <button
-                        onClick={() => toggleUserSelection(user)}
-                        className="ml-1 hover:bg-primary-200 rounded-full w-4 h-4 flex items-center justify-center"
+                  {selectedUsers.map((user) => {
+                    return (
+                      <div
+                        key={user.id}
+                        className="flex items-center gap-1 bg-primary-100 text-primary-700 px-2 py-1 rounded-full text-xs"
                       >
-                        ×
-                      </button>
-                    </div>
-                  ))}
+                        <span>
+                          {user.firstName} {user.lastName}
+                        </span>
+                        <button
+                          onClick={() => toggleUserSelection(user)}
+                          className="ml-1 hover:bg-primary-200 rounded-full w-4 h-4 flex items-center justify-center"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             )}
@@ -285,7 +293,11 @@ export const NewChatDialog = () => {
                     {isLoadingSuggested && <UserSkeletonList />}
                     {!isLoadingSuggested &&
                       suggestedUsers &&
-                      renderUserList(suggestedUsers)}
+                      renderUserList(
+                        suggestedUsers.map(
+                          (iUser) => iUser.student || iUser.advisor!
+                        )
+                      )}
                   </>
                 )}
               </div>

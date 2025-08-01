@@ -6,6 +6,7 @@ import { useAppSelector } from "@/app/hooks";
 import { Advisor } from "@/types";
 import { cn, haveTasksPrivilege, haveTeamsPrivilege } from "@/lib/utils";
 import { TeamTasksList } from "./components/team-tasks-list";
+import { Navigate } from "react-router";
 
 export const TeamDetail: React.FC<{ teamId: string }> = ({ teamId }) => {
   const user = useAppSelector((state) => state.auth.user);
@@ -36,6 +37,14 @@ export const TeamDetail: React.FC<{ teamId: string }> = ({ teamId }) => {
     : team.societyId === (user as Advisor).societyId;
   const isPrivileged = isTeamsPrivileged || isTasksPrivileged;
   const isMember = team.members.some(({ studentId }) => user?.id === studentId);
+
+  const isSocietyMember = isStudent
+    ? user.societies?.some(({ society }) => society.id === team.societyId)
+    : (user as Advisor).societyId === team.societyId;
+
+  if (!isSocietyMember) {
+    return <Navigate to="/dashboard" />;
+  }
 
   return (
     <div className="space-y-4 p-4">

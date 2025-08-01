@@ -12,6 +12,7 @@ import {
 import { ApiResponse } from "../api-response";
 import { AuthResponse, SocietyAdvisor } from "./types";
 import ApiError, { ApiErrorResponse, createApiError } from "../api-error";
+import { clearSession } from "../app/chat-bot/slice";
 
 export const AuthApi = api.injectEndpoints({
   endpoints: (builder) => ({
@@ -215,6 +216,7 @@ export const AuthApi = api.injectEndpoints({
         queryFulfilled.then(() => {
           // This will clear tokens from localStorage via the reducer
           dispatch(logout());
+          dispatch(clearSession());
           dispatch(api.util.resetApiState());
         });
       },

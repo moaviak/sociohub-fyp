@@ -303,6 +303,23 @@ export const sendNotificationToUsers = (
   });
 };
 
+/**
+ * Send an event to a specific user
+ */
+export const emitEventToUser = (
+  io: Server,
+  userId: string,
+  event: string,
+  payload: any
+) => {
+  const socketIds = connectedUsers.get(userId);
+  if (socketIds) {
+    socketIds.forEach((socketId) => {
+      io.to(socketId).emit(event, payload);
+    });
+  }
+};
+
 export const getReceiverSocketIds = (receiverId: string) => {
   return connectedUsers.get(receiverId);
 };

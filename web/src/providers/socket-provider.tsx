@@ -18,6 +18,11 @@ import {
   handleChatDeletionOrLeave,
   removeChatParticipant,
 } from "@/features/app/chats/slice";
+import {
+  setAgentThought,
+  setToolStatus,
+  ToolStatus,
+} from "@/features/app/chat-bot/slice";
 
 export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
   const dispatch = useAppDispatch();
@@ -115,6 +120,15 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
 
       socket.on("stop-typing", ({ chatId, userId }) => {
         dispatch(stopTyping({ chatId, userId }));
+      });
+
+      // Chat-Bot Events
+      socket.on("tool_status", (toolStatus: ToolStatus) => {
+        dispatch(setToolStatus(toolStatus));
+      });
+
+      socket.on("agent_thought", ({ thought }) => {
+        dispatch(setAgentThought(thought));
       });
 
       // Listen for connection errors

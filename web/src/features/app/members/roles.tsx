@@ -38,6 +38,7 @@ const Roles = () => {
           columns={rolesColumns}
           data={roles || []}
           isLoading={isLoading}
+          disableInternalPagination
         />
       </div>
     </div>

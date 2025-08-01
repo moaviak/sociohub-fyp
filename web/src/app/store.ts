@@ -5,6 +5,7 @@ import AuthReducer from "@/features/auth/slice";
 import NotificationsReducer from "@/features/app/topbar/slice";
 import PaymentsReducer from "@/features/app/payments/slice";
 import ChatsReducer from "@/features/app/chats/slice";
+import ChatBotReducer from "@/features/app/chat-bot/slice";
 
 export const store = configureStore({
   reducer: {
@@ -13,6 +14,7 @@ export const store = configureStore({
     notifications: NotificationsReducer,
     payments: PaymentsReducer,
     chats: ChatsReducer,
+    chatBot: ChatBotReducer,
   },
 
   middleware: (getDefaultMiddleware) =>

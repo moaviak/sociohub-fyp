@@ -72,8 +72,9 @@ export const EventOptions = ({
           </DropdownMenuItem>
         )}
         {havePrivilege &&
-          event.status !== EventStatus.Cancelled &&
-          event.status !== EventStatus.Completed && (
+          ((event.status !== EventStatus.Cancelled &&
+            event.status !== EventStatus.Completed) ||
+            event.visibility === EventVisibility.Draft) && (
             <DropdownMenuItem className="b3-regular">
               <Link
                 to={`/update-event/${event.id}`}
@@ -89,8 +90,8 @@ export const EventOptions = ({
           <>
             <DropdownMenuSeparator className="bg-neutral-300" />
             {event.visibility &&
-            event.visibility === EventVisibility.Draft &&
-            event.status === EventStatus.Completed ? (
+            (event.visibility === EventVisibility.Draft ||
+              event.status === EventStatus.Completed) ? (
               <DropdownMenuItem>
                 <Button
                   variant="ghost"

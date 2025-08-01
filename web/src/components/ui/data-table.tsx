@@ -31,6 +31,8 @@ interface DataTableProps<TData, TValue> {
   totalCount?: number;
   onPageChange?: (page: number) => void;
   onPageSizeChange?: (size: number) => void;
+  // Add this prop to disable internal pagination
+  disableInternalPagination?: boolean;
 }
 
 export function DataTable<TData, TValue>({
@@ -44,6 +46,7 @@ export function DataTable<TData, TValue>({
   pageSize = 20,
   totalCount = 0,
   onPageChange,
+  disableInternalPagination = false,
 }: DataTableProps<TData, TValue>) {
   const [rowSelection, setRowSelection] =
     React.useState<Record<string, boolean>>(initialRowSelection);
@@ -55,10 +58,22 @@ export function DataTable<TData, TValue>({
     data,
     columns,
     getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
+    // Only use pagination model if internal pagination is not disabled
+    ...(disableInternalPagination
+      ? {}
+      : { getPaginationRowModel: getPaginationRowModel() }),
     onRowSelectionChange: setRowSelection,
     state: {
       rowSelection,
+      // Only set pagination state if internal pagination is enabled
+      ...(disableInternalPagination
+        ? {}
+        : {
+            pagination: {
+              pageIndex: page - 1,
+              pageSize,
+            },
+          }),
     },
   });
 
@@ -156,7 +171,7 @@ export function DataTable<TData, TValue>({
           </TableBody>
         </Table>
       </div>
-      {isPaginated && (
+      {isPaginated && !disableInternalPagination && (
         <div className="flex items-center justify-between space-x-2 py-4">
           <Button
             variant="ghost"

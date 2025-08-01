@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useCallback, useEffect } from "react";
 import { Outlet, useNavigate } from "react-router";
 
 import TopBar from "@/features/app/topbar";
@@ -6,11 +6,15 @@ import Sidebar from "@/features/app/sidebar";
 import { useAppSelector } from "@/app/hooks";
 import { Advisor, UserType } from "@/types";
 import { AppSkeleton } from "@/components/skeleton/app-skeleton";
+import { ChatBot } from "@/features/app/chat-bot";
+import { useCreateSessionMutation } from "@/features/app/chat-bot/api";
 
 function AppLayout() {
   const { isAuthenticated, isAuthChecked, user, userType } = useAppSelector(
     (state) => state.auth
   );
+  const { sessionId, isLoading } = useAppSelector((state) => state.chatBot);
+  const [createSession] = useCreateSessionMutation();
 
   const navigate = useNavigate();
 
@@ -40,6 +44,20 @@ function AppLayout() {
     }
   }, [isAuthenticated, isAuthChecked, navigate, user, userType]);
 
+  const initializeSession = useCallback(async () => {
+    try {
+      await createSession().unwrap();
+    } catch (error) {
+      console.error("Failed to create chatbot session:", error);
+    }
+  }, [createSession]);
+
+  useEffect(() => {
+    if (!sessionId && !isLoading) {
+      initializeSession();
+    }
+  }, [sessionId, initializeSession, isLoading]);
+
   if (!isAuthChecked) {
     return <AppSkeleton />;
   }
@@ -54,6 +72,7 @@ function AppLayout() {
           <Outlet />
         </div>
       </div>
+      <ChatBot />
     </div>
   ) : null;
 }

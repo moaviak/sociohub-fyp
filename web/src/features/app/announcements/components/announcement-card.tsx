@@ -15,7 +15,7 @@ export const AnnouncementCard = ({
   announcement,
   variant = "default",
 }: AnnouncementCardProps) => {
-  const { society, title, content, createdAt } = announcement;
+  const { society, title, content, createdAt, publishDateTime } = announcement;
   const { user } = useAppSelector((state) => state.auth);
 
   const isStudent = user && "registrationNumber" in user;
@@ -56,8 +56,10 @@ export const AnnouncementCard = ({
           </p>
           <p className="b4-regular text-neutral-600">.</p>
           <p className="b4-regular text-neutral-600 flex-1">
-            {createdAt
-              ? formatDistanceToNow(new Date(createdAt), { addSuffix: true })
+            {publishDateTime || createdAt
+              ? formatDistanceToNow(publishDateTime || createdAt!, {
+                  addSuffix: true,
+                })
               : ""}
           </p>
           {havePrivilege && <AnnouncementOptions announcement={announcement} />}

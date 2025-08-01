@@ -134,61 +134,79 @@ async function handleParticipantJoined(
     ]);
 
     if (student) {
-      await Promise.all([
-        prisma.meetingParticipant.upsert({
+      // First upsert the participant
+      await prisma.meetingParticipant.upsert({
+        where: {
+          meetingId_studentId: { meetingId: meeting.id, studentId: user_id },
+        },
+        update: {
+          joinedAt: new Date(joined_at),
+          dailySessionId: session_id,
+          leftAt: null, // Reset left time in case of rejoin
+        },
+        create: {
+          meetingId: meeting.id,
+          studentId: user_id,
+          joinedAt: new Date(joined_at),
+          dailySessionId: session_id,
+          role: user_id === meeting.hostStudentId ? "HOST" : "PARTICIPANT",
+        },
+      });
+
+      // Then check if invitation exists before updating
+      const invitation = await prisma.meetingInvitation.findUnique({
+        where: {
+          meetingId_studentId: { meetingId: meeting.id, studentId: user_id },
+        },
+      });
+
+      if (invitation) {
+        await prisma.meetingInvitation.update({
           where: {
-            meetingId_studentId: { meetingId: meeting.id, studentId: user_id },
-          },
-          update: {
-            joinedAt: new Date(joined_at),
-            dailySessionId: session_id,
-            leftAt: null, // Reset left time in case of rejoin
-          },
-          create: {
-            meetingId: meeting.id,
-            studentId: user_id,
-            joinedAt: new Date(joined_at),
-            dailySessionId: session_id,
-            role: user_id === meeting.hostStudentId ? "HOST" : "PARTICIPANT",
-          },
-        }),
-        prisma.meetingInvitation.update({
-          where: {
-            meetingId_studentId: { meetingId: meeting.id, studentId: user_id },
+            id: invitation.id,
           },
           data: {
             status: "ACCEPTED",
           },
-        }),
-      ]);
+        });
+      }
     } else if (advisor) {
-      await Promise.all([
-        prisma.meetingParticipant.upsert({
+      // First upsert the participant
+      await prisma.meetingParticipant.upsert({
+        where: {
+          meetingId_advisorId: { meetingId: meeting.id, advisorId: user_id },
+        },
+        update: {
+          joinedAt: new Date(joined_at),
+          dailySessionId: session_id,
+          leftAt: null, // Reset left time in case of rejoin
+        },
+        create: {
+          meetingId: meeting.id,
+          advisorId: user_id,
+          joinedAt: new Date(joined_at),
+          dailySessionId: session_id,
+          role: user_id === meeting.hostAdvisorId ? "HOST" : "PARTICIPANT",
+        },
+      });
+
+      // Then check if invitation exists before updating
+      const invitation = await prisma.meetingInvitation.findUnique({
+        where: {
+          meetingId_advisorId: { meetingId: meeting.id, advisorId: user_id },
+        },
+      });
+
+      if (invitation) {
+        await prisma.meetingInvitation.update({
           where: {
-            meetingId_advisorId: { meetingId: meeting.id, advisorId: user_id },
-          },
-          update: {
-            joinedAt: new Date(joined_at),
-            dailySessionId: session_id,
-            leftAt: null, // Reset left time in case of rejoin
-          },
-          create: {
-            meetingId: meeting.id,
-            advisorId: user_id,
-            joinedAt: new Date(joined_at),
-            dailySessionId: session_id,
-            role: user_id === meeting.hostAdvisorId ? "HOST" : "PARTICIPANT",
-          },
-        }),
-        prisma.meetingInvitation.update({
-          where: {
-            meetingId_advisorId: { meetingId: meeting.id, advisorId: user_id },
+            id: invitation.id,
           },
           data: {
             status: "ACCEPTED",
           },
-        }),
-      ]);
+        });
+      }
     }
 
     console.log(`Participant ${user_id} joined meeting ${meeting.id}`);

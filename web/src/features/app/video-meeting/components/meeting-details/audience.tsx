@@ -49,6 +49,7 @@ export const Audience: React.FC<{ meeting: Meeting }> = ({ meeting }) => {
               <DataTable
                 data={meeting.invitations || []}
                 columns={meetingInvitationsColumns}
+                disableInternalPagination
               />
             </div>
           </div>

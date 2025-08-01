@@ -108,7 +108,7 @@ MessageList.Skeleton = function () {
   );
 };
 
-const TypingIndicator = () => {
+export const TypingIndicator = () => {
   return (
     <div className="flex space-x-1 py-1">
       <div

@@ -139,7 +139,10 @@ export const AddMembersDialog = ({ chat, children }: AddMembersDialogProps) => {
             <>
               <p className="px-4 text-muted-foreground b2-medium">Suggested</p>
               {isLoadingSuggested && <UserSkeletonList />}
-              {suggestedUsers && renderUserList(suggestedUsers)}
+              {suggestedUsers &&
+                renderUserList(
+                  suggestedUsers.map((iUser) => iUser.advisor || iUser.student!)
+                )}
             </>
           )}
         </div>

@@ -1,9 +1,9 @@
 import { api } from "@/features/api";
-import { Chat, Message } from "./types";
+import { Chat, IUser, Message } from "./types";
 import { ApiResponse } from "@/features/api-response";
 import { ApiErrorResponse, createApiError } from "@/features/api-error";
-import { User } from "@/types";
 import { setChats, setMessages } from "./slice";
+import { User } from "@/types";
 
 export const chatsApi = api.injectEndpoints({
   endpoints: (builder) => ({
@@ -131,9 +131,9 @@ export const chatsApi = api.injectEndpoints({
         { type: "Chat", id: chatId },
       ],
     }),
-    getSuggestedUsers: builder.query<User[], void>({
+    getSuggestedUsers: builder.query<IUser[], void>({
       query: () => "/chats/suggested-users",
-      transformResponse: (response: ApiResponse<User[]>) => {
+      transformResponse: (response: ApiResponse<IUser[]>) => {
         return response.data;
       },
       transformErrorResponse: (response) => {

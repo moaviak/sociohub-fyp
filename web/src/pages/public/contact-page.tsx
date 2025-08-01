@@ -34,7 +34,7 @@ function ContactPage() {
             </div>
             <div className="flex gap-4 my-4 items-center">
               <Mail className="w-5 text-white" />
-              <p className="text-white b2-regular">sociohub@gmail.com</p>
+              <p className="text-white b2-regular">sociohub.site@gmail.com</p>
             </div>
             <div className="flex gap-4 my-4 items-center">
               <MapPin className="w-6 text-white" />

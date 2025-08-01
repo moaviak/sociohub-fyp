@@ -8,8 +8,7 @@
     "build": "tsc && node dist/index.js"
   },
   "prisma": {
-    "seed": "ts-node prisma/seeds/index.ts",
-    "seed-advisors": "ts-node prisma/seeds/society-advisor.ts"
+    "seed": "ts-node prisma/seeds/index.ts"
   },
   "author": "Moavia",
   "license": "ISC",
@@ -38,8 +37,13 @@
     "typescript": "^5.7.3"
   },
   "dependencies": {
+    "@huggingface/inference": "^2.8.1",
     "@langchain/community": "^0.3.43",
     "@langchain/core": "^0.3.56",
+    "@langchain/langgraph": "^0.3.12",
+    "@langchain/pinecone": "^0.2.0",
+    "@langchain/tavily": "^0.1.4",
+    "@pinecone-database/pinecone": "^5.1.2",
     "@prisma/client": "^6.3.1",
     "@prisma/extension-accelerate": "^1.2.2",
     "axios": "^1.10.0",

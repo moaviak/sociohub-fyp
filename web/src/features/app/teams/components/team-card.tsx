@@ -98,8 +98,8 @@ export const TeamCard: React.FC<TeamCardProps> = ({ team }) => {
               <Avatar className="h-8 w-8 ring-1 ring-white">
                 <AvatarImage src={team.lead.avatar} />
                 <AvatarFallback className="bg-gradient-to-br from-amber-400 to-orange-500 text-white text-xs font-medium">
-                  {team.lead.firstName[0]}
-                  {team.lead.lastName[0]}
+                  {team.lead.firstName![0]}
+                  {team.lead.lastName![0]}
                 </AvatarFallback>
               </Avatar>
               <Crown className="absolute -top-1 -right-1 h-3 w-3 text-amber-500" />

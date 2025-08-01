@@ -46,6 +46,7 @@ export const RequestsHistory = () => {
           columns={requestsHistoryColumns}
           data={requests || []}
           isLoading={isLoading}
+          disableInternalPagination
         />
       </div>
     </div>

@@ -36,11 +36,11 @@ export const Navbar = () => {
         {!user || !userType ? (
           <div className="space-x-4 md:block md:w-auto flex items-center justify-between w-full">
             <Button variant="outline" asChild className="bg-transparent">
-              <Link to="/sign-in">Login</Link>
+              <Link to="/sign-in">Sign In</Link>
             </Button>
 
             <Button asChild>
-              <Link to="/sign-up">Sign up</Link>
+              <Link to="/sign-up">Sign Up</Link>
             </Button>
           </div>
         ) : (
