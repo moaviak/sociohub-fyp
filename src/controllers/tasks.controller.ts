@@ -55,7 +55,8 @@ export const assignTask = asyncHandler(async (req: Request, res: Response) => {
     societyId,
     assignerId: user.id,
   });
-  res
+
+  return res
     .status(201)
     .json(new ApiResponse(201, task, "Task assigned successfully"));
 });

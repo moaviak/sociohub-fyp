@@ -48,7 +48,7 @@ const People = () => {
   return (
     <div className="flex flex-col px-4 pt-4 gap-4 w-full">
       <SearchInput
-        placeholder="Search member"
+        placeholder="Search user"
         className="w-md"
         value={input}
         onChange={handleInputChange}
@@ -56,12 +56,7 @@ const People = () => {
       />
 
       <div className="container mx-auto overflow-y-auto custom-scrollbar">
-        <DataTable
-          columns={usersColumns}
-          data={users}
-          isLoading={isLoading}
-          disableInternalPagination={true}
-        />
+        <DataTable columns={usersColumns} data={users} isLoading={isLoading} />
       </div>
 
       {/* Loader that triggers infinite scroll */}

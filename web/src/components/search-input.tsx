@@ -8,6 +8,8 @@ interface SearchInputProps {
   className?: string;
   value?: string;
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onFocus?: (e: React.FocusEvent<HTMLInputElement>) => void;
+  onBlur?: (e: React.FocusEvent<HTMLInputElement>) => void;
   isSearching?: boolean;
 }
 
@@ -16,6 +18,8 @@ export const SearchInput = ({
   className,
   value,
   onChange,
+  onFocus,
+  onBlur,
   isSearching,
 }: SearchInputProps) => {
   return (
@@ -29,6 +33,8 @@ export const SearchInput = ({
         placeholder={placeholder}
         value={value}
         onChange={onChange}
+        onFocus={onFocus}
+        onBlur={onBlur}
       />
       {isSearching && (
         <Loader2 className="animate-spin w-5 h-5 absolute right-3 top-1/2 transform -translate-y-1/2 text-neutral-500" />

@@ -3,9 +3,9 @@ import { Outlet, useLocation, useNavigate } from "react-router";
 
 import { Advisor, UserType } from "@/types";
 import { useAppSelector } from "@/app/hooks";
-import { AppSkeleton } from "@/components/skeleton/app-skeleton";
 
 import { Header } from "./components/header";
+import { SpinnerLoader } from "@/components/spinner-loader";
 
 function AuthLayout() {
   const navigate = useNavigate();
@@ -83,7 +83,11 @@ function AuthLayout() {
   ]);
 
   if (!isAuthChecked && (isVerifyEmail || isSocietyForm)) {
-    return <AppSkeleton />;
+    return (
+      <div className="h-screen w-screen flex justify-center items-center">
+        <SpinnerLoader size="lg" />
+      </div>
+    );
   }
 
   return (

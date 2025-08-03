@@ -26,6 +26,15 @@ export const Transactions: React.FC<{ societyId: string }> = ({
     debouncedSetSearch(e.target.value);
   };
 
+  const handlePageChange = (newPage: number) => {
+    setPage(newPage);
+  };
+
+  const handlePageSizeChange = (newPageSize: number) => {
+    setPageSize(newPageSize);
+    setPage(1);
+  };
+
   return (
     <div className="flex flex-col px-4 pt-4 min-h-0 max-h-full overflow-hidden w-full">
       <div className="flex justify-between items-center mb-4">
@@ -46,11 +55,12 @@ export const Transactions: React.FC<{ societyId: string }> = ({
           data={data?.transactions || []}
           isLoading={isFetching}
           isPaginated
+          isServerSide // Enable server-side pagination
           page={page}
           pageSize={pageSize}
           totalCount={data?.total || 0}
-          onPageChange={setPage}
-          onPageSizeChange={setPageSize}
+          onPageChange={handlePageChange}
+          onPageSizeChange={handlePageSizeChange}
         />
       </div>
     </div>

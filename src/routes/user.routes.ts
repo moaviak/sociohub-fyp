@@ -1,5 +1,6 @@
 import { Router } from "express";
 import {
+  fetchCalendarReminders,
   getAllUsers,
   getUserById,
   searchUsers,
@@ -16,7 +17,6 @@ router.use(verifyJWT);
 
 router.route("/").get(getAllUsers);
 router.route("/search").get(searchUsers);
-router.route("/:id").get(getUserById);
 router
   .route("/profile")
   .patch(
@@ -25,5 +25,7 @@ router
     validate,
     updateUserProfile
   );
+router.get("/reminders", fetchCalendarReminders);
+router.route("/:id").get(getUserById);
 
 export default router;

@@ -9,7 +9,7 @@ export const RecentAnnouncements = () => {
   const announcements = data && !("error" in data) ? data : [];
 
   return (
-    <div className="w-full flex flex-col gap-y-4 p-4 bg-white drop-shadow-lg rounded-lg min-h-[448px]">
+    <div className="w-full flex flex-col gap-y-2 p-4 bg-white drop-shadow-lg rounded-lg min-h-[448px]">
       <div className="flex justify-between items-center">
         <h5 className="h6-semibold">Recent Announcements</h5>
 

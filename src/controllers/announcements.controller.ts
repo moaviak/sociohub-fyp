@@ -3,12 +3,14 @@ import { asyncHandler } from "../utils/asyncHandler";
 import { AnnouncementService } from "../services/announcement.service";
 import { ApiResponse } from "../utils/ApiResponse";
 import { ApiError } from "../utils/ApiError";
-import { IUser } from "../types";
+import { IUser, UserType } from "../types";
+import activityService from "../services/activity.service";
 
 export const createAnnouncement = asyncHandler(
   async (req: Request, res: Response) => {
     const { societyId, title, content, publishDateTime, audience, sendEmail } =
       req.body;
+    const user = req.user as IUser;
 
     // Defensive: audience should match enum
     try {
@@ -22,6 +24,19 @@ export const createAnnouncement = asyncHandler(
         audience,
         sendEmail,
       });
+
+      if (user.userType === UserType.STUDENT) {
+        activityService.createActivityLog({
+          studentId: user.id,
+          societyId,
+          action: "Create Announcement",
+          description: `${user.firstName} ${user.lastName} created a new Annoucement: ${announcement.title}`,
+          nature: "CONSTRUCTIVE",
+          targetId: announcement.id,
+          targetType: "Announcement",
+        });
+      }
+
       return res
         .status(201)
         .json(
@@ -95,6 +110,8 @@ export const getAnnouncementById = asyncHandler(
 export const updateAnnouncement = asyncHandler(
   async (req: Request, res: Response) => {
     const { announcementId } = req.params;
+    const user = req.user as IUser;
+
     // Only allow specific fields to be updated
     const { title, content, publishDateTime, audience, sendEmail } = req.body;
     const updateData: any = {};
@@ -112,6 +129,19 @@ export const updateAnnouncement = asyncHandler(
         announcementId,
         updateData
       );
+
+      if (user.userType === UserType.STUDENT) {
+        activityService.createActivityLog({
+          studentId: user.id,
+          societyId: updatedAnnouncement?.societyId || "",
+          action: "Update Announcement",
+          description: `${user.firstName} ${user.lastName} updated an Annoucement: ${updatedAnnouncement?.title}`,
+          nature: "NEUTRAL",
+          targetId: updatedAnnouncement?.id,
+          targetType: "Announcement",
+        });
+      }
+
       return res
         .status(200)
         .json(
@@ -130,6 +160,8 @@ export const updateAnnouncement = asyncHandler(
 export const deleteAnnouncement = asyncHandler(
   async (req: Request, res: Response) => {
     const { announcementId } = req.params;
+    const user = req.user as IUser;
+
     if (!announcementId) {
       throw new ApiError(400, "Announcement ID is required");
     }
@@ -140,6 +172,19 @@ export const deleteAnnouncement = asyncHandler(
       if (!deleted) {
         throw new ApiError(404, "Announcement not found");
       }
+
+      if (user.userType === UserType.STUDENT) {
+        activityService.createActivityLog({
+          studentId: user.id,
+          societyId: deleted.societyId,
+          action: "Delete Announcement",
+          description: `${user.firstName} ${user.lastName} deleted an Annoucement: ${deleted.title}`,
+          nature: "DESTRUCTIVE",
+          targetId: deleted.id,
+          targetType: "Announcement",
+        });
+      }
+
       return res
         .status(200)
         .json(

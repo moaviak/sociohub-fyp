@@ -185,3 +185,24 @@ export interface MeetingInvitation {
   studentId?: string;
   status: "PENDING" | "ACCEPTED" | "DECLINED";
 }
+
+export interface ActivityLog {
+  id: string;
+  action: string;
+  description: string;
+  nature: "CONSTRUCTIVE" | "NEUTRAL" | "DESTRUCTIVE" | "ADMINISTRATIVE";
+  studentId: string;
+  student: Student;
+  targetId: string;
+  targetType: string;
+  timestamp: string;
+}
+
+export interface CalendarReminder {
+  startDate: string;
+  endDate: string;
+  title: string;
+  description?: string;
+  image?: string;
+  type: "UPCOMING_EVENT" | "MEETING" | "PARTICIPANT_EVENT";
+}

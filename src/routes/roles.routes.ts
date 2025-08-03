@@ -15,8 +15,6 @@ import {
   updateRoleValidator,
 } from "../validators/roles.validators";
 import { validate } from "../validators/validate";
-import { asyncHandler } from "../utils/asyncHandler";
-import { Request, Response, NextFunction } from "express";
 
 const router = Router();
 

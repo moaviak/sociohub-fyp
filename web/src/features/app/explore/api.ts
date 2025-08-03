@@ -113,17 +113,14 @@ export const ExploreApi = api.injectEndpoints({
       },
     }),
     getEvents: builder.query<
-      Event[] | ApiError,
+      Event[],
       { status?: string; categories?: string; search?: string; limit?: number }
     >({
       query: ({ status = "", categories = "", search = "", limit = "" }) => ({
         url: `/events?status=${status}&categories=${categories}&search=${search}&limit=${limit}`,
       }),
       transformResponse: (response: ApiResponse<Event[]>) => {
-        if (response.success) {
-          return response.data;
-        }
-        return createApiError(response.message);
+        return response.data;
       },
       transformErrorResponse: (response) => {
         const errorResponse = response.data as ApiErrorResponse;
@@ -187,6 +184,19 @@ export const ExploreApi = api.injectEndpoints({
       },
       providesTags: ["Users"],
     }),
+    fetchUsers: builder.query<(Student | Advisor)[], { search?: string }>({
+      query: ({ search }) => ({
+        url: "/users",
+        params: { search },
+      }),
+      transformResponse: (response: ApiResponse<GetUsersResponse>) => {
+        return response.data.users;
+      },
+      transformErrorResponse: (response) => {
+        const errorResponse = response.data as ApiErrorResponse;
+        return createApiError(errorResponse.message);
+      },
+    }),
   }),
 });
 
@@ -196,4 +206,5 @@ export const {
   useCancelJoinRequestMutation,
   useGetEventsQuery,
   useGetAllUsersInfiniteQuery,
+  useFetchUsersQuery,
 } = ExploreApi;

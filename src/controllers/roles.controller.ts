@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { asyncHandler } from "../utils/asyncHandler";
-import { IUser } from "../types";
+import { IUser, UserType } from "../types";
 import { ApiError } from "../utils/ApiError";
 import prisma from "../db";
 import { ApiResponse } from "../utils/ApiResponse";
@@ -17,6 +17,7 @@ import {
   validateRolesInSociety,
   validateStudentSocietyMembership,
 } from "../services/role-assignment.service";
+import activityService from "../services/activity.service";
 
 export const getSocietyRoles = asyncHandler(
   async (req: Request, res: Response) => {
@@ -89,6 +90,7 @@ export const getSocietyRoles = asyncHandler(
 );
 
 export const createRole = asyncHandler(async (req: Request, res: Response) => {
+  const user = req.user as IUser;
   const { societyId } = req.params;
 
   const { name, description, minSemester, privileges, members } = req.body;
@@ -199,7 +201,19 @@ export const createRole = asyncHandler(async (req: Request, res: Response) => {
     });
   }
 
-  res
+  if (user.userType === UserType.STUDENT) {
+    activityService.createActivityLog({
+      studentId: user.id,
+      societyId,
+      action: "Create Role",
+      description: `${user.firstName} ${user.lastName} created a new Role: ${role.name}`,
+      nature: "CONSTRUCTIVE",
+      targetId: role.id,
+      targetType: "Role",
+    });
+  }
+
+  return res
     .status(201)
     .json(
       new ApiResponse(
@@ -255,12 +269,25 @@ export const deleteRole = asyncHandler(async (req: Request, res: Response) => {
     });
   });
 
-  res
+  if (user.userType === UserType.STUDENT) {
+    activityService.createActivityLog({
+      studentId: user.id,
+      societyId,
+      action: "Delete Role",
+      description: `${user.firstName} ${user.lastName} deleted a Role: ${role.name}`,
+      nature: "DESTRUCTIVE",
+      targetId: role.id,
+      targetType: "Role",
+    });
+  }
+
+  return res
     .status(200)
     .json(new ApiResponse(200, null, "Role deleted successfully."));
 });
 
 export const updateRole = asyncHandler(async (req: Request, res: Response) => {
+  const user = req.user as IUser;
   const { societyId } = req.params;
   const { roleId, name, description, minSemester, privileges, members } =
     req.body;
@@ -371,6 +398,18 @@ export const updateRole = asyncHandler(async (req: Request, res: Response) => {
       memberIds: newlyAssignedMembers,
     }).catch((error) => {
       console.error("Background notification processing failed: ", error);
+    });
+  }
+
+  if (user.userType === UserType.STUDENT) {
+    activityService.createActivityLog({
+      studentId: user.id,
+      societyId,
+      action: "Update Role",
+      description: `${user.firstName} ${user.lastName} updated a Role: ${updatedRole.name}`,
+      nature: "NEUTRAL",
+      targetId: updatedRole.id,
+      targetType: "Role",
     });
   }
 
@@ -525,18 +564,6 @@ export const assignRolesToStudent = asyncHandler(
 
     const formattedRoles = updatedRoles.map((r) => r.role);
     const responseMessage = getResponseMessage(rolesToAdd, rolesToRemove);
-
-    // Log performance metrics
-    const totalTime = Date.now() - startTime;
-    const updateTime = afterUpdateTime - startTime;
-    const responseTime = Date.now() - afterUpdateTime;
-
-    console.log(`Role assignment performance: 
-      Total: ${totalTime}ms, 
-      Update: ${updateTime}ms, 
-      Response: ${responseTime}ms,
-      Roles added: ${rolesToAdd.length}, 
-      Roles removed: ${rolesToRemove.length}`);
 
     return res
       .status(200)

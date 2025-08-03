@@ -6,12 +6,8 @@ import { validate } from "../validators/validate";
 import {
   createTeamValidator,
   updateTeamValidator,
-  teamMembershipValidator,
-  teamJoinRequestValidator,
-  teamInvitationValidator,
   teamTaskValidator,
   updateTeamTaskStatusValidator,
-  teamAnnouncementValidator,
 } from "../validators/team.validators";
 import {
   verifyTasksPrivilege,

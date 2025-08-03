@@ -2,14 +2,20 @@ import { useGetEventsQuery } from "@/features/app/explore/api";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router";
 import { EventCard } from "./event-card";
+import { useGetSocietyEventsQuery } from "../../events/api";
 
-export const UpcomingEvents = () => {
-  const { data, isLoading } = useGetEventsQuery({
+export const UpcomingEvents = ({ societyId }: { societyId?: string }) => {
+  const { data: studentEvents, isLoading } = useGetEventsQuery({
     limit: 3,
     status: "Upcoming",
   });
 
-  const events = data && !("error" in data) ? data : [];
+  const { data: societyEvents } = useGetSocietyEventsQuery({
+    societyId: societyId || "",
+    status: "Upcoming",
+  });
+
+  const events = (societyId ? societyEvents : studentEvents) || [];
 
   return (
     <div className="w-full flex flex-col gap-y-4 p-4 bg-white drop-shadow-lg rounded-lg min-h-[448px]">
@@ -30,7 +36,11 @@ export const UpcomingEvents = () => {
         )}
       </div>
       <Button variant={"outline"} asChild>
-        <Link to={"/explore#events"}>Explore More</Link>
+        {!societyId ? (
+          <Link to={"/explore#events"}>Explore More</Link>
+        ) : (
+          <Link to={`/events/${societyId}`}>View All</Link>
+        )}
       </Button>
     </div>
   );

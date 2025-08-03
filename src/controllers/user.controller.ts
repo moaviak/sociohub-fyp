@@ -3,12 +3,14 @@ import { asyncHandler } from "../utils/asyncHandler";
 import { ApiResponse } from "../utils/ApiResponse";
 import {
   getAllUsersService,
+  getCalendarReminders,
   getUserByIdService,
   searchUsersService,
   updateUserProfileService,
 } from "../services/user.service";
 import { ApiError } from "../utils/ApiError";
 import { uploadOnCloudinary, deleteFromCloudinary } from "../utils/cloudinary";
+import { IUser } from "../types";
 
 export const getAllUsers = asyncHandler(async (req: Request, res: Response) => {
   const page = parseInt((req.query.page as string) || "1", 10);
@@ -24,7 +26,11 @@ export const getAllUsers = asyncHandler(async (req: Request, res: Response) => {
   return res
     .status(200)
     .json(
-      new ApiResponse(200, { ...result, users: filteredUsers }, "Users fetched successfully")
+      new ApiResponse(
+        200,
+        { ...result, users: filteredUsers },
+        "Users fetched successfully"
+      )
     );
 });
 
@@ -43,7 +49,6 @@ export const searchUsers = asyncHandler(async (req: Request, res: Response) => {
     .status(200)
     .json(new ApiResponse(200, users, "Users fetched successfully"));
 });
-
 
 export const getUserById = asyncHandler(async (req: Request, res: Response) => {
   const { id } = req.params;
@@ -96,5 +101,23 @@ export const updateUserProfile = asyncHandler(
     return res
       .status(200)
       .json(new ApiResponse(200, updatedUser, "Profile updated successfully"));
+  }
+);
+
+export const fetchCalendarReminders = asyncHandler(
+  async (req: Request, res: Response) => {
+    const user = req.user as IUser;
+
+    const reminders = await getCalendarReminders(user);
+
+    return res
+      .status(200)
+      .json(
+        new ApiResponse(
+          200,
+          reminders,
+          "Calendar reminders successfully fetched."
+        )
+      );
   }
 );

@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { asyncHandler } from "../utils/asyncHandler";
-import { IUser, RequestAction } from "../types";
+import { IUser, RequestAction, UserType } from "../types";
 import prisma from "../db";
 import { ApiError } from "../utils/ApiError";
 import { uploadOnCloudinary, deleteFromCloudinary } from "../utils/cloudinary";
@@ -14,6 +14,8 @@ import {
   sendMemberRemovalStatusEmail,
   sendMemberRemovalStatusNotification,
 } from "../services/society-email.service";
+import activityService from "../services/activity.service";
+import societyService from "../services/society.service";
 
 export const createSociety = asyncHandler(
   async (req: Request, res: Response) => {
@@ -658,6 +660,7 @@ export const removeMember = asyncHandler(
           societyId,
         },
       },
+      include: { student: true },
     });
 
     if (!studentMembership) {
@@ -698,7 +701,17 @@ export const removeMember = asyncHandler(
       console.error("Background notification processing failed: ", error);
     });
 
-    res
+    if (user.userType === UserType.STUDENT) {
+      activityService.createActivityLog({
+        studentId: user.id,
+        societyId,
+        action: "Remove Member",
+        description: `${user.firstName} ${user.lastName} removed ${studentMembership.student.firstName} ${studentMembership.student.lastName} from society.`,
+        nature: "ADMINISTRATIVE",
+      });
+    }
+
+    return res
       .status(200)
       .json(
         new ApiResponse(200, null, "Member has been successfully removed.")
@@ -710,6 +723,7 @@ export const updateSettings = asyncHandler(
   async (req: Request, res: Response) => {
     const { societyId } = req.params;
     const { acceptingNewMembers, membersLimit } = req.body;
+    const user = req.user as IUser;
 
     if (!societyId) {
       throw new ApiError(400, "Society id is required.");
@@ -729,6 +743,16 @@ export const updateSettings = asyncHandler(
 
     if (!society) {
       throw new ApiError(400, "Invalid society id.");
+    }
+
+    if (user.userType === UserType.STUDENT) {
+      activityService.createActivityLog({
+        studentId: user.id,
+        societyId,
+        action: "Update Settings",
+        description: `${user.firstName} ${user.lastName} updated society settings.`,
+        nature: "NEUTRAL",
+      });
     }
 
     return res
@@ -814,6 +838,16 @@ export const updateSocietyProfile = asyncHandler(
       },
     });
 
+    if (user.userType === UserType.STUDENT) {
+      activityService.createActivityLog({
+        studentId: user.id,
+        societyId,
+        action: "Update Profile",
+        description: `${user.firstName} ${user.lastName} updated society profile.`,
+        nature: "NEUTRAL",
+      });
+    }
+
     return res
       .status(200)
       .json(
@@ -823,5 +857,52 @@ export const updateSocietyProfile = asyncHandler(
           "Society profile updated successfully."
         )
       );
+  }
+);
+
+export const getSocietyActivityLogs = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { societyId } = req.params;
+    const user = req.user as IUser;
+
+    if (!user.societyId || user.societyId !== societyId) {
+      throw new ApiError(403, "You are not authorized to access this society.");
+    }
+
+    const { page = 1, limit = 20, search = "", status } = req.query;
+
+    const activityLogs = await activityService.fetchSocietyActivityLogs({
+      societyId,
+      page: parseInt(page as string),
+      limit: parseInt(limit as string),
+      search: search as string,
+    });
+
+    return res
+      .status(200)
+      .json(
+        new ApiResponse(
+          200,
+          activityLogs,
+          "Society activity logs fetched successfully."
+        )
+      );
+  }
+);
+
+export const getSocietyKPIs = asyncHandler(
+  async (req: Request, res: Response) => {
+    const user = req.user as IUser;
+    const { societyId } = req.params;
+
+    if (user.societyId !== societyId) {
+      throw new ApiError(403, "Only advisors can access this route.");
+    }
+
+    const kpis = await societyService.getSocietyKPIs(societyId);
+
+    return res
+      .status(200)
+      .json(new ApiResponse(200, kpis, "Society KPIs succesfully fetched."));
   }
 );

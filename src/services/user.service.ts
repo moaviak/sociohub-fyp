@@ -2,7 +2,10 @@ import { Advisor, Student } from "@prisma/client";
 import prisma from "../db";
 import { UserType, IUser } from "../types";
 
-export const searchUsersService = async (query: string, currentUserId: string) => {
+export const searchUsersService = async (
+  query: string,
+  currentUserId: string
+) => {
   const searchTerm = `%${query.trim().toLowerCase()}%`;
 
   const users = await prisma.$queryRaw<any[]>`
@@ -307,3 +310,162 @@ export const updateUserProfileService = async (
 
   return null;
 };
+
+export interface CalendarReminder {
+  startDate: string;
+  endDate: string;
+  title: string;
+  description?: string;
+  image?: string;
+  type: "UPCOMING_EVENT" | "MEETING" | "PARTICIPANT_EVENT";
+}
+
+export const getCalendarReminders = async (
+  user: IUser
+): Promise<CalendarReminder[]> => {
+  const reminders: CalendarReminder[] = [];
+  if (user.userType === UserType.ADVISOR) {
+    const [events, meetings] = await Promise.all([
+      prisma.event.findMany({
+        where: {
+          societyId: user.societyId,
+          endDate: { gte: new Date() },
+          visibility: { not: "Draft" },
+        },
+      }),
+      prisma.meeting.findMany({
+        where: {
+          hostSocietyId: user.societyId,
+          OR: [
+            { audienceType: "ALL_SOCIETY_MEMBERS" },
+            {
+              audienceType: "SPECIFIC_MEMBERS",
+              invitations: { some: { advisorId: user.id } },
+            },
+          ],
+        },
+      }),
+    ]);
+
+    events.forEach((event) => {
+      reminders.push({
+        startDate: createISOString(event.startDate!, event.startTime!),
+        endDate: createISOString(event.endDate!, event.endTime!),
+        title: event.title,
+        description: `${
+          event.tagline ? `"${event.tagline}"` + ". " : ""
+        }Society's live event`,
+        type: "UPCOMING_EVENT",
+        image: event.banner ?? undefined,
+      });
+    });
+
+    meetings.forEach((meeting) => {
+      reminders.push({
+        startDate: meeting.scheduledAt.toISOString(),
+        endDate: meeting.scheduledAt.toISOString(),
+        title: meeting.title,
+        description: meeting.description ?? undefined,
+        type: "MEETING",
+        image:
+          "https://res.cloudinary.com/dkigkyzqg/image/upload/v1754230064/pexels-fauxels-3183197_cbgqfb.jpg",
+      });
+    });
+  } else {
+    const [events, registeredEvents, meetings] = await Promise.all([
+      prisma.event.findMany({
+        where: {
+          endDate: { gte: new Date() },
+          visibility: "Publish",
+          eventRegistrations: {
+            none: { studentId: user.id },
+          },
+          isDraft: { not: true },
+        },
+      }),
+      prisma.event.findMany({
+        where: {
+          endDate: { gte: new Date() },
+          eventRegistrations: {
+            some: { studentId: user.id },
+          },
+        },
+      }),
+      prisma.meeting.findMany({
+        where: {
+          OR: [
+            {
+              audienceType: "ALL_SOCIETY_MEMBERS",
+              hostSociety: {
+                members: { some: { studentId: user.id } },
+              },
+            },
+            {
+              audienceType: "SPECIFIC_MEMBERS",
+              invitations: {
+                some: { studentId: user.id },
+              },
+            },
+          ],
+        },
+      }),
+    ]);
+
+    events.forEach((event) => {
+      reminders.push({
+        startDate: createISOString(event.startDate!, event.startTime!),
+        endDate: createISOString(event.endDate!, event.endTime!),
+        title: event.title,
+        description: `${
+          event.tagline ? `"${event.tagline}"` + ". " : ""
+        }Upcoming event.`,
+        type: "UPCOMING_EVENT",
+        image: event.banner ?? undefined,
+      });
+    });
+
+    registeredEvents.forEach((event) => {
+      reminders.push({
+        startDate: createISOString(event.startDate!, event.startTime!),
+        endDate: createISOString(event.endDate!, event.endTime!),
+        title: event.title,
+        description: `${
+          event.tagline ? `"${event.tagline}"` + ". " : ""
+        }Registered event.`,
+        type: "PARTICIPANT_EVENT",
+        image: event.banner ?? undefined,
+      });
+    });
+
+    meetings.forEach((meeting) => {
+      reminders.push({
+        startDate: meeting.scheduledAt.toISOString(),
+        endDate: meeting.scheduledAt.toISOString(),
+        title: meeting.title,
+        description: meeting.description ?? undefined,
+        type: "MEETING",
+        image:
+          "https://res.cloudinary.com/dkigkyzqg/image/upload/v1754230064/pexels-fauxels-3183197_cbgqfb.jpg",
+      });
+    });
+  }
+
+  return reminders.sort((a, b) => {
+    // Sort by start date (earliest first)
+    return new Date(a.startDate).getTime() - new Date(b.startDate).getTime();
+  });
+};
+
+function createISOString(startDate: Date, startTime: string) {
+  // Ensure the date part is correct and reset the time to midnight UTC
+  const baseDate = new Date(startDate);
+
+  // Parse the time string
+  const [hours, minutes] = startTime.split(":").map(Number);
+
+  // Set the hours, minutes, and seconds on the date object
+  baseDate.setHours(hours, minutes);
+
+  // Return the ISO 8601 string
+  return baseDate.toISOString();
+}

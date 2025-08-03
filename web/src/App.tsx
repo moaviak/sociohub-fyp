@@ -56,6 +56,8 @@ import PostDetailPage from "./pages/app/posts/post-detail-page";
 import TeamsPage from "./pages/app/teams";
 import CreateTeamPage from "./pages/app/teams/create-team";
 import TeamDetailPage from "./pages/app/teams/team-detail";
+import ActivityLogsPage from "./pages/app/activity-logs-page";
+import CalendarPage from "./pages/app/calendar-page";
 
 function App() {
   return (
@@ -188,6 +190,7 @@ function App() {
             <Route path="/chats" element={<ChatsPage />}>
               <Route path=":chatId" element={<ChatViewPage />} />
             </Route>
+            <Route path="/calendar" element={<CalendarPage />} />
 
             <Route path="/event/:id" element={<EventDetailPage />} />
             <Route path="update-event/:eventid" element={<UpdateEventPage />} />
@@ -197,6 +200,7 @@ function App() {
             />
             <Route path="/posts/:postId" element={<PostDetailPage />} />
             <Route path="/team-detail/:teamId" element={<TeamDetailPage />} />
+            <Route path="/activity-logs" element={<ActivityLogsPage />} />
 
             <Route path="/profile/:id" element={<UserProfilePage />} />
             <Route path="/user-settings" element={<UserSettingsLayout />}>

@@ -1,7 +1,29 @@
-import { Society } from "@/types";
+import { ActivityLog, CalendarReminder, Society } from "@/types";
 import { api } from "../api";
 import ApiError, { ApiErrorResponse, createApiError } from "../api-error";
 import { ApiResponse } from "../api-response";
+
+interface GetActivityLogsRequest {
+  societyId: string;
+  page?: number;
+  limit?: number;
+  search?: string;
+}
+
+interface GetActivityLogsResponse {
+  activityLogs: ActivityLog[];
+  total: number;
+  page: number;
+  totalPages: number;
+  limit: number;
+}
+
+interface SocietyKPIsResponse {
+  members: number;
+  activeEvents: number;
+  totalTeams: number;
+  upcomingEventRegistrations: number;
+}
 
 export const appApi = api.injectEndpoints({
   endpoints: (builder) => ({
@@ -81,6 +103,42 @@ export const appApi = api.injectEndpoints({
         }
       },
     }),
+    getActivityLogs: builder.query<
+      GetActivityLogsResponse,
+      GetActivityLogsRequest
+    >({
+      query: ({ societyId, page, limit, search }) => ({
+        url: `/society/${societyId}/activity-logs`,
+        params: { page, limit, search },
+      }),
+      transformResponse: (response: ApiResponse<GetActivityLogsResponse>) => {
+        return response.data;
+      },
+      transformErrorResponse: (response) => {
+        const errorResponse = response.data as ApiErrorResponse;
+        return createApiError(errorResponse.message);
+      },
+    }),
+    getSocietyKPIs: builder.query<SocietyKPIsResponse, string>({
+      query: (societyId) => `/society/${societyId}/kpis`,
+      transformResponse: (response: ApiResponse<SocietyKPIsResponse>) => {
+        return response.data;
+      },
+      transformErrorResponse: (response) => {
+        const errorResponse = response.data as ApiErrorResponse;
+        return createApiError(errorResponse.message);
+      },
+    }),
+    getCalendarReminders: builder.query<CalendarReminder[], void>({
+      query: () => `/users/reminders`,
+      transformResponse: (response: ApiResponse<CalendarReminder[]>) => {
+        return response.data;
+      },
+      transformErrorResponse: (response) => {
+        const errorResponse = response.data as ApiErrorResponse;
+        return createApiError(errorResponse.message);
+      },
+    }),
   }),
 });
 
@@ -88,4 +146,7 @@ export const {
   useGetSocietyQuery,
   useUpdateSocietySettingsMutation,
   useUpdateSocietyProfileMutation,
+  useGetActivityLogsQuery,
+  useGetSocietyKPIsQuery,
+  useGetCalendarRemindersQuery,
 } = appApi;

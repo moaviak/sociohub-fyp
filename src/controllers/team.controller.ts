@@ -4,15 +4,30 @@ import { asyncHandler } from "../utils/asyncHandler";
 import { ApiResponse } from "../utils/ApiResponse";
 import { ApiError } from "../utils/ApiError";
 import { IUser, UserType } from "../types";
+import activityService from "../services/activity.service";
 
 const teamService = new TeamService();
 
 export class TeamController {
   // Team Management (Society Admin)
   createTeam = asyncHandler(async (req: Request, res: Response) => {
+    const user = req.user as IUser;
     const logoFile = req.file as Express.Multer.File;
     const team = await teamService.createTeam(req.body, logoFile);
-    res
+
+    if (user.userType === UserType.STUDENT) {
+      activityService.createActivityLog({
+        studentId: user.id,
+        societyId: team.societyId,
+        action: "Create Team",
+        description: `${user.firstName} ${user.lastName} created a new Team: ${team.name}.`,
+        nature: "CONSTRUCTIVE",
+        targetId: team.id,
+        targetType: "Team",
+      });
+    }
+
+    return res
       .status(201)
       .json(new ApiResponse(201, team, "Team created successfully"));
   });
@@ -38,17 +53,47 @@ export class TeamController {
   });
 
   updateTeam = asyncHandler(async (req: Request, res: Response) => {
+    const user = req.user as IUser;
     const { teamId } = req.params;
     const team = await teamService.updateTeam(teamId, req.body);
-    res
+
+    if (user.userType === UserType.STUDENT) {
+      activityService.createActivityLog({
+        studentId: user.id,
+        societyId: team.societyId,
+        action: "Update Team",
+        description: `${user.firstName} ${user.lastName} updated a Team: ${team.name}.`,
+        nature: "NEUTRAL",
+        targetId: team.id,
+        targetType: "Team",
+      });
+    }
+
+    return res
       .status(200)
       .json(new ApiResponse(200, team, "Team updated successfully"));
   });
 
   deleteTeam = asyncHandler(async (req: Request, res: Response) => {
+    const user = req.user as IUser;
     const { teamId } = req.params;
-    await teamService.deleteTeam(teamId);
-    res.status(200).json(new ApiResponse(200, {}, "Team deleted successfully"));
+    const team = await teamService.deleteTeam(teamId);
+
+    if (user.userType === UserType.STUDENT) {
+      activityService.createActivityLog({
+        studentId: user.id,
+        societyId: team.societyId,
+        action: "Delete Team",
+        description: `${user.firstName} ${user.lastName} deleted Team: ${team.name}.`,
+        nature: "ADMINISTRATIVE",
+        targetId: team.id,
+        targetType: "Team",
+      });
+    }
+
+    return res
+      .status(200)
+      .json(new ApiResponse(200, {}, "Team deleted successfully"));
   });
 
   requestToJoinTeam = asyncHandler(async (req: Request, res: Response) => {
@@ -58,7 +103,7 @@ export class TeamController {
       studentId,
       message
     );
-    res
+    return res
       .status(201)
       .json(new ApiResponse(201, request, "Join request sent successfully"));
   });
@@ -71,7 +116,7 @@ export class TeamController {
       respondedById,
       responseNote
     );
-    res
+    return res
       .status(200)
       .json(
         new ApiResponse(200, request, "Join request approved successfully")
@@ -86,7 +131,7 @@ export class TeamController {
       respondedById,
       responseNote
     );
-    res
+    return res
       .status(200)
       .json(
         new ApiResponse(200, request, "Join request rejected successfully")
@@ -101,7 +146,7 @@ export class TeamController {
       studentId,
       user.id
     );
-    res
+    return res
       .status(201)
       .json(new ApiResponse(201, member, "Member added to team successfully"));
   });
@@ -114,7 +159,7 @@ export class TeamController {
       studentIds,
       user.id
     );
-    res
+    return res
       .status(201)
       .json(
         new ApiResponse(201, members, "Members added to team successfully")
@@ -129,7 +174,7 @@ export class TeamController {
       studentId,
       user.id
     );
-    res
+    return res
       .status(200)
       .json(
         new ApiResponse(200, member, "Member removed from team successfully")
@@ -149,15 +194,15 @@ export class TeamController {
       dueDate,
       userId: user.id,
     });
-    res
+    return res
       .status(201)
       .json(new ApiResponse(201, task, "Team task assigned successfully"));
   });
 
   assignTeamTask = asyncHandler(async (req: Request, res: Response) => {
+    const user = req.user as IUser;
     const { teamId } = req.params;
     const { title, description, dueDate } = req.body;
-    const user = req.user as IUser;
 
     const task = await teamService.assignTeamTask({
       teamId,
@@ -168,7 +213,20 @@ export class TeamController {
         user.userType === UserType.ADVISOR ? user.id : undefined,
       assignedById: user.userType === UserType.STUDENT ? user.id : undefined,
     });
-    res
+
+    if (user.userType === UserType.STUDENT) {
+      activityService.createActivityLog({
+        studentId: user.id,
+        societyId: task.team.societyId,
+        action: "Create Team",
+        description: `${user.firstName} ${user.lastName} assigned a new taks to Team: ${task.team.name}.`,
+        nature: "NEUTRAL",
+        targetId: task.team.id,
+        targetType: "Team",
+      });
+    }
+
+    return res
       .status(201)
       .json(new ApiResponse(201, task, "Team task assigned successfully"));
   });

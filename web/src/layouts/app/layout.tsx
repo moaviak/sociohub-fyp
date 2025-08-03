@@ -5,9 +5,9 @@ import TopBar from "@/features/app/topbar";
 import Sidebar from "@/features/app/sidebar";
 import { useAppSelector } from "@/app/hooks";
 import { Advisor, UserType } from "@/types";
-import { AppSkeleton } from "@/components/skeleton/app-skeleton";
 import { ChatBot } from "@/features/app/chat-bot";
 import { useCreateSessionMutation } from "@/features/app/chat-bot/api";
+import { SpinnerLoader } from "@/components/spinner-loader";
 
 function AppLayout() {
   const { isAuthenticated, isAuthChecked, user, userType } = useAppSelector(
@@ -59,7 +59,11 @@ function AppLayout() {
   }, [sessionId, initializeSession, isLoading]);
 
   if (!isAuthChecked) {
-    return <AppSkeleton />;
+    return (
+      <div className="h-screen w-screen flex justify-center items-center">
+        <SpinnerLoader size="lg" />
+      </div>
+    );
   }
 
   // Only render the outlet if user is authenticated

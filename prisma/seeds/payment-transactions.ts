@@ -187,3 +187,13 @@ export const seedPaymentTransactions = async () => {
 
   console.log(`Created ${paidEventRegistrations.length} payment transactions`);
 };
+
+seedPaymentTransactions()
+  .then(async () => {
+    await prisma.$disconnect();
+  })
+  .catch(async (e) => {
+    console.error(e);
+    await prisma.$disconnect();
+    process.exit(1);
+  });

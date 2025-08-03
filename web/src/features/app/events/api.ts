@@ -89,7 +89,7 @@ export const eventApi = api.injectEndpoints({
       },
     }),
     getSocietyEvents: builder.query<
-      Event[] | ApiError,
+      Event[],
       {
         societyId: string;
         status?: string;
@@ -101,10 +101,7 @@ export const eventApi = api.injectEndpoints({
         url: `/events?societyId=${societyId}&status=${status}&categories=${categories}&search=${search}`,
       }),
       transformResponse: (response: ApiResponse<Event[]>) => {
-        if (response.success) {
-          return response.data;
-        }
-        return createApiError(response.message);
+        return response.data;
       },
       transformErrorResponse: (response) => {
         const errorResponse = response.data as ApiErrorResponse;

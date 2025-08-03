@@ -549,7 +549,7 @@ export class MeetingService {
     });
   }
 
-  async deleteMeeting(meetingId: string): Promise<void> {
+  async deleteMeeting(meetingId: string) {
     const meeting = await prisma.meeting.findUnique({
       where: { id: meetingId },
     });
@@ -569,7 +569,7 @@ export class MeetingService {
     }
 
     // Delete meeting from database
-    await prisma.meeting.delete({
+    return await prisma.meeting.delete({
       where: { id: meetingId },
     });
   }

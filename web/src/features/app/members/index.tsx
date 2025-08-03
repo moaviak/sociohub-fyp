@@ -55,7 +55,6 @@ const Members = () => {
           columns={membersColumns}
           data={members || []}
           isLoading={isLoading}
-          disableInternalPagination
         />
       </div>
     </div>

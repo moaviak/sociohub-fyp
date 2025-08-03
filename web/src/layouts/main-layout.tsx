@@ -4,8 +4,8 @@ import { Outlet } from "react-router";
 import { useAppDispatch, useAppSelector } from "@/app/hooks";
 import { useGetUserQuery } from "@/features/auth/api";
 import { setAuthChecked } from "@/features/auth/slice";
-import { AppSkeleton } from "@/components/skeleton/app-skeleton";
 import { useRefreshAuthMutation } from "@/features/api";
+import { SpinnerLoader } from "@/components/spinner-loader";
 
 function MainLayout() {
   const dispatch = useAppDispatch();
@@ -42,7 +42,11 @@ function MainLayout() {
   }, [isLoading, isRefreshing, dispatch]);
 
   if (isLoading || isRefreshing) {
-    return <AppSkeleton />;
+    return (
+      <div className="h-screen w-screen flex justify-center items-center">
+        <SpinnerLoader size="lg" />
+      </div>
+    );
   }
 
   return <Outlet />;

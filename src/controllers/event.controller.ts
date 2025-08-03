@@ -20,8 +20,11 @@ import { haveEventsPrivilege } from "../utils/helpers";
 import { IUser, UserType } from "../types";
 import prisma from "../db";
 import { EventRegistrationService } from "../services/event-registration.service";
+import activityService from "../services/activity.service";
 
 export const createEvent = asyncHandler(async (req: Request, res: Response) => {
+  const user = req.user as IUser;
+
   // Get the local path for the uploaded banner if it exists
   const banner = req.file ? getLocalPath(req.file.filename) : undefined;
 
@@ -74,6 +77,19 @@ export const createEvent = asyncHandler(async (req: Request, res: Response) => {
     isDraft: false,
     formStep: req.body.formStep ? parseInt(req.body.formStep, 10) : undefined,
   });
+
+  if (user.userType === UserType.STUDENT) {
+    activityService.createActivityLog({
+      studentId: user.id,
+      societyId: event.societyId,
+      action: "Create Event",
+      description: `${user.firstName} ${user.lastName} created a new Event: ${event.title}`,
+      nature: "CONSTRUCTIVE",
+      targetId: event.id,
+      targetType: "Event",
+    });
+  }
+
   return res.status(201).json({
     status: 201,
     message: "Event created successfully",
@@ -416,6 +432,7 @@ export const getEventById = asyncHandler(
 
 export const updateEvent = asyncHandler(async (req: Request, res: Response) => {
   try {
+    const user = req.user as IUser;
     const eventId = req.body.eventId || req.params.eventId;
     if (!eventId) {
       throw new ApiError(400, "Event ID is required");
@@ -543,6 +560,19 @@ export const updateEvent = asyncHandler(async (req: Request, res: Response) => {
     };
 
     const updatedEvent = await EventService.updateEvent(eventId, updateData);
+
+    if (user.userType === UserType.STUDENT) {
+      activityService.createActivityLog({
+        studentId: user.id,
+        societyId: updatedEvent.societyId,
+        action: "Create Event",
+        description: `${user.firstName} ${user.lastName} updated an Event: ${updatedEvent.title}`,
+        nature: "NEUTRAL",
+        targetId: updatedEvent.id,
+        targetType: "Event",
+      });
+    }
+
     return res
       .status(200)
       .json(new ApiResponse(200, updatedEvent, "Event updated successfully"));
@@ -603,11 +633,25 @@ export const cancelRegistration = asyncHandler(
 
 export const deleteEvent = asyncHandler(async (req: Request, res: Response) => {
   try {
+    const user = req.user as IUser;
     const { eventId } = req.params;
     if (!eventId) {
       throw new ApiError(400, "Event ID is required");
     }
     const deletedEvent = await EventService.deleteEvent(eventId);
+
+    if (user.userType === UserType.STUDENT) {
+      activityService.createActivityLog({
+        studentId: user.id,
+        societyId: deletedEvent.societyId,
+        action: "Delete Event",
+        description: `${user.firstName} ${user.lastName} deleted an Event: ${deletedEvent.title}`,
+        nature: "CONSTRUCTIVE",
+        targetId: deletedEvent.id,
+        targetType: "Event",
+      });
+    }
+
     return res
       .status(200)
       .json(new ApiResponse(200, deletedEvent, "Event deleted successfully"));
@@ -619,11 +663,25 @@ export const deleteEvent = asyncHandler(async (req: Request, res: Response) => {
 
 export const cancelEvent = asyncHandler(async (req: Request, res: Response) => {
   try {
+    const user = req.user as IUser;
     const { eventId } = req.params;
     if (!eventId) {
       throw new ApiError(400, "Event ID is required");
     }
     const cancelledEvent = await EventService.cancelEvent(eventId);
+
+    if (user.userType === UserType.STUDENT) {
+      activityService.createActivityLog({
+        studentId: user.id,
+        societyId: cancelledEvent.societyId,
+        action: "Cancel Event",
+        description: `${user.firstName} ${user.lastName} cancelled an Event: ${cancelledEvent.title}`,
+        nature: "ADMINISTRATIVE",
+        targetId: cancelledEvent.id,
+        targetType: "Event",
+      });
+    }
+
     return res
       .status(200)
       .json(

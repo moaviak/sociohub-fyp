@@ -1,4 +1,5 @@
 import {
+  Activity,
   Building,
   CalendarCheck,
   CalendarDays,
@@ -76,6 +77,11 @@ const navItems = [
     label: "Calendar",
     icon: <CalendarDays className="w-4 h-4" />,
     href: "/calendar",
+  },
+  {
+    label: "Activity Logs",
+    icon: <Activity className="w-4 h-4" />,
+    href: "/activity-logs",
   },
   {
     label: "Settings",

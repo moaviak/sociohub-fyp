@@ -12,6 +12,8 @@ import {
   createSociety,
   getSocieties,
   getSociety,
+  getSocietyActivityLogs,
+  getSocietyKPIs,
   getSocietyMembers,
   getSocietyPeople,
   removeMember,
@@ -76,5 +78,11 @@ router
     validate,
     updateSocietyProfile
   );
+
+router
+  .route("/:societyId/activity-logs")
+  .get(verifyJWT, getSocietyActivityLogs);
+
+router.route("/:societyId/kpis").get(verifyJWT, getSocietyKPIs);
 
 export default router;

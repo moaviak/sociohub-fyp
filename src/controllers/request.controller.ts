@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { asyncHandler } from "../utils/asyncHandler";
-import { IUser, RequestAction } from "../types";
+import { IUser, RequestAction, UserType } from "../types";
 import prisma from "../db";
 import { ApiError } from "../utils/ApiError";
 import { processJoinRequestPDF } from "../services/request.service";
@@ -17,6 +17,7 @@ import {
 } from "../services/notification.service";
 import { io } from "../app";
 import { sendNotificationToUsers } from "../socket";
+import activityService from "../services/activity.service";
 
 export const sendJoinRequest = asyncHandler(
   async (req: Request, res: Response) => {
@@ -212,6 +213,7 @@ export const cancelJoinRequest = asyncHandler(
 
 export const handleRequest = asyncHandler(
   async (req: Request, res: Response) => {
+    const user = req.user as IUser;
     const { societyId } = req.params;
     const { studentId, action, reason } = req.body;
 
@@ -336,6 +338,18 @@ export const handleRequest = asyncHandler(
         console.error("Notification sending failed: ", error);
       });
 
+      if (user.userType === UserType.STUDENT) {
+        activityService.createActivityLog({
+          studentId: user.id,
+          societyId,
+          action: "Accept Join Request",
+          description: `${user.firstName} ${user.lastName} accepted the society join request of ${student.firstName} ${student.lastName}`,
+          nature: "ADMINISTRATIVE",
+          targetId: request.id,
+          targetType: "Join Request",
+        });
+      }
+
       return res
         .status(200)
         .json(
@@ -372,6 +386,18 @@ export const handleRequest = asyncHandler(
       }).catch((error) => {
         console.error("Notification sending failed: ", error);
       });
+
+      if (user.userType === UserType.STUDENT) {
+        activityService.createActivityLog({
+          studentId: user.id,
+          societyId,
+          action: "Reject Join Request",
+          description: `${user.firstName} ${user.lastName} rejected the society join request of ${student.firstName} ${student.lastName}`,
+          nature: "DESTRUCTIVE",
+          targetId: request.id,
+          targetType: "Join Request",
+        });
+      }
 
       return res
         .status(200)
@@ -577,6 +603,7 @@ export const getRequestsHistory = asyncHandler(
 
 export const deleteRequest = asyncHandler(
   async (req: Request, res: Response) => {
+    const user = req.user as IUser;
     const { requestId } = req.body;
 
     const [request] = await prisma.$transaction([
@@ -590,6 +617,18 @@ export const deleteRequest = asyncHandler(
 
     if (request.pdf) {
       deleteFromCloudinary(request.pdf);
+    }
+
+    if (user.userType === UserType.STUDENT) {
+      activityService.createActivityLog({
+        studentId: user.id,
+        societyId: request.societyId,
+        action: "Delete Join Request",
+        description: `${user.firstName} ${user.lastName} deleted a past request.`,
+        nature: "DESTRUCTIVE",
+        targetId: request.id,
+        targetType: "Join Request",
+      });
     }
 
     return res

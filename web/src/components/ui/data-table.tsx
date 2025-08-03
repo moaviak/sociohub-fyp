@@ -5,6 +5,8 @@ import {
   getCoreRowModel,
   getPaginationRowModel,
   useReactTable,
+  PaginationState,
+  Updater,
 } from "@tanstack/react-table";
 
 import {
@@ -31,8 +33,8 @@ interface DataTableProps<TData, TValue> {
   totalCount?: number;
   onPageChange?: (page: number) => void;
   onPageSizeChange?: (size: number) => void;
-  // Add this prop to disable internal pagination
-  disableInternalPagination?: boolean;
+  // For server-side pagination
+  isServerSide?: boolean;
 }
 
 export function DataTable<TData, TValue>({
@@ -46,7 +48,8 @@ export function DataTable<TData, TValue>({
   pageSize = 20,
   totalCount = 0,
   onPageChange,
-  disableInternalPagination = false,
+  onPageSizeChange,
+  isServerSide = false,
 }: DataTableProps<TData, TValue>) {
   const [rowSelection, setRowSelection] =
     React.useState<Record<string, boolean>>(initialRowSelection);
@@ -54,26 +57,60 @@ export function DataTable<TData, TValue>({
   // Keep track of previously selected rows to prevent unnecessary updates
   const prevSelectedRowsRef = useRef<TData[]>([]);
 
+  // For server-side pagination, manage pagination state
+  const [pagination, setPagination] = React.useState<PaginationState>({
+    pageIndex: page - 1, // TanStack uses 0-based indexing
+    pageSize: pageSize,
+  });
+
+  // Update pagination state when external page/pageSize changes
+  useEffect(() => {
+    if (isServerSide) {
+      setPagination({
+        pageIndex: page - 1,
+        pageSize: pageSize,
+      });
+    }
+  }, [page, pageSize, isServerSide]);
+
+  // Handle pagination changes for server-side
+  const handlePaginationChange = (updater: Updater<PaginationState>) => {
+    if (isServerSide) {
+      const newPagination =
+        typeof updater === "function" ? updater(pagination) : updater;
+      setPagination(newPagination);
+
+      // Notify parent component of page change
+      if (onPageChange && newPagination.pageIndex !== pagination.pageIndex) {
+        onPageChange(newPagination.pageIndex + 1); // Convert back to 1-based
+      }
+
+      // Notify parent component of page size change
+      if (onPageSizeChange && newPagination.pageSize !== pagination.pageSize) {
+        onPageSizeChange(newPagination.pageSize);
+      }
+    }
+  };
+
   const table = useReactTable({
     data,
     columns,
     getCoreRowModel: getCoreRowModel(),
-    // Only use pagination model if internal pagination is not disabled
-    ...(disableInternalPagination
-      ? {}
-      : { getPaginationRowModel: getPaginationRowModel() }),
+    // Only use pagination model for client-side pagination
+    ...(isServerSide ? {} : { getPaginationRowModel: getPaginationRowModel() }),
+
+    // Server-side pagination configuration
+    ...(isServerSide && {
+      manualPagination: true, // Tell TanStack this is server-side
+      rowCount: totalCount, // Total number of rows on server
+      onPaginationChange: handlePaginationChange,
+    }),
+
     onRowSelectionChange: setRowSelection,
     state: {
       rowSelection,
-      // Only set pagination state if internal pagination is enabled
-      ...(disableInternalPagination
-        ? {}
-        : {
-            pagination: {
-              pageIndex: page - 1,
-              pageSize,
-            },
-          }),
+      // Only set pagination state for server-side pagination
+      ...(isServerSide && { pagination }),
     },
   });
 
@@ -171,25 +208,41 @@ export function DataTable<TData, TValue>({
           </TableBody>
         </Table>
       </div>
-      {isPaginated && !disableInternalPagination && (
+      {isPaginated && (
         <div className="flex items-center justify-between space-x-2 py-4">
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => onPageChange && onPageChange(page - 1)}
-            disabled={page <= 1}
+            onClick={() => {
+              if (isServerSide) {
+                table.previousPage();
+              } else {
+                if (onPageChange) onPageChange(page - 1);
+              }
+            }}
+            disabled={isServerSide ? !table.getCanPreviousPage() : page <= 1}
           >
             <ArrowLeft className="w-4 h-4" />
             Previous
           </Button>
           <div className="b3-regular text-neutral-700">
-            Page {page} of {totalPages}
+            Page{" "}
+            {isServerSide ? table.getState().pagination.pageIndex + 1 : page} of{" "}
+            {totalPages}
           </div>
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => onPageChange && onPageChange(page + 1)}
-            disabled={page >= totalPages}
+            onClick={() => {
+              if (isServerSide) {
+                table.nextPage();
+              } else {
+                if (onPageChange) onPageChange(page + 1);
+              }
+            }}
+            disabled={
+              isServerSide ? !table.getCanNextPage() : page >= totalPages
+            }
           >
             Next
             <ArrowRight className="w-4 h-4" />

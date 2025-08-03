@@ -2,16 +2,29 @@ import { Request, Response } from "express";
 import { asyncHandler } from "../utils/asyncHandler";
 import * as cmsService from "../services/cms.service";
 import { ApiResponse } from "../utils/ApiResponse";
-import { IUser } from "../types";
+import { IUser, UserType } from "../types";
+import activityService from "../services/activity.service";
 
 export const createPost = asyncHandler(async (req: Request, res: Response) => {
+  const user = req.user as IUser;
   const files = req.files as Express.Multer.File[];
-  const post = await cmsService.createPost(
-    req.body,
-    (req.user as IUser).id,
-    files
-  );
-  res.status(201).json(new ApiResponse(201, post, "Post created successfully"));
+  const post = await cmsService.createPost(req.body, user.id, files);
+
+  if (user.userType === UserType.STUDENT) {
+    activityService.createActivityLog({
+      studentId: user.id,
+      societyId: req.body.societyId,
+      action: "Create Post",
+      description: `${user.firstName} ${user.lastName} created a new Post for society page.`,
+      nature: "CONSTRUCTIVE",
+      targetId: post?.id,
+      targetType: "Post",
+    });
+  }
+
+  return res
+    .status(201)
+    .json(new ApiResponse(201, post, "Post created successfully"));
 });
 
 export const getPostById = asyncHandler(async (req: Request, res: Response) => {
@@ -29,19 +42,50 @@ export const getPostsBySociety = asyncHandler(
 );
 
 export const updatePost = asyncHandler(async (req: Request, res: Response) => {
+  const user = req.user as IUser;
   const files = req.files as Express.Multer.File[];
   const { removedMediaIds } = req.body;
+
   const post = await cmsService.updatePost(
     req.params.postId,
     req.body,
     files,
     removedMediaIds ? JSON.parse(removedMediaIds) : undefined
   );
-  res.status(200).json(new ApiResponse(200, post, "Post updated successfully"));
+
+  if (user.userType === UserType.STUDENT && !!post) {
+    activityService.createActivityLog({
+      studentId: user.id,
+      societyId: post.societyId,
+      action: "Update Post",
+      description: `${user.firstName} ${user.lastName} updated a post at society page.`,
+      nature: "NEUTRAL",
+      targetId: post?.id,
+      targetType: "Post",
+    });
+  }
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, post, "Post updated successfully"));
 });
 
 export const deletePost = asyncHandler(async (req: Request, res: Response) => {
-  await cmsService.deletePost(req.params.postId);
+  const user = req.user as IUser;
+  const post = await cmsService.deletePost(req.params.postId);
+
+  if (user.userType === UserType.STUDENT && post) {
+    activityService.createActivityLog({
+      studentId: user.id,
+      societyId: post.societyId,
+      action: "Delete Post",
+      description: `${user.firstName} ${user.lastName} deleted a Post from society page.`,
+      nature: "DESTRUCTIVE",
+      targetId: post.id,
+      targetType: "Post",
+    });
+  }
+
   res.status(200).json(new ApiResponse(200, null, "Post deleted successfully"));
 });
 

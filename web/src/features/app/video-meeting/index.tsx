@@ -17,7 +17,6 @@ export const VideoMeeting = () => {
         data={meetings}
         columns={meetingsColumns}
         isLoading={isLoading}
-        disableInternalPagination
       />
     </div>
   );

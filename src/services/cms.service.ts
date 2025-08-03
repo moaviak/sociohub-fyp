@@ -163,7 +163,7 @@ export const deletePost = async (postId: string) => {
     );
   }
 
-  await prisma.post.delete({ where: { id: postId } });
+  return await prisma.post.delete({ where: { id: postId } });
 };
 
 export const togglePostLike = async (

@@ -3,8 +3,9 @@ import { asyncHandler } from "../utils/asyncHandler";
 import paymentService from "../services/payment.service";
 import { ApiError } from "../utils/ApiError";
 import { ApiResponse } from "../utils/ApiResponse";
-import { IUser } from "../types";
+import { IUser, UserType } from "../types";
 import paymentDashboardService from "../services/payment-dashboard.service";
+import activityService from "../services/activity.service";
 
 export const createCheckoutSession = asyncHandler(
   async (req: Request, res: Response) => {
@@ -76,6 +77,16 @@ export const startOnboarding = asyncHandler(
       returnUrl
     );
 
+    if (user.userType === UserType.STUDENT) {
+      activityService.createActivityLog({
+        studentId: user.id,
+        societyId,
+        action: "Start Payment Account On-Boarding",
+        description: `${user.firstName} ${user.lastName} started society payment account on-boardnig process.`,
+        nature: "NEUTRAL",
+      });
+    }
+
     return res
       .status(200)
       .json(new ApiResponse(200, { onboardingUrl: accountLink.url }));
@@ -84,9 +95,20 @@ export const startOnboarding = asyncHandler(
 
 export const completeOnboarding = asyncHandler(
   async (req: Request, res: Response) => {
+    const user = req.user as IUser;
     const { societyId, accountId } = req.body;
 
     const status = await paymentService.completeOnboarding(societyId);
+
+    if (user.userType === UserType.STUDENT && status.isOnboarded) {
+      activityService.createActivityLog({
+        studentId: user.id,
+        societyId,
+        action: "Complete Payment Account On-Boarding",
+        description: `${user.firstName} ${user.lastName} completed the payment account on-boarding process.`,
+        nature: "CONSTRUCTIVE",
+      });
+    }
 
     res.status(200).json(new ApiResponse(200, status));
   }
