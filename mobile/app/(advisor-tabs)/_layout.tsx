@@ -1,6 +1,7 @@
 import { icons, images } from "@/constants";
 import { useAppSelector } from "@/store/hooks";
 import { UserType } from "@/types";
+import { Advisor } from "@/types/type";
 import { router, Tabs } from "expo-router";
 import { useEffect } from "react";
 import {
@@ -24,18 +25,41 @@ const TabIcon = ({
   name: string;
 }) => {
   return (
-    <View className="items-center justify-center flex-1">
-      <Image
-        source={icon}
-        resizeMode="contain"
-        tintColor={color}
-        style={{ width: 26, height: 26 }}
-      />
+    <View
+      className="items-center"
+      style={{
+        height: 60,
+        justifyContent: "space-between",
+        paddingBottom: 4,
+        paddingTop: 8,
+        width: 70,
+        minWidth: 70,
+      }}
+    >
+      <View
+        style={{
+          height: 26,
+          width: 26,
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
+        <Image
+          source={icon}
+          resizeMode="contain"
+          tintColor={color}
+          style={{ width: 26, height: 26 }}
+        />
+      </View>
       <Text
-        className="font-body text-xs text-center w-full mt-1"
+        className="font-body text-xs text-center"
+        numberOfLines={1}
         style={{
           color,
           fontWeight: focused ? "600" : "400",
+          fontSize: 12,
+          lineHeight: 14,
+          width: 70,
         }}
       >
         {name}
@@ -56,21 +80,82 @@ const ProfileTabIcon = ({
   name: string;
 }) => {
   return (
-    <View className="items-center justify-center flex-1">
-      <Image
-        source={typeof icon === "string" ? { uri: icon } : icon}
-        resizeMode="cover"
-        style={{ width: 26, height: 26, borderRadius: 12 }}
-      />
+    <View
+      className="items-center"
+      style={{
+        height: 60,
+        justifyContent: "space-between",
+        paddingBottom: 4,
+        paddingTop: 8,
+        width: 70,
+        minWidth: 70,
+      }}
+    >
+      <View
+        style={{
+          height: 26,
+          width: 26,
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
+        <Image
+          source={typeof icon === "string" ? { uri: icon } : icon}
+          resizeMode="cover"
+          style={{ width: 26, height: 26, borderRadius: 13 }}
+        />
+      </View>
       <Text
-        className="font-body text-xs text-center w-full mt-1"
+        className="font-body text-xs text-center"
+        numberOfLines={1}
         style={{
           color,
           fontWeight: focused ? "600" : "400",
+          fontSize: 12,
+          lineHeight: 14,
+          width: 70,
         }}
       >
         {name}
       </Text>
+    </View>
+  );
+};
+
+const MenuTabIcon = () => {
+  return (
+    <View
+      className="items-center"
+      style={{
+        height: 60,
+        justifyContent: "center",
+        paddingBottom: 4,
+        paddingTop: 8,
+        width: 70,
+        minWidth: 70,
+      }}
+    >
+      <View
+        style={{
+          height: 44,
+          width: 44,
+          borderRadius: 22,
+          backgroundColor: "#218bff",
+          justifyContent: "center",
+          alignItems: "center",
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: 4 },
+          shadowOpacity: 0.25,
+          shadowRadius: 6,
+          elevation: 6,
+        }}
+      >
+        <Image
+          source={icons.menu}
+          style={{ width: 24, height: 24, tintColor: "#fff" }}
+        />
+      </View>
+      {/* No label for menu */}
     </View>
   );
 };
@@ -127,7 +212,8 @@ export default function StudentTabsLayout() {
           tabBarStyle: {
             position: "absolute",
             height: 80,
-            paddingTop: 16,
+            paddingTop: 12,
+            paddingBottom: 8,
             paddingHorizontal: 16,
             backgroundColor: "#fff",
             elevation: 10,
@@ -150,9 +236,6 @@ export default function StudentTabsLayout() {
                 name="Home"
               />
             ),
-            tabBarItemStyle: {
-              marginTop: 6,
-            },
           }}
         />
         <Tabs.Screen
@@ -167,37 +250,13 @@ export default function StudentTabsLayout() {
                 name="Members"
               />
             ),
-            tabBarItemStyle: {
-              marginTop: 12,
-            },
           }}
         />
         <Tabs.Screen
           name="menu"
           options={{
             title: "Menu",
-            tabBarIcon: () => (
-              <View
-                style={{
-                  height: 44,
-                  width: 44,
-                  borderRadius: 32,
-                  backgroundColor: "#218bff",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  shadowColor: "#000",
-                  shadowOffset: { width: 0, height: 4 },
-                  shadowOpacity: 0.25,
-                  shadowRadius: 6,
-                  elevation: 6,
-                }}
-              >
-                <Image
-                  source={icons.menu}
-                  style={{ width: 24, height: 24, tintColor: "#fff" }}
-                />
-              </View>
-            ),
+            tabBarIcon: () => <MenuTabIcon />,
           }}
         />
         <Tabs.Screen
@@ -212,9 +271,6 @@ export default function StudentTabsLayout() {
                 name="Events"
               />
             ),
-            tabBarItemStyle: {
-              marginTop: 11,
-            },
           }}
         />
         <Tabs.Screen
@@ -229,9 +285,6 @@ export default function StudentTabsLayout() {
                 name="Profile"
               />
             ),
-            tabBarItemStyle: {
-              marginTop: 6,
-            },
           }}
         />
       </Tabs>
