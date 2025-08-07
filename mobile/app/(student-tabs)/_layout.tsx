@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   Image,
   ImageSourcePropType,
+  StatusBar,
   Text,
   View,
 } from "react-native";
@@ -203,6 +204,7 @@ export default function StudentTabsLayout() {
 
   return (
     <SafeAreaView style={{ flex: 1 }} className="bg-white">
+      <StatusBar barStyle="dark-content" backgroundColor="#fff" />
       <Tabs
         screenOptions={{
           tabBarShowLabel: false,
@@ -210,17 +212,12 @@ export default function StudentTabsLayout() {
           tabBarActiveTintColor: "#218bff",
           tabBarInactiveTintColor: "#7a7a7a",
           tabBarStyle: {
-            position: "absolute",
-            height: 80,
+            height: 72,
             paddingTop: 12,
             paddingBottom: 8,
             paddingHorizontal: 16,
             backgroundColor: "#fff",
             elevation: 10,
-            shadowColor: "#000",
-            shadowOffset: { width: 0, height: -2 },
-            shadowOpacity: 0.08,
-            shadowRadius: 6,
           },
         }}
       >

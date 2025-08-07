@@ -21,7 +21,7 @@ declare interface User {
 
 declare interface Student extends User {
   registrationNumber?: string;
-  societies?: (Society & { privileges: string[] })[];
+  societies?: { society: Society & { privileges: string[] }; roles?: Role[] }[];
 }
 
 declare interface Advisor extends User {
@@ -42,18 +42,28 @@ declare interface Society {
   id: string;
   name: string;
   description: string;
+  statementOfPurpose?: string;
+  advisorMessage?: string;
+  coreValues?: string;
+  mission?: string;
   logo?: string;
   acceptingNewMembers?: boolean;
   membersLimit?: number;
   createdAt: string;
   updatedAt: string;
+  advisorId?: string;
   advisor?: Advisor;
   roles?: Role[];
   _count?: {
     members: number;
-    joinRequests: number;
+    events?: number;
+    joinRequests?: number;
   };
+  officeBearers?: { role: string; student: Student }[];
+  isMember?: boolean;
+  hasRequestedToJoin?: boolean;
 }
+`q765`;
 
 declare interface JoinRequest {
   id: string;

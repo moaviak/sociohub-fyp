@@ -10,13 +10,13 @@ const MenuPage = () => {
   const haveTicketHandlingPrivilege =
     user &&
     "registrationNumber" in user &&
-    user.societies?.some((society) =>
+    user.societies?.some(({ society }) =>
       society.privileges.includes("event_ticket_handling")
     );
 
   return (
     <View className="bg-white flex-1 px-4 py-2 gap-4">
-      <View className="w-full px-4 py-2">
+      <View className="w-full py-2">
         <Text className="font-heading font-bold text-2xl">Menu Options</Text>
       </View>
       <VStack space="md">

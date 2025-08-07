@@ -1,7 +1,6 @@
 // ScanTicket.tsx
 import React, { useState } from "react";
 import { icons } from "@/constants";
-import { useScanTicketMutation } from "@/store/events/api";
 import {
   Image,
   Text,
@@ -13,6 +12,7 @@ import {
 } from "react-native";
 import { QRScanner } from "./qr-scanner";
 import ApiError from "@/store/api-error";
+import { useScanTicketMutation } from "@/features/events/api";
 
 export interface TicketData {
   registrationId: string;

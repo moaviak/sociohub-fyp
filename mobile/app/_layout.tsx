@@ -106,6 +106,8 @@ export default function RootLayout() {
             <Stack.Screen name="auth" />
             <Stack.Screen name="(student-tabs)" />
             <Stack.Screen name="(advisor-tabs)" />
+            <Stack.Screen name="society/[id]" />
+            <Stack.Screen name="profile/[id]" />
           </Stack>
           <StatusBar style="auto" />
         </GluestackUIProvider>

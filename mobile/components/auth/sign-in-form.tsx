@@ -174,7 +174,7 @@ export const SignInForm = () => {
                   <Select onValueChange={onChange} className="flex-1 min-w-0">
                     <SelectTrigger
                       variant="outline"
-                      className="h-11 border-neutral-300 rounded-lg"
+                      className="h-11 border-neutral-300 rounded-lg justify-between"
                     >
                       <SelectInput value={value} />
                       <SelectIcon className="mr-2" as={ChevronDownIcon} />
@@ -201,7 +201,7 @@ export const SignInForm = () => {
                   <Select onValueChange={onChange} className="flex-1 min-w-0">
                     <SelectTrigger
                       variant="outline"
-                      className="h-11 border-neutral-300 rounded-lg"
+                      className="h-11 border-neutral-300 rounded-lg justify-between"
                     >
                       <SelectInput value={value} />
                       <SelectIcon className="mr-2" as={ChevronDownIcon} />
@@ -231,7 +231,7 @@ export const SignInForm = () => {
                   <Select onValueChange={onChange} className="flex-1 min-w-0">
                     <SelectTrigger
                       variant="outline"
-                      className="h-11 border-neutral-300 rounded-lg"
+                      className="h-11 border-neutral-300 rounded-lg justify-between"
                     >
                       <SelectInput value={value} />
                       <SelectIcon className="mr-2" as={ChevronDownIcon} />

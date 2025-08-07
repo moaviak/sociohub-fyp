@@ -1,10 +1,14 @@
-import { View, Text } from "react-native";
+import { MembersTabs } from "@/components/members-tabs";
+import { View } from "react-native";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 const MembersPage = () => {
   return (
-    <View>
-      <Text>MembersPage</Text>
-    </View>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <View className="bg-white flex-1 gap-4">
+        <MembersTabs />
+      </View>
+    </GestureHandlerRootView>
   );
 };
 export default MembersPage;

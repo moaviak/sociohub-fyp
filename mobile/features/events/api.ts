@@ -1,12 +1,12 @@
+import { api } from "@/store/api";
+import { ApiErrorResponse, createApiError } from "@/store/api-error";
+import { ApiResponse } from "@/store/api-response";
 import { Ticket } from "@/types/type";
-import { api } from "../api";
-import ApiError, { ApiErrorResponse, createApiError } from "../api-error";
-import { ApiResponse } from "../api-response";
 
-export const EventApi = api.injectEndpoints({
+export const EventsApi = api.injectEndpoints({
   endpoints: (builder) => ({
     scanTicket: builder.mutation<
-      Ticket | ApiError,
+      Ticket,
       {
         registrationId: string;
         eventId: string;
@@ -20,10 +20,7 @@ export const EventApi = api.injectEndpoints({
         body: { ...arg },
       }),
       transformResponse: (response: ApiResponse<Ticket>) => {
-        if (response.success) {
-          return response.data;
-        }
-        return createApiError(response.message);
+        return response.data;
       },
       transformErrorResponse: (response) => {
         const errorResponse = response.data as ApiErrorResponse;
@@ -37,4 +34,4 @@ export const EventApi = api.injectEndpoints({
   }),
 });
 
-export const { useScanTicketMutation } = EventApi;
+export const { useScanTicketMutation } = EventsApi;

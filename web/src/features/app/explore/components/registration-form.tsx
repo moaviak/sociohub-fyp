@@ -159,7 +159,7 @@ export const RegistrationForm = ({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>
-                      Whatsapp Number <span className="text-red-500">*</span>
+                      WhatsApp Number <span className="text-red-500">*</span>
                     </FormLabel>
                     <FormControl>
                       <Input

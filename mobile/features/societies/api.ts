@@ -1,34 +1,31 @@
+import { api } from "@/store/api";
+import ApiError, { ApiErrorResponse, createApiError } from "@/store/api-error";
+import { ApiResponse } from "@/store/api-response";
 import { JoinRequest, Society } from "@/types/type";
-import { api } from "../api";
-import ApiError, { ApiErrorResponse, createApiError } from "../api-error";
-import { ApiResponse } from "../api-response";
 
-export const SocitiesAuth = api.injectEndpoints({
+export const SocietiesApi = api.injectEndpoints({
   endpoints: (builder) => ({
     getSocieties: builder.query<
-      | (Society & { isMember: boolean; hasRequestedToJoin: boolean })[]
-      | ApiError,
-      void
+      (Society & { isMember: boolean; hasRequestedToJoin: boolean })[],
+      { search?: string }
     >({
-      query: () => ({
+      query: ({ search }) => ({
         url: "/society",
+        params: { search },
       }),
       transformResponse: (
         response: ApiResponse<
           (Society & { isMember: boolean; hasRequestedToJoin: boolean })[]
         >
       ) => {
-        if (response.success) {
-          return response.data;
-        }
-        return createApiError(response.message);
+        return response.data;
       },
       transformErrorResponse: (response) => {
         const errorResponse = response.data as ApiErrorResponse;
         return createApiError(errorResponse.message);
       },
       providesTags: (result) => {
-        if (result && !("error" in result)) {
+        if (result) {
           return [
             ...result.map(({ id }) => ({ type: "Societies" as const, id })),
             { type: "Societies", id: "LIST" },
@@ -39,7 +36,7 @@ export const SocitiesAuth = api.injectEndpoints({
       },
     }),
     sendJoinRequest: builder.mutation<
-      JoinRequest | ApiError,
+      JoinRequest,
       {
         societyId: string;
         whatsappNo: string;
@@ -56,17 +53,14 @@ export const SocitiesAuth = api.injectEndpoints({
         body,
       }),
       transformResponse: (response: ApiResponse<JoinRequest>) => {
-        if (response.success) {
-          return response.data;
-        }
-        return createApiError(response.message);
+        return response.data;
       },
       transformErrorResponse: (response) => {
         const errorResponse = response.data as ApiErrorResponse;
         return createApiError(errorResponse.message);
       },
       invalidatesTags: (result) => {
-        if (result && !("error" in result)) {
+        if (result) {
           return [{ type: "Societies", id: result.societyId }];
         } else {
           return [{ type: "Societies", id: "LIST" }];
@@ -74,7 +68,7 @@ export const SocitiesAuth = api.injectEndpoints({
       },
     }),
     cancelJoinRequest: builder.mutation<
-      JoinRequest | ApiError,
+      JoinRequest,
       {
         societyId: string;
       }
@@ -84,17 +78,14 @@ export const SocitiesAuth = api.injectEndpoints({
         method: "DELETE",
       }),
       transformResponse: (response: ApiResponse<JoinRequest>) => {
-        if (response.success) {
-          return response.data;
-        }
-        return createApiError(response.message);
+        return response.data;
       },
       transformErrorResponse: (response) => {
         const errorResponse = response.data as ApiErrorResponse;
         return createApiError(errorResponse.message);
       },
       invalidatesTags: (result) => {
-        if (result && !("error" in result)) {
+        if (result) {
           return [{ type: "Societies", id: result.societyId }];
         } else {
           return [{ type: "Societies", id: "LIST" }];
@@ -108,4 +99,4 @@ export const {
   useGetSocietiesQuery,
   useCancelJoinRequestMutation,
   useSendJoinRequestMutation,
-} = SocitiesAuth;
+} = SocietiesApi;
