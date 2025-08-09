@@ -95,11 +95,6 @@ export class EventQueryService {
         }
       }
 
-      // Debug log
-      console.log("User context:", user);
-      console.log("Filters:", filters);
-      console.log("Where clause:", JSON.stringify(whereClause, null, 2));
-
       const events = await prisma.event.findMany({
         where: whereClause,
         orderBy: [
@@ -110,10 +105,28 @@ export class EventQueryService {
         ...(limit ? { take: limit } : {}),
       });
 
-      // Debug log
-      console.log("Found events count:", events.length);
+      // Custom sort: Upcoming first, then Ongoing, then Completed, then Cancelled
+      const statusOrder: Record<EventStatus, number> = {
+        [EventStatus.Upcoming]: 1,
+        [EventStatus.Ongoing]: 2,
+        [EventStatus.Completed]: 3,
+        [EventStatus.Cancelled]: 4,
+      };
+      const sortedEvents = events.sort((a, b) => {
+        const orderA = a.status ? statusOrder[a.status] : 99;
+        const orderB = b.status ? statusOrder[b.status] : 99;
+        if (orderA !== orderB) return orderA - orderB;
+        // fallback to startDate, startTime if same status
+        if (a.startDate && b.startDate && a.startDate !== b.startDate)
+          return (
+            new Date(a.startDate).getTime() - new Date(b.startDate).getTime()
+          );
+        if (a.startTime && b.startTime && a.startTime !== b.startTime)
+          return a.startTime.localeCompare(b.startTime);
+        return 0;
+      });
 
-      return events;
+      return sortedEvents;
     } catch (error: any) {
       throw new ApiError(500, "Error fetching events: " + error.message);
     }

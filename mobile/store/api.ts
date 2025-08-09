@@ -8,6 +8,24 @@ import ApiError, { ApiErrorResponse, createApiError } from "./api-error";
 import { ApiResponse } from "./api-response";
 import { hasRefreshToken } from "./storage";
 
+export interface PaymentStatusResponse {
+  sessionId: string;
+  status: string;
+  ticketId?: string;
+  registrationId: string;
+}
+
+export interface PaymentSuccessRequest {
+  sessionId: string;
+}
+
+interface PaymentConfirmation {
+  paymentIntentId: string;
+  status: "COMPLETED" | "FAILED" | "PENDING" | "CANCELLED";
+  ticketId?: string;
+  registrationId?: string;
+}
+
 interface RefreshTokenResponse {
   accessToken: string;
   refreshToken: string;
@@ -69,7 +87,25 @@ const baseQueryWithReauth: BaseQueryFn<
 export const api = createApi({
   reducerPath: "api",
   baseQuery: baseQueryWithReauth,
-  tagTypes: ["Auth", "Societies", "Requests", "Members", "Roles"],
+  tagTypes: [
+    "Auth",
+    "Societies",
+    "Requests",
+    "Members",
+    "Roles",
+    "Notifications",
+    "Events",
+    "Users",
+    "Announcements",
+    "Tasks",
+    "Meetings",
+    "OnboardingStatus",
+    "PaymentIntent",
+    "Chat",
+    "Posts",
+    "Teams",
+    "TeamRequests",
+  ],
   endpoints: (builder) => ({
     refreshAuth: builder.mutation<RefreshTokenResponse | ApiError, void>({
       query: () => ({
@@ -105,7 +141,38 @@ export const api = createApi({
           });
       },
     }),
+    handlePaymentSuccess: builder.mutation<
+      PaymentStatusResponse,
+      PaymentSuccessRequest
+    >({
+      query: (data) => ({
+        url: `/payments/handle-payment-success`,
+        method: "POST",
+        body: data,
+      }),
+      transformResponse: (response: ApiResponse<PaymentStatusResponse>) => {
+        return response.data;
+      },
+      transformErrorResponse: (response) => {
+        const errorResponse = response.data as ApiErrorResponse;
+        return createApiError(errorResponse.message);
+      },
+    }),
+    getPaymentStatus: builder.query<PaymentConfirmation, string>({
+      query: (paymentIntentId) => `/payments/payment-status/${paymentIntentId}`,
+      transformResponse: (response: ApiResponse<PaymentConfirmation>) => {
+        return response.data;
+      },
+      transformErrorResponse: (response) => {
+        const errorResponse = response.data as ApiErrorResponse;
+        return createApiError(errorResponse.message);
+      },
+    }),
   }),
 });
 
-export const { useRefreshAuthMutation } = api;
+export const {
+  useRefreshAuthMutation,
+  useHandlePaymentSuccessMutation,
+  useGetPaymentStatusQuery,
+} = api;

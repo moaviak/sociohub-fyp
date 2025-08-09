@@ -1,6 +1,6 @@
 import { GluestackUIProvider } from "@/components/ui/gluestack-ui-provider";
 import { useFonts } from "expo-font";
-import { Stack } from "expo-router";
+import { Stack, useRouter } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { useEffect, ReactNode } from "react";
@@ -12,7 +12,12 @@ import { store } from "@/store";
 import { useGetUserQuery } from "@/store/auth/api";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { setAuthChecked, initializeAuth } from "@/store/auth/slice";
-import { useRefreshAuthMutation } from "@/store/api";
+import {
+  useHandlePaymentSuccessMutation,
+  useRefreshAuthMutation,
+} from "@/store/api";
+import { useToastUtility } from "@/hooks/useToastUtility";
+import { useDeepLinkHandler } from "@/hooks/useDeepLinkHandler";
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -62,6 +67,60 @@ const AuthProvider = ({ children }: AuthProviderProps) => {
     }
   }, [isLoading, isRefreshing, isTokenLoading, dispatch]);
 
+  const router = useRouter();
+  const { showSuccessToast, showWarningToast, showErrorToast } =
+    useToastUtility();
+  const [handlePaymentSuccess] = useHandlePaymentSuccessMutation();
+
+  // Use the deep link handler hook
+  useDeepLinkHandler({
+    onPaymentSuccess: async (params) => {
+      console.log("Payment success for session_id: ", params.session_id);
+
+      if (params.session_id) {
+        const result = await handlePaymentSuccess({
+          sessionId: params.session_id,
+        }).unwrap();
+
+        if (result.status === "COMPLETED") {
+          showSuccessToast("Payment successful! Registration confirmed.");
+        } else {
+          showErrorToast("Payment processing failed");
+        }
+      }
+    },
+
+    onPaymentCancelled: (params) => {
+      console.log("Payment cancelled for event:", params.eventId);
+
+      if (params.eventId) {
+        router.push({
+          pathname: "/event/[id]",
+          params: { id: params.eventId },
+        });
+      }
+    },
+
+    onDeepLink: (url, params) => {
+      // This is called for ANY deep link, useful for logging or analytics
+      console.log("Deep link opened:", url, params);
+    },
+
+    onToastShow: (type, message) => {
+      switch (type) {
+        case "success":
+          showSuccessToast(message);
+          break;
+        case "warning":
+          showWarningToast(message);
+          break;
+        case "error":
+          showErrorToast(message);
+          break;
+      }
+    },
+  });
+
   return children;
 };
 
@@ -108,6 +167,7 @@ export default function RootLayout() {
             <Stack.Screen name="(advisor-tabs)" />
             <Stack.Screen name="society/[id]" />
             <Stack.Screen name="profile/[id]" />
+            <Stack.Screen name="event/[id]" />
           </Stack>
           <StatusBar style="auto" />
         </GluestackUIProvider>

@@ -24,7 +24,11 @@ const MembersScreen = () => {
     );
 
   return (
-    <View className="bg-white flex-1 gap-4">
+    <View
+      className={`bg-white flex-1 gap-4 ${
+        havePrivilege ? "" : "border-t border-gray-200"
+      }`}
+    >
       {havePrivilege ? <MembersTabs /> : <Members />}
     </View>
   );

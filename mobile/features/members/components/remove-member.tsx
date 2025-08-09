@@ -14,7 +14,7 @@ import {
   RadioLabel,
 } from "@/components/ui/radio";
 import { Textarea, TextareaInput } from "@/components/ui/textarea";
-import { Member } from "@/types/type";
+import { Member } from "@/types";
 import {
   KeyboardAvoidingView,
   Keyboard,

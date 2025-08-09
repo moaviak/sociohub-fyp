@@ -1,4 +1,4 @@
-import { Society } from "@/types/type";
+import { Society } from "@/types";
 
 export interface Task {
   id: string;

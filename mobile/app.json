@@ -5,7 +5,10 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/symbol-sociohub.png",
-    "scheme": "myapp",
+    "scheme": "sociohub",
+    "linking": {
+      "prefixes": ["sociohub://", "https://sociohub.site"]
+    },
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "ios": {

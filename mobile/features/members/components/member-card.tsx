@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { UserAvatar } from "@/components/user-avatar";
-import { Member } from "@/types/type";
+import { Member } from "@/types";
 import { View, Text, TouchableOpacity } from "react-native";
 import { RolesBadges } from "./roles-badges";
 import { Skeleton } from "@/components/ui/skeleton";

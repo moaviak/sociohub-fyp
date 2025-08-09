@@ -1,3 +1,113 @@
+export type SocietyAdvisor = {
+  displayName: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  society: string;
+};
+
+export interface User {
+  id: string;
+  email: string;
+  firstName?: string;
+  lastName?: string;
+  isEmailVerified?: boolean;
+  avatar?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface Student extends User {
+  registrationNumber?: string;
+  societies?: { society: Society & { privileges: string[] }; roles?: Role[] }[];
+}
+
+export interface Advisor extends User {
+  displayName?: string;
+  phone?: string;
+  societyId?: string;
+  societyName?: string;
+}
+
+export type AuthResponse = {
+  user: Student | Advisor;
+  userType: UserType;
+  accessToken?: string;
+  refreshToken?: string;
+};
+
+export interface Society {
+  id: string;
+  name: string;
+  description: string;
+  statementOfPurpose?: string;
+  advisorMessage?: string;
+  coreValues?: string;
+  mission?: string;
+  logo?: string;
+  acceptingNewMembers?: boolean;
+  membersLimit?: number;
+  createdAt: string;
+  updatedAt: string;
+  advisorId?: string;
+  advisor?: Advisor;
+  roles?: Role[];
+  _count?: {
+    members: number;
+    events?: number;
+    joinRequests?: number;
+  };
+  officeBearers?: { role: string; student: Student }[];
+  isMember?: boolean;
+  hasRequestedToJoin?: boolean;
+}
+`q765`;
+
+export interface JoinRequest {
+  id: string;
+  studentId: string;
+  societyId: string;
+  student: Student;
+  whatsappNo: string;
+  semester: number;
+  interestedRole?: Role;
+  pdf?: string;
+  status: JoinRequestStatus;
+  rejectionReason?: string;
+  reason: string;
+  expectations: string;
+  skills?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Member extends Student {
+  roles?: Role[];
+  societyId: string;
+  interestedRole?: Role;
+}
+
+export interface Role {
+  id: string;
+  name: string;
+  description?: string;
+  minSemester?: number;
+  assignedMembers?: Member[];
+  privileges?: string[];
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface Ticket {
+  id: string;
+  registrationId?: string;
+  qrCode?: string;
+  issuedAt?: string;
+  isScanned?: boolean;
+  scannedAt?: string;
+  scannedBy?: Student;
+}
+
 export enum UserType {
   ADVISOR = "advisor",
   STUDENT = "student",
@@ -26,74 +136,4 @@ export interface Notification {
   readAt?: string;
   createdAt?: string;
   updatedAt?: string;
-}
-
-export enum EventCategory {
-  Workshop = "Workshop",
-  Seminar = "Seminar",
-  SocialGathering = "Social Gathering",
-  Competition = "Competition",
-  CulturalEvent = "Cultural Event",
-  SportsEvent = "Sports Event",
-  Meeting = "Meeting",
-  Other = "Other",
-}
-
-export enum EventType {
-  Physical = "Physical",
-  Online = "Online",
-}
-
-export enum EventAudience {
-  Open = "Open",
-  Members = "Members",
-  Invite = "Invite",
-}
-
-export enum EventVisibility {
-  Publish = "Publish",
-  Draft = "Draft",
-  Schedule = "Schedule",
-}
-
-export enum PaymentMethods {
-  CreditCard = "Credit Card",
-  Easypaisa = "Easypaisa",
-}
-
-export enum EventStatus {
-  Upcoming = "Upcoming",
-  Ongoing = "Ongoing",
-  Completed = "Completed",
-  Cancelled = "Cancelled",
-}
-
-export interface Event {
-  id: string;
-  title: string;
-  tagline?: string;
-  description?: string;
-  categories?: EventCategory[];
-  banner?: string;
-  startDate?: string;
-  endDate?: string;
-  startTime?: string;
-  endTime?: string;
-  eventType?: EventType;
-  venueName?: string;
-  venueAddress?: string;
-  platform?: string;
-  meetingLink?: string;
-  accessInstructions?: string;
-  audience?: EventAudience;
-  visibility?: EventVisibility;
-  publishDateTime?: string;
-  registrationRequired?: boolean;
-  registrationDeadline?: string;
-  maxParticipants?: number;
-  paidEvent?: boolean;
-  ticketPrice?: number;
-  paymentMethods?: PaymentMethods[];
-  announcementEnabled?: boolean;
-  announcement?: string;
 }

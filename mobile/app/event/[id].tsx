@@ -1,10 +1,10 @@
+import EventDetail from "@/features/events/event-detail";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { Text, View, TouchableOpacity } from "react-native";
 import { ArrowLeft } from "lucide-react-native";
-import RegistrationForm from "@/features/societies/registration-form";
+import { View, Text, TouchableOpacity, SafeAreaView } from "react-native";
 
-const RegistrationFormScreen = () => {
-  const { societyId } = useLocalSearchParams<{ societyId?: string }>();
+const EventScreen = () => {
+  const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
 
   const handleGoBack = () => {
@@ -12,7 +12,7 @@ const RegistrationFormScreen = () => {
   };
 
   return (
-    <View className="flex-1">
+    <SafeAreaView style={{ flex: 1 }}>
       {/* Header */}
       <View className="flex-row items-center px-4 py-3 bg-white border-b border-gray-200">
         {/* Back Button */}
@@ -26,16 +26,16 @@ const RegistrationFormScreen = () => {
 
         {/* Header Title */}
         <Text className="flex-1 text-lg font-semibold text-gray-900">
-          Society Registration Form
+          Event Details
         </Text>
       </View>
 
       {/* Main Content */}
       <View className="flex-1 p-4 bg-white">
-        <RegistrationForm societyId={societyId} />
+        <EventDetail eventId={id} />
       </View>
-    </View>
+    </SafeAreaView>
   );
 };
 
-export default RegistrationFormScreen;
+export default EventScreen;

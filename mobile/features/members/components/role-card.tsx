@@ -7,7 +7,7 @@ import {
 import { HStack } from "@/components/ui/hstack";
 import { Skeleton } from "@/components/ui/skeleton";
 import { UserAvatar } from "@/components/user-avatar";
-import { Role } from "@/types/type";
+import { Role } from "@/types";
 import { View, Text, TouchableOpacity } from "react-native";
 import { Icon, EditIcon, TrashIcon } from "@/components/ui/icon";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";

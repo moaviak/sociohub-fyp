@@ -9,7 +9,7 @@ import { Button, ButtonText } from "@/components/ui/button";
 import { Input, InputField } from "@/components/ui/input";
 import { FormControl, FormControlLabel } from "@/components/ui/form-control";
 import { useAssignTaskMutation } from "@/features/tasks/api";
-import { Member } from "@/types/type";
+import { Member } from "@/types";
 import { useState } from "react";
 import {
   View,

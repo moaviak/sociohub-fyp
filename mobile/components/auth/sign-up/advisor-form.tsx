@@ -27,7 +27,7 @@ import {
   useAdvisorSignUpMutation,
   useGetAdvisorsListQuery,
 } from "@/store/auth/api";
-import { Advisor, AuthResponse, SocietyAdvisor } from "@/types/type";
+import { Advisor, AuthResponse, SocietyAdvisor } from "@/types";
 import { zodResolver } from "@hookform/resolvers/zod";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";

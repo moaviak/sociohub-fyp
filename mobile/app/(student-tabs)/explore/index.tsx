@@ -10,36 +10,7 @@ import {
 import { TabView, SceneMap, TabBarProps } from "react-native-tab-view";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import Societies from "@/features/societies";
-
-const EventsRoute = () => (
-  <View
-    style={{
-      flex: 1,
-      backgroundColor: "#f8f9fa",
-      justifyContent: "center",
-      alignItems: "center",
-    }}
-  >
-    <Text
-      style={{
-        fontSize: 18,
-        fontWeight: "600",
-        color: "#333",
-      }}
-    >
-      Events
-    </Text>
-    <Text
-      style={{
-        fontSize: 14,
-        color: "#666",
-        marginTop: 8,
-      }}
-    >
-      Browse upcoming events
-    </Text>
-  </View>
-);
+import Events from "@/features/events";
 
 const PeopleRoute = () => (
   <View
@@ -103,7 +74,7 @@ const AnnouncementsRoute = () => (
 
 const renderScene = SceneMap({
   societies: Societies,
-  events: EventsRoute,
+  events: Events,
   people: PeopleRoute,
   announcements: AnnouncementsRoute,
 });

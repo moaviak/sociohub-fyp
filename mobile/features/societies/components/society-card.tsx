@@ -2,13 +2,14 @@ import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Society } from "@/types/type";
+import { Society } from "@/types";
 import { Link } from "expo-router";
 import { Building } from "lucide-react-native";
 import { View, Text } from "react-native";
 import { useCancelJoinRequestMutation } from "../api";
 import { Toast, ToastDescription, useToast } from "@/components/ui/toast";
 import ApiError from "@/store/api-error";
+import { SocietyLogo } from "@/components/society-logo";
 
 export const SocietyCard = ({ society }: { society: Society }) => {
   const [cancelJoinRequest, { isLoading }] = useCancelJoinRequestMutation();
@@ -61,22 +62,8 @@ export const SocietyCard = ({ society }: { society: Society }) => {
         params: { id: society.id },
       }}
     >
-      <View className="flex-row items-center gap-3">
-        <Avatar className="bg-primary-500">
-          <Icon as={Building} className="text-white" />
-          <AvatarImage
-            source={{
-              uri: society.logo,
-            }}
-          />
-        </Avatar>
-        <Text
-          numberOfLines={1}
-          ellipsizeMode="tail"
-          className="font-body font-semibold flex-1"
-        >
-          {society.name}
-        </Text>
+      <View className="flex-row items-center">
+        <SocietyLogo society={society} />
         {!society.acceptingNewMembers ? (
           <></>
         ) : society.isMember || society.hasRequestedToJoin ? (

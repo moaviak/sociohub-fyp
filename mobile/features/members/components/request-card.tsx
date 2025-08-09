@@ -1,6 +1,6 @@
 import { Button, ButtonText } from "@/components/ui/button";
 import { UserAvatar } from "@/components/user-avatar";
-import { JoinRequest } from "@/types/type";
+import { JoinRequest } from "@/types";
 import { useState } from "react";
 import { View, Text } from "react-native";
 import { RequestForm } from "./request-form";

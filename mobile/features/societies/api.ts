@@ -1,7 +1,7 @@
 import { api } from "@/store/api";
 import ApiError, { ApiErrorResponse, createApiError } from "@/store/api-error";
 import { ApiResponse } from "@/store/api-response";
-import { JoinRequest, Society } from "@/types/type";
+import { JoinRequest, Society } from "@/types";
 
 export const SocietiesApi = api.injectEndpoints({
   endpoints: (builder) => ({

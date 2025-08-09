@@ -6,7 +6,7 @@ import {
   ActionsheetDragIndicatorWrapper,
 } from "@/components/ui/actionsheet";
 import { Toast, ToastDescription, useToast } from "@/components/ui/toast";
-import { Role } from "@/types/type";
+import { Role } from "@/types";
 import {
   View,
   Text,

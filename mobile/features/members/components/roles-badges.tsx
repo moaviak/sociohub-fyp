@@ -1,5 +1,5 @@
 import { Badge, BadgeText } from "@/components/ui/badge";
-import { Role } from "@/types/type";
+import { Role } from "@/types";
 import { View, Text } from "react-native";
 
 export const RolesBadges = ({ roles }: { roles: Role[] }) => {

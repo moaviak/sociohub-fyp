@@ -1,4 +1,4 @@
-import { EventCategory } from "@/types";
+import { EventCategory } from "@/features/events/types";
 
 export const DEGREES = [
   { value: "BAF" },

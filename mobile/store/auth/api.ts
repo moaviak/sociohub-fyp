@@ -1,4 +1,4 @@
-import { AuthResponse, Society, SocietyAdvisor } from "@/types/type";
+import { AuthResponse, Society, SocietyAdvisor } from "@/types";
 import { api } from "../api";
 import ApiError, { ApiErrorResponse, createApiError } from "../api-error";
 import { ApiResponse } from "../api-response";

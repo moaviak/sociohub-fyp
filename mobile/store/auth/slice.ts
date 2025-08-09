@@ -1,7 +1,7 @@
 import { UserType } from "@/types";
 import { createSlice } from "@reduxjs/toolkit";
 import { clearTokens, getTokens, saveTokens } from "../storage";
-import { Advisor, Student } from "@/types/type";
+import { Advisor, Student } from "@/types";
 
 interface AuthState {
   user: Student | Advisor | null;

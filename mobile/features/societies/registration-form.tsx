@@ -42,7 +42,7 @@ import {
   SelectTrigger,
 } from "@/components/ui/select";
 import { ChevronDownIcon } from "lucide-react-native";
-import { Student } from "@/types/type";
+import { Student } from "@/types";
 import { useEffect } from "react";
 import { SocietyRules } from "./components/society-rules";
 

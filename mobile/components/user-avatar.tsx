@@ -1,4 +1,4 @@
-import { Advisor, Student } from "@/types/type";
+import { Advisor, Student } from "@/types";
 import { View, Text } from "react-native";
 import { Avatar, AvatarFallbackText, AvatarImage } from "./ui/avatar";
 import { Skeleton } from "./ui/skeleton";

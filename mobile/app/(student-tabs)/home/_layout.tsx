@@ -1,5 +1,4 @@
 import { RelativePathString } from "expo-router";
-import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { Drawer } from "expo-router/drawer";
 import { Text, View, TouchableOpacity, ScrollView } from "react-native";
 import { DrawerToggleButton } from "@react-navigation/drawer";
@@ -22,7 +21,7 @@ import {
 import { useState } from "react";
 import { router } from "expo-router";
 import { Avatar, AvatarImage } from "@/components/ui/avatar";
-import { Society } from "@/types/type";
+import { Society } from "@/types";
 import { PRIVILEGES } from "@/constants";
 
 const HomeHeader = () => {
@@ -207,37 +206,35 @@ const CustomDrawerContent = ({ navigation }: any) => {
 
 export default function HomeLayout() {
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <Drawer
-        screenOptions={{
-          headerShown: false,
-          drawerStyle: {
-            backgroundColor: "#fff",
-            width: 320,
-          },
-          drawerActiveTintColor: "#218bff",
-          drawerInactiveTintColor: "#7a7a7a",
+    <Drawer
+      screenOptions={{
+        headerShown: false,
+        drawerStyle: {
+          backgroundColor: "#fff",
+          width: 320,
+        },
+        drawerActiveTintColor: "#218bff",
+        drawerInactiveTintColor: "#7a7a7a",
+      }}
+      drawerContent={(props) => <CustomDrawerContent {...props} />}
+    >
+      <Drawer.Screen
+        name="index"
+        options={{
+          drawerItemStyle: { display: "none" }, // Hide from drawer menu
+          header: () => <HomeHeader />,
+          headerShown: true,
         }}
-        drawerContent={(props) => <CustomDrawerContent {...props} />}
-      >
-        <Drawer.Screen
-          name="index"
-          options={{
-            drawerItemStyle: { display: "none" }, // Hide from drawer menu
-            header: () => <HomeHeader />,
-            headerShown: true,
-          }}
-        />
+      />
 
-        {/* Dynamic routes for each society */}
-        <Drawer.Screen
-          name="[societyId]"
-          options={{
-            drawerItemStyle: { display: "none" }, // Hide from drawer menu
-            headerShown: false,
-          }}
-        />
-      </Drawer>
-    </GestureHandlerRootView>
+      {/* Dynamic routes for each society */}
+      <Drawer.Screen
+        name="[societyId]"
+        options={{
+          drawerItemStyle: { display: "none" }, // Hide from drawer menu
+          headerShown: false,
+        }}
+      />
+    </Drawer>
   );
 }

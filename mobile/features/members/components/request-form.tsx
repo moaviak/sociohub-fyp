@@ -10,7 +10,7 @@ import { Button, ButtonText } from "@/components/ui/button";
 import { VStack } from "@/components/ui/vstack";
 import { HStack } from "@/components/ui/hstack";
 import { Textarea, TextareaInput } from "@/components/ui/textarea";
-import { JoinRequest } from "@/types/type";
+import { JoinRequest } from "@/types";
 import { useHandleSocietyRequestMutation } from "../api";
 import { Toast, ToastDescription, useToast } from "@/components/ui/toast";
 import ApiError from "@/store/api-error";

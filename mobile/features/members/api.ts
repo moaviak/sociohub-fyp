@@ -2,7 +2,7 @@ import { api } from "@/store/api";
 import { ApiErrorResponse, createApiError } from "@/store/api-error";
 import { ApiResponse } from "@/store/api-response";
 import { RequestAction } from "@/types";
-import { JoinRequest, Member, Role } from "@/types/type";
+import { JoinRequest, Member, Role } from "@/types";
 
 export const MembersApi = api.injectEndpoints({
   endpoints: (builder) => ({
