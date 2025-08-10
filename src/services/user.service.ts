@@ -207,6 +207,13 @@ export const getUserByIdService = async (userId: string) => {
           },
         },
       },
+      _count: {
+        select: {
+          eventRegistrations: {
+            where: { status: "APPROVED" },
+          },
+        },
+      },
     },
   });
 

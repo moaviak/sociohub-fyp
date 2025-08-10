@@ -1,4 +1,4 @@
-import { Event, EventRegistration } from "@prisma/client";
+import { Event, EventRegistration, EventStatus } from "@prisma/client";
 import prisma from "../../db";
 
 export class EventRepository {
@@ -124,7 +124,7 @@ export class EventRepository {
       orderBy: { registeredAt: "desc" },
     });
 
-    return registrations.map((reg) => ({
+    const events = registrations.map((reg) => ({
       ...reg.event,
       isRegistered: true,
       registration: {
@@ -136,6 +136,28 @@ export class EventRepository {
         student: reg.student,
       },
     }));
+
+    const statusOrder: Record<EventStatus, number> = {
+      [EventStatus.Ongoing]: 1,
+      [EventStatus.Upcoming]: 2,
+      [EventStatus.Completed]: 3,
+      [EventStatus.Cancelled]: 4,
+    };
+    const sortedEvents = events.sort((a, b) => {
+      const orderA = a.status ? statusOrder[a.status] : 99;
+      const orderB = b.status ? statusOrder[b.status] : 99;
+      if (orderA !== orderB) return orderA - orderB;
+      // fallback to startDate, startTime if same status
+      if (a.startDate && b.startDate && a.startDate !== b.startDate)
+        return (
+          new Date(a.startDate).getTime() - new Date(b.startDate).getTime()
+        );
+      if (a.startTime && b.startTime && a.startTime !== b.startTime)
+        return a.startTime.localeCompare(b.startTime);
+      return 0;
+    });
+
+    return sortedEvents;
   }
 
   static async deleteEvent(eventId: string) {

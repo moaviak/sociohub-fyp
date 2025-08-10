@@ -13,6 +13,8 @@ export interface User {
   lastName?: string;
   isEmailVerified?: boolean;
   avatar?: string;
+  bio?: string;
+  phone?: string;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -20,13 +22,41 @@ export interface User {
 export interface Student extends User {
   registrationNumber?: string;
   societies?: { society: Society & { privileges: string[] }; roles?: Role[] }[];
+  _count?: {
+    eventRegistrations: number;
+  };
 }
 
 export interface Advisor extends User {
   displayName?: string;
-  phone?: string;
   societyId?: string;
   societyName?: string;
+  society?: Society;
+}
+export interface Society {
+  id: string;
+  name: string;
+  description: string;
+  statementOfPurpose?: string;
+  advisorMessage?: string;
+  coreValues?: string;
+  mission?: string;
+  logo?: string;
+  acceptingNewMembers?: boolean;
+  membersLimit?: number;
+  createdAt: string;
+  updatedAt: string;
+  advisorId?: string;
+  advisor?: Advisor;
+  roles?: Role[];
+  _count?: {
+    members: number;
+    events?: number;
+    joinRequests?: number;
+  };
+  officeBearers?: { role: string; student: Student }[];
+  isMember?: boolean;
+  hasRequestedToJoin?: boolean;
 }
 
 export type AuthResponse = {

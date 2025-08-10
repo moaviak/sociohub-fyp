@@ -1,10 +1,14 @@
-import { View, Text } from "react-native";
+import Profile from "@/features/users";
+import { useLocalSearchParams } from "expo-router";
+import { View, Text, SafeAreaView } from "react-native";
 
 const ProfileScreen = () => {
+  const { id } = useLocalSearchParams<{ id: string }>();
+
   return (
-    <View>
-      <Text>ProfileScreen</Text>
-    </View>
+    <SafeAreaView className="bg-white flex-1">
+      <Profile userId={id} />
+    </SafeAreaView>
   );
 };
 

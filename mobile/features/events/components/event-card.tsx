@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Event, EventStatus, EventVisibility } from "../types";
 import { HStack } from "@/components/ui/hstack";
 import { ActivityIndicator, Image } from "react-native";
@@ -17,7 +17,7 @@ import Animated, {
   runOnJS,
 } from "react-native-reanimated";
 import { Icon } from "@/components/ui/icon";
-import { CirclePlus, TrashIcon } from "lucide-react-native";
+import { CirclePlus, TrashIcon, Ticket } from "lucide-react-native";
 import { useAppSelector } from "@/store/hooks";
 import { PRIVILEGES } from "@/constants";
 import { Advisor } from "@/types";
@@ -25,12 +25,14 @@ import { useCancelEventMutation, useDeleteEventMutation } from "../api";
 import { Toast, ToastDescription, useToast } from "@/components/ui/toast";
 import ApiError from "@/store/api-error";
 import { useRouter } from "expo-router";
+import { EventTicket } from "./event-ticket";
 
 interface EventCardProps {
   event: Event;
+  variant?: "default" | "registered";
 }
 
-export const EventCard = ({ event }: EventCardProps) => {
+export const EventCard = ({ event, variant = "default" }: EventCardProps) => {
   const toast = useToast();
   const user = useAppSelector((state) => state.auth.user);
   const router = useRouter();
@@ -46,6 +48,8 @@ export const EventCard = ({ event }: EventCardProps) => {
 
   const [cancelEvent, { isLoading: isCancelling }] = useCancelEventMutation();
   const [deleteEvent, { isLoading: isDeleting }] = useDeleteEventMutation();
+
+  const [showTicket, setShowTicket] = useState(false);
 
   const getStatusBadgeColor = (status: EventStatus) => {
     switch (status) {
@@ -65,6 +69,95 @@ export const EventCard = ({ event }: EventCardProps) => {
     }
   };
 
+  // Early return for registered variant - simpler UI without swipe functionality
+  if (variant === "registered") {
+    return (
+      <>
+        <TouchableOpacity
+          onPress={() =>
+            router.push({
+              pathname: "/event/[id]",
+              params: { id: event.id },
+            })
+          }
+          activeOpacity={0.8}
+        >
+          <Card className="bg-white rounded-lg shadow-gray-300 shadow-md overflow-hidden p-0">
+            <HStack className="" style={{ height: 120 }} space="md">
+              <Image
+                source={
+                  event.banner
+                    ? { uri: event.banner }
+                    : require("@/assets/images/image-placeholder.png")
+                }
+                alt={event.title}
+                style={{ width: 100, height: "100%", objectFit: "cover" }}
+                defaultSource={require("@/assets/images/image-placeholder.png")}
+              />
+              <VStack
+                className="p-2"
+                style={{ flex: 1, justifyContent: "space-between" }}
+              >
+                <VStack>
+                  <Text
+                    className="text-gray-900 font-semibold text-base"
+                    numberOfLines={2}
+                  >
+                    {event.title}
+                  </Text>
+                  {event.startDate &&
+                    event.startTime &&
+                    event.endDate &&
+                    event.endTime && (
+                      <Text className="text-sm text-gray-600" numberOfLines={2}>
+                        {formatEventDateTime(
+                          event.startDate,
+                          event.endDate,
+                          event.startTime,
+                          event.endTime
+                        )}
+                      </Text>
+                    )}
+                </VStack>
+                {event.isRegistered && event.registration?.ticket ? (
+                  <TouchableOpacity
+                    className="bg-primary-500 px-4 py-2 rounded-md flex-row items-center justify-center self-start"
+                    onPress={() => {
+                      setShowTicket(true);
+                    }}
+                  >
+                    <Icon as={Ticket} className="text-white size-4 mr-2" />
+                    <Text className="text-white text-sm font-medium">
+                      View Ticket
+                    </Text>
+                  </TouchableOpacity>
+                ) : (
+                  <TouchableOpacity
+                    className="bg-transparent border border-primary-500 px-4 py-2 rounded-md flex-row items-center justify-center self-start"
+                    disabled
+                  >
+                    <Text className="text-primary-500 text-sm font-medium">
+                      Registered
+                    </Text>
+                  </TouchableOpacity>
+                )}
+              </VStack>
+            </HStack>
+          </Card>
+        </TouchableOpacity>
+        {showTicket && event.registration?.ticket && (
+          <EventTicket
+            event={event}
+            ticket={event.registration?.ticket}
+            open={showTicket}
+            setOpen={setShowTicket}
+          />
+        )}
+      </>
+    );
+  }
+
+  // Default variant with swipe functionality
   const RIGHT_ACTION_WIDTH = havePrivilege ? 80 : 0;
   const SWIPE_THRESHOLD = 100;
   const VELOCITY_THRESHOLD = 800;
@@ -269,9 +362,14 @@ export const EventCard = ({ event }: EventCardProps) => {
             <Card className="bg-white rounded-lg shadow-gray-300 shadow-md overflow-hidden p-0">
               <HStack className="" style={{ height: 120 }} space="md">
                 <Image
-                  source={{ uri: event.banner }}
+                  source={
+                    event.banner
+                      ? { uri: event.banner }
+                      : require("@/assets/images/image-placeholder.png")
+                  }
                   alt={event.title}
                   style={{ width: 100, height: "100%", objectFit: "cover" }}
+                  defaultSource={require("@/assets/images/image-placeholder.png")}
                 />
                 <VStack
                   className="py-2"

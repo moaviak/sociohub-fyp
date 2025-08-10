@@ -11,36 +11,7 @@ import { TabView, SceneMap, TabBarProps } from "react-native-tab-view";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import Societies from "@/features/societies";
 import Events from "@/features/events";
-
-const PeopleRoute = () => (
-  <View
-    style={{
-      flex: 1,
-      backgroundColor: "#f8f9fa",
-      justifyContent: "center",
-      alignItems: "center",
-    }}
-  >
-    <Text
-      style={{
-        fontSize: 18,
-        fontWeight: "600",
-        color: "#333",
-      }}
-    >
-      People
-    </Text>
-    <Text
-      style={{
-        fontSize: 14,
-        color: "#666",
-        marginTop: 8,
-      }}
-    >
-      Connect with people
-    </Text>
-  </View>
-);
+import People from "@/features/users/people";
 
 const AnnouncementsRoute = () => (
   <View
@@ -75,7 +46,7 @@ const AnnouncementsRoute = () => (
 const renderScene = SceneMap({
   societies: Societies,
   events: Events,
-  people: PeopleRoute,
+  people: People,
   announcements: AnnouncementsRoute,
 });
 

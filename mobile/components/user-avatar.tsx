@@ -64,6 +64,7 @@ export const UserAvatar = ({
         params: { id: user.id },
       }}
       className={className}
+      style={{ flex: 1, flexShrink: 1 }}
     >
       <View className={`flex-row items-center ${config.gap}`}>
         <Avatar

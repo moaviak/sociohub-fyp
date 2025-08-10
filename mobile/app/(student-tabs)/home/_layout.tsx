@@ -26,7 +26,7 @@ import { PRIVILEGES } from "@/constants";
 
 const HomeHeader = () => {
   return (
-    <View className="flex-row items-center px-4 py-3 bg-white border-b border-b-neutral-300">
+    <View className="flex-row items-center p-4 bg-white border-b border-b-neutral-300">
       <DrawerToggleButton tintColor="#218bff" />
       <Text className="text-xl font-bold ml-2 text-neutral-800 flex-1">
         Home
