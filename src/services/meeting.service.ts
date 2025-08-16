@@ -5,6 +5,7 @@ import { createNotification } from "./notification.service";
 import { sendNotificationToUsers } from "../socket";
 import { ApiError } from "../utils/ApiError";
 import { io } from "../app";
+import pushNotificationService from "./push-notification.service";
 
 export interface MeetingData {
   title: string;
@@ -479,6 +480,10 @@ export class MeetingService {
 
     if (notification) {
       sendNotificationToUsers(io, validRecipients, notification);
+      pushNotificationService.sendToRecipients(validRecipients, {
+        title: notification.title,
+        body: notification.description,
+      });
     }
   }
 

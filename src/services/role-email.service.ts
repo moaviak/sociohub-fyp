@@ -4,6 +4,7 @@ import logger from "../logger/winston.logger";
 import { createNotification } from "./notification.service";
 import { sendNotificationToUsers } from "../socket";
 import { io } from "../app";
+import pushNotificationService from "./push-notification.service";
 
 interface SendRoleAssignmentOptions {
   roleId: string;
@@ -179,7 +180,10 @@ export const sendRoleAssignmentNotifications = async ({
         recipientId: member.id,
         recipientType: "student" as const,
         webRedirectUrl: `/society/${society.id}`,
-        mobileRedirectUrl: `/(student-tabs)/society/${society.id}`,
+        mobileRedirectUrl: {
+          pathname: "/society/[id]",
+          params: { id: society.id },
+        },
       })),
     ];
 
@@ -193,6 +197,10 @@ export const sendRoleAssignmentNotifications = async ({
 
       if (notification) {
         sendNotificationToUsers(io, recipients, notification);
+        pushNotificationService.sendToRecipients(recipients, {
+          title: notification.title,
+          body: notification.description,
+        });
       }
     }
   } catch (error) {

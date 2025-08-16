@@ -51,6 +51,7 @@ model Student {
 
   user         User?
   activityLogs ActivityLog[]
+  pushTokens   PushToken[]
 }
 
 model Advisor {
@@ -78,11 +79,45 @@ model Advisor {
   MeetingParticipant      MeetingParticipant[]
   MeetingInvitation       MeetingInvitation[]
 
-  user     User?
-  userId   String?    @unique
-  TeamTask TeamTask[]
+  user       User?
+  userId     String?     @unique
+  TeamTask   TeamTask[]
+  pushTokens PushToken[]
 
   @@index([societyId])
+}
+
+enum DevicePlatform {
+  ANDROID
+  IOS
+  WEB
+  EXPO // expo-specific tokens
+  UNKNOWN
+}
+
+model PushToken {
+  id         String         @id @default(cuid())
+  token      String         @unique // the push token (Expo token / FCM / Web push key)
+  deviceId   String?        @unique // optional device identifier (UUID/device serial)
+  platform   DevicePlatform @default(EXPO)
+  // Polymorphic-style relations — exactly one of studentId / advisorId should be set (enforced at app or DB level)
+  student    Student?       @relation(fields: [studentId], references: [id])
+  studentId  String?
+  advisor    Advisor?       @relation(fields: [advisorId], references: [id])
+  advisorId  String?
+  isActive   Boolean        @default(true) // mark inactive on logout/uninstall if desired
+  lastUsedAt DateTime?
+  meta       Json? // any extra device/app info (OS version, app version, locale)
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+
+  @@unique([studentId, deviceId, token])
+  @@unique([advisorId, deviceId, token])
+  @@index([studentId])
+  @@index([advisorId])
+  @@index([studentId, deviceId])
+  @@index([advisorId, deviceId])
+  @@map("push_tokens")
 }
 
 model Society {

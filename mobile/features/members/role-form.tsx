@@ -5,7 +5,6 @@ import {
   ActionsheetDragIndicator,
   ActionsheetDragIndicatorWrapper,
 } from "@/components/ui/actionsheet";
-import { Toast, ToastDescription, useToast } from "@/components/ui/toast";
 import { Role } from "@/types";
 import {
   View,
@@ -24,7 +23,6 @@ import { useEffect, useState } from "react";
 import ApiError from "@/store/api-error";
 import useGetSocietyId from "@/hooks/useGetSocietyId";
 import { HStack } from "@/components/ui/hstack";
-import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { VStack } from "@/components/ui/vstack";
 import { Button, ButtonText } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
@@ -32,6 +30,7 @@ import { ArrowLeftIcon, ArrowRightIcon } from "lucide-react-native";
 import { RoleFormBasic } from "./components/roles-form-basic";
 import { RoleFormPrivileges } from "./components/roles-form-privileges";
 import { RoleFormMembers } from "./components/roles-form-members";
+import { useToastUtility } from "@/hooks/useToastUtility";
 
 export const RoleForm = ({
   role,
@@ -44,7 +43,7 @@ export const RoleForm = ({
 }) => {
   const [step, setStep] = useState(1);
   const totalSteps = 3;
-  const toast = useToast();
+  const toast = useToastUtility();
   const societyId = useGetSocietyId();
 
   const [createRole, { isLoading }] = useCreateRoleMutation();
@@ -122,42 +121,18 @@ export const RoleForm = ({
               ...processedValues,
             }).unwrap();
 
-        toast.show({
-          duration: 5000,
-          placement: "top",
-          containerStyle: {
-            marginTop: 18,
-          },
-          render: () => (
-            <Toast action="success">
-              <ToastDescription>
-                {role
-                  ? "Role has been successfully updated."
-                  : "Role has been successfully created."}
-              </ToastDescription>
-            </Toast>
-          ),
-        });
+        toast.showSuccessToast(
+          role
+            ? "Role has been successfully updated."
+            : "Role has been successfully created."
+        );
 
         form.reset();
         setStep(1);
         setOpen(false);
       } catch (error) {
         const message = (error as ApiError).errorMessage;
-        toast.show({
-          duration: 10000,
-          placement: "top",
-          containerStyle: {
-            marginTop: 18,
-          },
-          render: () => (
-            <Toast action="error">
-              <ToastDescription>
-                {message || "An unexpected error occurred"}
-              </ToastDescription>
-            </Toast>
-          ),
-        });
+        toast.showErrorToast(message);
       }
     } else {
       // Move to the next step

@@ -1,53 +1,19 @@
-import { v2 as cloudinary } from "cloudinary";
-import path from "path";
-import dotenv from "dotenv";
+import pushNotificationService from "./services/push-notification.service";
 
-dotenv.config();
+const main = async () => {
+  const userId = "a1e6f829-aaad-42f5-ab4b-b00b261ba255";
+  const userType = "advisor";
 
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
-
-const testCloudinaryDownload = async () => {
-  try {
-    // Upload a simple text file as raw
-    const testFilePath = path.join(
-      __dirname,
-      "../public/temp",
-      "SP22-bcs-051.pdf"
-    );
-
-    const uploadResult = await cloudinary.uploader.upload(testFilePath, {
-      resource_type: "raw",
-      folder: "test-downloads",
-    });
-
-    console.log("Upload successful:", uploadResult);
-
-    // Create a direct download link using Cloudinary's API
-    const downloadUrl = cloudinary.url(uploadResult.public_id, {
-      resource_type: "raw",
-      type: "upload",
-      flags: "attachment",
-    });
-
-    console.log("Direct download URL:", downloadUrl);
-
-    // Alternative approach with query parameter
-    const alternativeUrl = `${uploadResult.secure_url}?dl=test.pdf`;
-    console.log("Alternative download URL:", alternativeUrl);
-
-    return {
-      uploadResult,
-      downloadUrl,
-      alternativeUrl,
-    };
-  } catch (error) {
-    console.error("Test failed:", error);
-    return null;
-  }
+  await pushNotificationService.sendToUser(userId, userType, {
+    title: "This is a test notification 2",
+    body: "This is the body of notification 2",
+  });
 };
 
-testCloudinaryDownload();
+main()
+  .then(() => {
+    console.log("Notification Sent");
+  })
+  .catch((err) => {
+    console.error("Failed to send notification.", err);
+  });

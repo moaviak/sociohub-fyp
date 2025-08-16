@@ -13,7 +13,6 @@ import {
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useGetSocietiesQuery, useSendJoinRequestMutation } from "./api";
 import { useAppSelector } from "@/store/hooks";
-import { Toast, ToastDescription, useToast } from "@/components/ui/toast";
 import { useRouter } from "expo-router";
 import ApiError from "@/store/api-error";
 import { VStack } from "@/components/ui/vstack";
@@ -45,10 +44,11 @@ import { ChevronDownIcon } from "lucide-react-native";
 import { Student } from "@/types";
 import { useEffect } from "react";
 import { SocietyRules } from "./components/society-rules";
+import { useToastUtility } from "@/hooks/useToastUtility";
 
 const RegistrationForm = ({ societyId }: { societyId?: string }) => {
   const { user, userType } = useAppSelector((state) => state.auth);
-  const toast = useToast();
+  const toast = useToastUtility();
   const router = useRouter();
 
   const { society, isFetching } = useGetSocietiesQuery(
@@ -98,39 +98,11 @@ const RegistrationForm = ({ societyId }: { societyId?: string }) => {
   const onSubmit = async (values: SocietyRegistrationFormValues) => {
     try {
       await sendJoinRequest(values).unwrap();
-      toast.show({
-        duration: 5000,
-        placement: "top",
-        containerStyle: {
-          marginTop: 18,
-        },
-        render: () => {
-          return (
-            <Toast action="success">
-              <ToastDescription>Request successfully sent.</ToastDescription>
-            </Toast>
-          );
-        },
-      });
+      toast.showSuccessToast("Request successfully sent.");
       router.back();
     } catch (error) {
       const message = (error as ApiError).errorMessage;
-      toast.show({
-        duration: 10000,
-        placement: "top",
-        containerStyle: {
-          marginTop: 18,
-        },
-        render: () => {
-          return (
-            <Toast action="error">
-              <ToastDescription>
-                {message || "An unexpected error occurred"}
-              </ToastDescription>
-            </Toast>
-          );
-        },
-      });
+      toast.showErrorToast(message || "An unexpected error occurred");
     }
   };
 

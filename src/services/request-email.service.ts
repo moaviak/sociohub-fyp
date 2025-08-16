@@ -7,6 +7,7 @@ import logger from "../logger/winston.logger";
 import { createNotification } from "./notification.service";
 import { sendNotificationToUsers } from "../socket";
 import { io } from "../app";
+import pushNotificationService from "./push-notification.service";
 
 interface SendRequestOptions {
   requestId?: string;
@@ -150,7 +151,10 @@ export const sendRequestStatusNotification = async ({
             recipientId: student.id,
             recipientType: "student",
             webRedirectUrl: `/society/${society.id}`,
-            mobileRedirectUrl: `/(student-tabs)/society/${society.id}`,
+            mobileRedirectUrl: {
+              pathname: "/society/[id]",
+              params: { id: society.id },
+            },
           },
         ],
         image: society.logo,
@@ -167,6 +171,18 @@ export const sendRequestStatusNotification = async ({
           ],
           notification
         );
+        pushNotificationService.sendToRecipients(
+          [
+            {
+              recipientId: student.id,
+              recipientType: "student",
+            },
+          ],
+          {
+            title: notification.title,
+            body: notification.description,
+          }
+        );
       }
     } else {
       const notification = await createNotification({
@@ -177,7 +193,10 @@ export const sendRequestStatusNotification = async ({
             recipientId: student.id,
             recipientType: "student",
             webRedirectUrl: `/society/${society.id}`,
-            mobileRedirectUrl: `/(student-tabs)/society/${society.id}`,
+            mobileRedirectUrl: {
+              pathname: "/society/[id]",
+              params: { id: society.id },
+            },
           },
         ],
         image: society.logo,
@@ -193,6 +212,19 @@ export const sendRequestStatusNotification = async ({
             },
           ],
           notification
+        );
+
+        pushNotificationService.sendToRecipients(
+          [
+            {
+              recipientId: student.id,
+              recipientType: "student",
+            },
+          ],
+          {
+            title: notification.title,
+            body: notification.description,
+          }
         );
       }
     }

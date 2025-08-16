@@ -29,16 +29,17 @@ import {
   SelectTrigger,
 } from "@/components/ui/select";
 import { useStudentSignUpMutation } from "@/store/auth/api";
-import { Toast, ToastDescription, useToast } from "@/components/ui/toast";
 import ApiError from "@/store/api-error";
 import { router } from "expo-router";
+import { useToastUtility } from "@/hooks/useToastUtility";
 
 export const StudentForm = () => {
   const [showPassword, setShowPassword] = useState(false);
   const yearOptions = getYearOptions();
 
   const [signUp, { isLoading, isError, error }] = useStudentSignUpMutation();
-  const toast = useToast();
+  const { showErrorToast, showSuccessToast, showWarningToast } =
+    useToastUtility();
 
   const form = useForm<studentSignUpValues>({
     resolver: zodResolver(studentSignUpSchema),
@@ -68,36 +69,18 @@ export const StudentForm = () => {
     });
 
     if (!("error" in response) && response.data) {
-      toast.show({
-        render: () => {
-          return (
-            <Toast action="success">
-              <ToastDescription>
-                Account created successfully! Please verify your email.
-              </ToastDescription>
-            </Toast>
-          );
-        },
-      });
+      showWarningToast(
+        "Account created successfully! Please verify your email."
+      );
       router.replace("/auth/verify-email");
     }
   };
 
   useEffect(() => {
     if (isError) {
-      toast.show({
-        duration: 10000,
-        render: () => {
-          return (
-            <Toast action="error">
-              <ToastDescription>
-                {(error as ApiError)?.errorMessage ||
-                  "An unexpected error occurred"}
-              </ToastDescription>
-            </Toast>
-          );
-        },
-      });
+      showErrorToast(
+        (error as ApiError)?.errorMessage || "An unexpected error occurred"
+      );
     }
   }, [isError, error]);
 

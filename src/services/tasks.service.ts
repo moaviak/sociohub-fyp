@@ -4,6 +4,7 @@ import { sendNotificationToUsers } from "../socket";
 import { ApiError } from "../utils/ApiError";
 import { haveTaskPrivilege } from "../utils/helpers";
 import { createNotification } from "./notification.service";
+import pushNotificationService from "./push-notification.service";
 
 export const createTask = async ({
   description,
@@ -98,6 +99,13 @@ export const assignTask = async ({
         io,
         [{ recipientType: "student", recipientId: memberId }],
         notification
+      );
+      pushNotificationService.sendToRecipients(
+        [{ recipientType: "student", recipientId: memberId }],
+        {
+          title: notification.title,
+          body: notification.description,
+        }
       );
     }
   })();

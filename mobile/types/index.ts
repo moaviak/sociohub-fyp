@@ -1,3 +1,5 @@
+import { DevicePlatform } from "@/features/notifications/api";
+
 export type SocietyAdvisor = {
   displayName: string;
   firstName: string;
@@ -160,10 +162,27 @@ export interface Notification {
   description?: string;
   image?: string;
   webRedirectUrl?: string;
-  mobileRedirectUrl?: string;
+  mobileRedirectUrl?: {
+    pathname: string;
+    params: any;
+  };
   isRead: boolean;
   isDeleted: boolean;
   readAt?: string;
   createdAt?: string;
   updatedAt?: string;
+}
+
+export interface PushToken {
+  id: string;
+  token: string;
+  meta?: any;
+  createdAt: Date;
+  updatedAt: Date;
+  deviceId?: string;
+  platform?: DevicePlatform;
+  studentId?: string;
+  advisorId?: string;
+  isActive: boolean;
+  lastUsedAt?: Date;
 }

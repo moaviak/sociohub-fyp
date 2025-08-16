@@ -23,6 +23,8 @@ import { router } from "expo-router";
 import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import { Society } from "@/types";
 import { PRIVILEGES } from "@/constants";
+import { Header } from "@/app/_layout";
+import NotificationIcon from "@/features/notifications/notification-icon";
 
 const HomeHeader = () => {
   return (
@@ -31,7 +33,7 @@ const HomeHeader = () => {
       <Text className="text-xl font-bold ml-2 text-neutral-800 flex-1">
         Home
       </Text>
-      <Icon as={Bell} size="xl" className="mr-4" />
+      <NotificationIcon />
     </View>
   );
 };
@@ -42,7 +44,7 @@ const getSocietyRoutes = (society: Society & { privileges: string[] }) => {
       key: "profile",
       label: "Society Profile",
       icon: Building,
-      pathname: "/society/[societyId]",
+      pathname: "/society/[id]",
     },
     {
       key: "events",
@@ -223,6 +225,14 @@ export default function HomeLayout() {
         options={{
           drawerItemStyle: { display: "none" }, // Hide from drawer menu
           header: () => <HomeHeader />,
+          headerShown: true,
+        }}
+      />
+      <Drawer.Screen
+        name="notifications"
+        options={{
+          drawerItemStyle: { display: "none" }, // Hide from drawer menu
+          header: () => <Header title="Notifications" backButton />,
           headerShown: true,
         }}
       />

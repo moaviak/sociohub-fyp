@@ -22,10 +22,10 @@ import { useAppSelector } from "@/store/hooks";
 import { PRIVILEGES } from "@/constants";
 import { Advisor } from "@/types";
 import { useCancelEventMutation, useDeleteEventMutation } from "../api";
-import { Toast, ToastDescription, useToast } from "@/components/ui/toast";
 import ApiError from "@/store/api-error";
 import { useRouter } from "expo-router";
 import { EventTicket } from "./event-ticket";
+import { useToastUtility } from "@/hooks/useToastUtility";
 
 interface EventCardProps {
   event: Event;
@@ -33,7 +33,7 @@ interface EventCardProps {
 }
 
 export const EventCard = ({ event, variant = "default" }: EventCardProps) => {
-  const toast = useToast();
+  const toast = useToastUtility();
   const user = useAppSelector((state) => state.auth.user);
   const router = useRouter();
 
@@ -178,37 +178,12 @@ export const EventCard = ({ event, variant = "default" }: EventCardProps) => {
         societyId: event.societyId!,
       }).unwrap();
 
-      toast.show({
-        duration: 5000,
-        placement: "top",
-        containerStyle: {
-          marginTop: 18,
-        },
-        render: () => {
-          return (
-            <Toast action="success">
-              <ToastDescription>Event successfully deleted</ToastDescription>
-            </Toast>
-          );
-        },
-      });
+      toast.showSuccessToast("Event successfully deleted");
     } catch (error) {
       const message =
         (error as ApiError).errorMessage || "Unexpected error occurred";
-      toast.show({
-        duration: 10000,
-        placement: "top",
-        containerStyle: {
-          marginTop: 18,
-        },
-        render: () => {
-          return (
-            <Toast action="error">
-              <ToastDescription>{message}</ToastDescription>
-            </Toast>
-          );
-        },
-      });
+
+      toast.showErrorToast(message);
     } finally {
       resetPosition();
     }
@@ -221,37 +196,11 @@ export const EventCard = ({ event, variant = "default" }: EventCardProps) => {
         societyId: event.societyId!,
       }).unwrap();
 
-      toast.show({
-        duration: 5000,
-        placement: "top",
-        containerStyle: {
-          marginTop: 18,
-        },
-        render: () => {
-          return (
-            <Toast action="success">
-              <ToastDescription>Event successfully cancelled</ToastDescription>
-            </Toast>
-          );
-        },
-      });
+      toast.showSuccessToast("Event successfully cancelled");
     } catch (error) {
       const message =
         (error as ApiError).errorMessage || "Unexpected error occurred";
-      toast.show({
-        duration: 10000,
-        placement: "top",
-        containerStyle: {
-          marginTop: 18,
-        },
-        render: () => {
-          return (
-            <Toast action="error">
-              <ToastDescription>{message}</ToastDescription>
-            </Toast>
-          );
-        },
-      });
+      toast.showErrorToast(message);
     } finally {
       resetPosition();
     }

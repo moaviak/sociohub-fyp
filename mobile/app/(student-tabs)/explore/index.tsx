@@ -12,42 +12,13 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import Societies from "@/features/societies";
 import Events from "@/features/events";
 import People from "@/features/users/people";
-
-const AnnouncementsRoute = () => (
-  <View
-    style={{
-      flex: 1,
-      backgroundColor: "#f8f9fa",
-      justifyContent: "center",
-      alignItems: "center",
-    }}
-  >
-    <Text
-      style={{
-        fontSize: 18,
-        fontWeight: "600",
-        color: "#333",
-      }}
-    >
-      Announcements
-    </Text>
-    <Text
-      style={{
-        fontSize: 14,
-        color: "#666",
-        marginTop: 8,
-      }}
-    >
-      Latest announcements
-    </Text>
-  </View>
-);
+import Announcements from "@/features/announcements";
 
 const renderScene = SceneMap({
   societies: Societies,
   events: Events,
   people: People,
-  announcements: AnnouncementsRoute,
+  announcements: Announcements,
 });
 
 // Define the route type

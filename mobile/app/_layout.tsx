@@ -20,6 +20,11 @@ import { useToastUtility } from "@/hooks/useToastUtility";
 import { useDeepLinkHandler } from "@/hooks/useDeepLinkHandler";
 import { Text, TouchableOpacity, View } from "react-native";
 import { ArrowLeft, Menu } from "lucide-react-native";
+import SocketProvider from "@/providers/socket-provider";
+import {
+  initializePushNotifications,
+  refreshTokenIfNeeded,
+} from "@/features/notifications/push-notifications";
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -31,9 +36,13 @@ interface AuthProviderProps {
 
 const AuthProvider = ({ children }: AuthProviderProps) => {
   const dispatch = useAppDispatch();
-  const { accessToken, refreshToken, isTokenLoading } = useAppSelector(
-    (state) => state.auth
-  );
+  const {
+    accessToken,
+    refreshToken,
+    isTokenLoading,
+    isAuthenticated,
+    isAuthChecked,
+  } = useAppSelector((state) => state.auth);
 
   useEffect(() => {
     // Initialize tokens on mount
@@ -68,6 +77,28 @@ const AuthProvider = ({ children }: AuthProviderProps) => {
       dispatch(setAuthChecked(true));
     }
   }, [isLoading, isRefreshing, isTokenLoading, dispatch]);
+
+  // Hide splash screen when auth is fully initialized
+  useEffect(() => {
+    if (isAuthChecked && !isTokenLoading) {
+      SplashScreen.hideAsync();
+    }
+  }, [isAuthChecked, isTokenLoading]);
+
+  useEffect(() => {
+    initializePushNotifications();
+    if (isAuthenticated) {
+      refreshTokenIfNeeded();
+    }
+  }, [isAuthenticated]);
+
+  useEffect(() => {
+    initializePushNotifications();
+
+    if (isAuthenticated) {
+      refreshTokenIfNeeded();
+    }
+  }, [isAuthenticated]);
 
   const router = useRouter();
   const { showSuccessToast, showWarningToast, showErrorToast } =
@@ -148,63 +179,52 @@ export default function RootLayout() {
     "DMSans-Thin": require("../assets/fonts/DMSans-Thin.ttf"),
   });
 
-  useEffect(() => {
-    if (loaded) {
-      SplashScreen.hideAsync();
-    }
-  }, [loaded]);
-
   if (!loaded) {
     return null;
   }
 
   return (
     <Provider store={store}>
-      <AuthProvider>
-        <GluestackUIProvider mode="light">
-          <Stack>
-            <Stack.Screen name="index" options={{ headerShown: false }} />
-            <Stack.Screen name="auth" options={{ headerShown: false }} />
-            <Stack.Screen
-              name="(student-tabs)"
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name="(advisor-tabs)"
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen
-              name="society/[id]"
-              options={{ header: () => <Header title="Society Profile" /> }}
-            />
-            <Stack.Screen
-              name="profile/[id]"
-              options={{ header: () => <Header title="User Profile" /> }}
-            />
-            <Stack.Screen
-              name="event/[id]"
-              options={{ header: () => <Header title="Event Details" /> }}
-            />
-          </Stack>
-          <StatusBar style="auto" />
-        </GluestackUIProvider>
-      </AuthProvider>
+      <SocketProvider>
+        <AuthProvider>
+          <GluestackUIProvider mode="light">
+            <Stack screenOptions={{ headerShown: false }}>
+              <Stack.Screen name="index" />
+              <Stack.Screen name="auth" />
+              <Stack.Screen name="(student-tabs)" />
+              <Stack.Screen name="(advisor-tabs)" />
+              <Stack.Screen name="society/[id]" />
+              <Stack.Screen name="profile/[id]" />
+              <Stack.Screen name="event/[id]" />
+            </Stack>
+            <StatusBar style="auto" />
+          </GluestackUIProvider>
+        </AuthProvider>
+      </SocketProvider>
     </Provider>
   );
 }
 
-const Header = ({ title }: { title: string }) => {
+export const Header = ({
+  title,
+  backButton,
+}: {
+  title: string;
+  backButton?: boolean;
+}) => {
   const router = useRouter();
 
   return (
     <View className="flex-row items-center px-4 py-3 bg-white border-b border-neutral-300">
-      <TouchableOpacity
-        onPress={() => router.back()}
-        className="mr-3 p-2 -ml-2"
-        activeOpacity={0.7}
-      >
-        <ArrowLeft size={20} color="#333" />
-      </TouchableOpacity>
+      {backButton && (
+        <TouchableOpacity
+          onPress={() => router.back()}
+          className="mr-3 p-2 -ml-2"
+          activeOpacity={0.7}
+        >
+          <ArrowLeft size={20} color="#333" />
+        </TouchableOpacity>
+      )}
       <Text className="text-xl font-heading font-bold flex-1">{title}</Text>
     </View>
   );

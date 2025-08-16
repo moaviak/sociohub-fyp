@@ -3,6 +3,7 @@ import prisma from "../db";
 import { createNotification } from "./notification.service";
 import { sendNotificationToUsers } from "../socket";
 import { io } from "../app";
+import pushNotificationService from "./push-notification.service";
 
 export class EventNotificationService {
   async sendEventNotification(event: Event) {
@@ -71,13 +72,20 @@ export class EventNotificationService {
         description: notificationDescription,
         image: event.banner || undefined,
         webRedirectUrl: `/event/${event.id}`,
-        mobileRedirectUrl: `event/${event.id}`,
+        mobileRedirectUrl: {
+          pathname: "/event/[id]",
+          params: { id: event.id },
+        },
         recipients,
       });
 
       // If notification was created successfully and we have socket.io instance
       if (notification && io) {
         sendNotificationToUsers(io, recipients, notification);
+        pushNotificationService.sendToRecipients(recipients, {
+          title: notification.title,
+          body: notification.description,
+        });
       }
 
       return notification;

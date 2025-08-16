@@ -41,8 +41,8 @@ import { useAppSelector } from "@/store/hooks";
 import { useState } from "react";
 import * as Linking from "expo-linking";
 import * as WebBrowser from "expo-web-browser";
-import { Toast, ToastDescription, useToast } from "@/components/ui/toast";
 import ApiError from "@/store/api-error";
+import { useToastUtility } from "@/hooks/useToastUtility";
 
 const { width: screenWidth } = Dimensions.get("window");
 
@@ -97,7 +97,8 @@ const EventDetail = ({ eventId }: { eventId: string }) => {
   const [createCheckoutSession, { isLoading: isCreatingCheckout }] =
     useCreateCheckoutSessionMutation();
 
-  const toast = useToast();
+  const { showErrorToast, showSuccessToast, showWarningToast } =
+    useToastUtility();
 
   if (isFetching) {
     return (
@@ -229,35 +230,11 @@ const EventDetail = ({ eventId }: { eventId: string }) => {
           if (result.type === "cancel") {
             // User manually cancelled
             setIsProcessingPayment(false);
-            toast.show({
-              duration: 5000,
-              placement: "top",
-              containerStyle: { marginTop: 18 },
-              render: () => (
-                <Toast action="warning">
-                  <ToastDescription>Payment was cancelled</ToastDescription>
-                </Toast>
-              ),
-            });
+            showWarningToast("Payment was cancelled");
           }
         }
       } else {
-        toast.show({
-          duration: 5000,
-          placement: "top",
-          containerStyle: {
-            marginTop: 18,
-          },
-          render: () => {
-            return (
-              <Toast action="success">
-                <ToastDescription>
-                  Successfully registered for the event
-                </ToastDescription>
-              </Toast>
-            );
-          },
-        });
+        showSuccessToast("Successfully registered for the event");
       }
     } catch (error) {
       const message =
@@ -265,20 +242,7 @@ const EventDetail = ({ eventId }: { eventId: string }) => {
         (error as Error).message ||
         "Unexpected error occurred. Please try again!";
 
-      toast.show({
-        duration: 10000,
-        placement: "top",
-        containerStyle: {
-          marginTop: 18,
-        },
-        render: () => {
-          return (
-            <Toast action="error">
-              <ToastDescription>{message}</ToastDescription>
-            </Toast>
-          );
-        },
-      });
+      showErrorToast(message);
     } finally {
       setIsProcessingPayment(false);
     }

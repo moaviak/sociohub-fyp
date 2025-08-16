@@ -10,6 +10,7 @@ import { haveAnnouncementsPrivilege } from "../utils/helpers";
 import { sendNotificationToUsers } from "../socket";
 import { io } from "../app";
 import { CreateEventInput } from "./event.service";
+import pushNotificationService from "./push-notification.service";
 
 export interface CreateAnnouncementInput {
   societyId: string;
@@ -86,6 +87,10 @@ export class AnnouncementService {
       });
       if (notification) {
         sendNotificationToUsers(io, recipients, notification);
+        pushNotificationService.sendToRecipients(recipients, {
+          title: notification.title,
+          body: notification.description
+        })
       }
     }
     // Send email if requested

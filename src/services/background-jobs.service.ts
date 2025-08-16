@@ -5,6 +5,7 @@ import { deleteFromCloudinary } from "../utils/cloudinary";
 import { AnnouncementService } from "./announcement.service";
 import { sendNotificationToUsers } from "../socket";
 import { io } from "../app";
+import pushNotificationService from "./push-notification.service";
 
 // In-memory cache to avoid duplicate reminders within the same interval (reset on process restart)
 const sentReminders = new Set<string>();
@@ -309,12 +310,19 @@ const scheduleEventReminders = () => {
               description: message,
               image: event.banner || undefined,
               webRedirectUrl: `/event/${event.id}`,
-              mobileRedirectUrl: `event/${event.id}`,
+              mobileRedirectUrl: {
+                pathname: "/event/[id]",
+                params: { id: event.id },
+              },
               recipients,
             });
 
             if (notification) {
               sendNotificationToUsers(io, recipients, notification);
+              pushNotificationService.sendToRecipients(recipients, {
+                title: notification.title,
+                body: notification.description,
+              });
             }
 
             logger.info(

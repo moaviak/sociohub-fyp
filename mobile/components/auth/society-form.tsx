@@ -15,9 +15,9 @@ import { Textarea, TextareaInput } from "../ui/textarea";
 import { Button, ButtonText } from "../ui/button";
 import { ImagePickerCircle } from "./image-picker-circle";
 import { useCreateSocietyMutation } from "@/store/auth/api";
-import { Toast, ToastDescription, useToast } from "../ui/toast";
 import ApiError from "@/store/api-error";
 import { router } from "expo-router";
+import { useToastUtility } from "@/hooks/useToastUtility";
 
 export const SocietyForm = () => {
   const form = useForm<societyFormValues>({
@@ -27,7 +27,7 @@ export const SocietyForm = () => {
       description: "",
     },
   });
-  const toast = useToast();
+  const { showErrorToast, showSuccessToast } = useToastUtility();
   const [createSociety, { isError, isLoading, error }] =
     useCreateSocietyMutation();
 
@@ -42,19 +42,9 @@ export const SocietyForm = () => {
 
   useEffect(() => {
     if (isError) {
-      toast.show({
-        duration: 10000,
-        render: () => {
-          return (
-            <Toast action="error">
-              <ToastDescription>
-                {(error as ApiError)?.errorMessage ||
-                  "An unexpected error occurred"}
-              </ToastDescription>
-            </Toast>
-          );
-        },
-      });
+      showErrorToast(
+        (error as ApiError)?.errorMessage || "An unexpected error occurred"
+      );
     }
   }, [isError, error]);
 
@@ -88,35 +78,15 @@ export const SocietyForm = () => {
 
       if (!("error" in response) && response.data) {
         await AsyncStorage.removeItem("societyName");
-        toast.show({
-          duration: 3000,
-          render: () => {
-            return (
-              <Toast action="success">
-                <ToastDescription>
-                  Society created successfully.
-                </ToastDescription>
-              </Toast>
-            );
-          },
-        });
+        showSuccessToast("Society created successfully.");
         router.replace("/");
       }
     } catch (err) {
       console.error("Submit error:", err);
       const error = err as ApiError;
-      toast.show({
-        duration: 5000,
-        render: () => {
-          return (
-            <Toast action="error">
-              <ToastDescription>
-                Error submitting form: {error.errorMessage || "Unknown error"}
-              </ToastDescription>
-            </Toast>
-          );
-        },
-      });
+      showErrorToast(
+        `Error submitting form: ${error.errorMessage || "Unknown error"}`
+      );
     }
   };
 

@@ -19,7 +19,7 @@ import {
   Keyboard,
 } from "react-native";
 import ApiError from "@/store/api-error";
-import { Toast, ToastDescription, useToast } from "@/components/ui/toast";
+import { useToastUtility } from "@/hooks/useToastUtility";
 
 export const AssignTask = ({
   member,
@@ -31,7 +31,7 @@ export const AssignTask = ({
   setOpen: (open: boolean) => void;
 }) => {
   const [value, setValue] = useState("");
-  const toast = useToast();
+  const toast = useToastUtility();
 
   const [assignTask, { isLoading }] = useAssignTaskMutation();
 
@@ -43,22 +43,7 @@ export const AssignTask = ({
 
   const handleSubmit = async () => {
     if (!value.trim()) {
-      toast.show({
-        duration: 5000,
-        placement: "top",
-        containerStyle: {
-          marginTop: 18,
-        },
-        render: () => {
-          return (
-            <Toast action="error">
-              <ToastDescription>
-                Please enter a task description
-              </ToastDescription>
-            </Toast>
-          );
-        },
-      });
+      toast.showErrorToast("Please enter a task description");
       return;
     }
 
@@ -68,20 +53,8 @@ export const AssignTask = ({
         memberId: member.id,
         societyId: member.societyId,
       }).unwrap();
-      toast.show({
-        duration: 5000,
-        placement: "top",
-        containerStyle: {
-          marginTop: 18,
-        },
-        render: () => {
-          return (
-            <Toast action="success">
-              <ToastDescription>Task assigned to member.</ToastDescription>
-            </Toast>
-          );
-        },
-      });
+
+      toast.showSuccessToast("Task assigned to member.");
       handleClose();
     } catch (error) {
       const message =
@@ -89,20 +62,7 @@ export const AssignTask = ({
         (error as Error).message ||
         "Unexpected error occurred. Please try again!";
 
-      toast.show({
-        duration: 10000,
-        placement: "top",
-        containerStyle: {
-          marginTop: 18,
-        },
-        render: () => {
-          return (
-            <Toast action="error">
-              <ToastDescription>{message}</ToastDescription>
-            </Toast>
-          );
-        },
-      });
+      toast.showErrorToast(message);
     }
   };
 

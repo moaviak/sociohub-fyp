@@ -40,3 +40,8 @@ app-example
 # env
 .env
 .env.local
+
+google-services.json
+
+android/
+ios/

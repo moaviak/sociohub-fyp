@@ -1,57 +1,24 @@
-import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Icon } from "@/components/ui/icon";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Society } from "@/types";
 import { Link } from "expo-router";
-import { Building } from "lucide-react-native";
 import { View, Text } from "react-native";
 import { useCancelJoinRequestMutation } from "../api";
-import { Toast, ToastDescription, useToast } from "@/components/ui/toast";
 import ApiError from "@/store/api-error";
 import { SocietyLogo } from "@/components/society-logo";
+import { useToastUtility } from "@/hooks/useToastUtility";
 
 export const SocietyCard = ({ society }: { society: Society }) => {
   const [cancelJoinRequest, { isLoading }] = useCancelJoinRequestMutation();
-  const toast = useToast();
+  const toast = useToastUtility();
 
   const onCancelRequest = async () => {
     try {
       await cancelJoinRequest({ societyId: society.id }).unwrap();
-      toast.show({
-        duration: 5000,
-        placement: "top",
-        containerStyle: {
-          marginTop: 18,
-        },
-        render: () => {
-          return (
-            <Toast action="success">
-              <ToastDescription>
-                Request successfully cancelled.
-              </ToastDescription>
-            </Toast>
-          );
-        },
-      });
+      toast.showSuccessToast("Request successfully cancelled.");
     } catch (error) {
       const message = (error as ApiError).errorMessage;
-      toast.show({
-        duration: 10000,
-        placement: "top",
-        containerStyle: {
-          marginTop: 18,
-        },
-        render: () => {
-          return (
-            <Toast action="error">
-              <ToastDescription>
-                {message || "An unexpected error occurred"}
-              </ToastDescription>
-            </Toast>
-          );
-        },
-      });
+      toast.showErrorToast(message || "An unexpected error occurred");
     }
   };
 
@@ -63,7 +30,7 @@ export const SocietyCard = ({ society }: { society: Society }) => {
       }}
     >
       <View className="flex-row items-center">
-        <SocietyLogo society={society} />
+        <SocietyLogo society={society} className="flex-1" />
         {!society.acceptingNewMembers ? (
           <></>
         ) : society.isMember || society.hasRequestedToJoin ? (

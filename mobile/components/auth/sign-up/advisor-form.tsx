@@ -18,9 +18,9 @@ import {
   SelectPortal,
   SelectTrigger,
 } from "@/components/ui/select";
-import { Toast, ToastDescription, useToast } from "@/components/ui/toast";
 import { VStack } from "@/components/ui/vstack";
 import { SOCIETIES_ADVISORS } from "@/data";
+import { useToastUtility } from "@/hooks/useToastUtility";
 import { advisorSignUpSchema, advisorSignUpValues } from "@/schema";
 import ApiError from "@/store/api-error";
 import {
@@ -39,7 +39,8 @@ export const AdvisorForm = () => {
   const [advisors, setAdvisors] =
     useState<SocietyAdvisor[]>(SOCIETIES_ADVISORS);
   const [showPassword, setShowPassword] = useState(false);
-  const toast = useToast();
+  const { showErrorToast, showSuccessToast, showWarningToast } =
+    useToastUtility();
 
   const { data: advisorList, isSuccess } = useGetAdvisorsListQuery();
   const [signUp, { isLoading, isError, error }] = useAdvisorSignUpMutation();
@@ -61,19 +62,9 @@ export const AdvisorForm = () => {
 
   useEffect(() => {
     if (isError) {
-      toast.show({
-        duration: 10000,
-        render: () => {
-          return (
-            <Toast action="error">
-              <ToastDescription>
-                {(error as ApiError)?.errorMessage ||
-                  "An unexpected error occurred"}
-              </ToastDescription>
-            </Toast>
-          );
-        },
-      });
+      showErrorToast(
+        (error as ApiError)?.errorMessage || "An unexpected error occurred"
+      );
     }
   }, [isError, error]);
 
@@ -83,17 +74,9 @@ export const AdvisorForm = () => {
     if (!("error" in response) && response.data) {
       const user = (response.data as AuthResponse).user as Advisor;
       await AsyncStorage.setItem("societyName", user.societyName || "");
-      toast.show({
-        render: () => {
-          return (
-            <Toast action="success">
-              <ToastDescription>
-                Account created successfully! Please verify your email.
-              </ToastDescription>
-            </Toast>
-          );
-        },
-      });
+      showWarningToast(
+        "Account created successfully! Please verify your email."
+      );
       router.replace("/auth/verify-email");
     }
   };

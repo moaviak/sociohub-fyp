@@ -6,13 +6,6 @@ import {
   ActionsheetDragIndicatorWrapper,
 } from "@/components/ui/actionsheet";
 import { Button, ButtonText } from "@/components/ui/button";
-import {
-  Radio,
-  RadioGroup,
-  RadioIcon,
-  RadioIndicator,
-  RadioLabel,
-} from "@/components/ui/radio";
 import { Textarea, TextareaInput } from "@/components/ui/textarea";
 import { Member } from "@/types";
 import {
@@ -23,11 +16,11 @@ import {
   ScrollView,
   TouchableOpacity,
 } from "react-native";
-import { Toast, ToastDescription, useToast } from "@/components/ui/toast";
 import { useRemoveMemberMutation } from "../api";
 import { REMOVAL_REASONS } from "@/data";
 import { useState, useEffect } from "react";
 import ApiError from "@/store/api-error";
+import { useToastUtility } from "@/hooks/useToastUtility";
 
 export const RemoveMember = ({
   member,
@@ -43,7 +36,7 @@ export const RemoveMember = ({
   const [otherReason, setOtherReason] = useState("");
   const [formError, setFormError] = useState("");
 
-  const toast = useToast();
+  const toast = useToastUtility();
 
   const [removeMember, { isLoading }] = useRemoveMemberMutation();
 
@@ -97,22 +90,7 @@ export const RemoveMember = ({
         reason: selectedReason,
       }).unwrap();
 
-      toast.show({
-        duration: 5000,
-        placement: "top",
-        containerStyle: {
-          marginTop: 18,
-        },
-        render: () => {
-          return (
-            <Toast action="success">
-              <ToastDescription>
-                Student has been removed from the society
-              </ToastDescription>
-            </Toast>
-          );
-        },
-      });
+      toast.showSuccessToast("Student has been removed from the society");
 
       handleClose();
     } catch (error) {
@@ -121,20 +99,7 @@ export const RemoveMember = ({
         (error as Error).message ||
         "Unexpected error occurred. Please try again!";
 
-      toast.show({
-        duration: 10000,
-        placement: "top",
-        containerStyle: {
-          marginTop: 18,
-        },
-        render: () => {
-          return (
-            <Toast action="error">
-              <ToastDescription>{message}</ToastDescription>
-            </Toast>
-          );
-        },
-      });
+      toast.showErrorToast(message);
     }
   };
 

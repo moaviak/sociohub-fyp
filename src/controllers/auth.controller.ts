@@ -12,6 +12,7 @@ import {
   resendEmailVerificationService,
   verifyEmailService,
 } from "../services/auth.service";
+import { PushTokenService } from "../services/push-token.service";
 
 export const loginUser = asyncHandler(async (req, res) => {
   const result = await loginUserService(req.body);
@@ -109,6 +110,7 @@ export const getCurrentUser = asyncHandler(
 
 export const logoutUser = asyncHandler(async (req: Request, res: Response) => {
   const user = req.user as IUser;
+  const { deviceId } = req.body; // Get deviceId from request body
 
   await (prisma[user.userType] as any).update({
     where: { id: user.id },
@@ -116,6 +118,17 @@ export const logoutUser = asyncHandler(async (req: Request, res: Response) => {
       refreshToken: "",
     },
   });
+
+  // Delete push token if deviceId is provided
+  if (deviceId) {
+    try {
+      await PushTokenService.deletePushTokenByDeviceId(deviceId);
+      console.log(`Push token deleted for deviceId: ${deviceId}`);
+    } catch (error) {
+      console.error("Error deleting push token:", error);
+      // Don't throw error here, just log it as logout should still succeed
+    }
+  }
 
   const options = {
     httpOnly: true,

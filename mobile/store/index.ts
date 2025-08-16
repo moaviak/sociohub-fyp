@@ -2,12 +2,14 @@ import { configureStore } from "@reduxjs/toolkit";
 import { setupListeners } from "@reduxjs/toolkit/query";
 
 import AuthReducer from "./auth/slice";
+import NotificationsReducer from "@/features/notifications/slice";
 import { api } from "./api";
 
 export const store = configureStore({
   reducer: {
-    auth: AuthReducer,
     [api.reducerPath]: api.reducer,
+    auth: AuthReducer,
+    notifications: NotificationsReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware().concat(api.middleware),

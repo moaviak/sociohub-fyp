@@ -123,10 +123,11 @@ export const AuthApi = api.injectEndpoints({
       },
       providesTags: ["Auth"],
     }),
-    logout: builder.mutation<void | ApiError, void>({
-      query: () => ({
+    logout: builder.mutation<void | ApiError, { deviceId?: string }>({
+      query: ({ deviceId }) => ({
         url: "/auth/logout",
         method: "POST",
+        body: { deviceId },
       }),
       transformResponse: (response: ApiResponse<void>) => {
         if (response.success) {

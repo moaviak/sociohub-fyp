@@ -4,6 +4,7 @@ import logger from "../logger/winston.logger";
 import { createNotification } from "./notification.service";
 import { sendNotificationToUsers } from "../socket";
 import { io } from "../app";
+import pushNotificationService from "./push-notification.service";
 
 interface SendMemberRemovalOptions {
   studentId: string;
@@ -110,8 +111,11 @@ export const sendMemberRemovalStatusNotification = async ({
         {
           recipientId: student.id,
           recipientType: "student",
-          webRedirectUrl: `/society/${society.name}`,
-          mobileRedirectUrl: `/(student-tabs)/society/${society.name}`,
+          webRedirectUrl: `/society/${society.id}`,
+          mobileRedirectUrl: {
+            pathname: "/society/[id]",
+            params: { id: society.id },
+          },
         },
       ],
       image: society.logo,
@@ -122,6 +126,13 @@ export const sendMemberRemovalStatusNotification = async ({
         io,
         [{ recipientId: student.id, recipientType: "student" }],
         notification
+      );
+      pushNotificationService.sendToRecipients(
+        [{ recipientId: student.id, recipientType: "student" }],
+        {
+          title: notification.title,
+          body: notification.description,
+        }
       );
     }
   } catch (error) {

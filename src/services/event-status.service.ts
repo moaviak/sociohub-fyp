@@ -7,6 +7,7 @@ import prisma from "../db";
 import { createNotification } from "./notification.service";
 import { sendNotificationToUsers } from "../socket";
 import { io } from "../app";
+import pushNotificationService from "./push-notification.service";
 
 export class EventStatusService {
   determineUpdatedStatus(
@@ -100,11 +101,18 @@ export class EventStatusService {
             description: `The event "${event.title}" has been cancelled. We apologize for any inconvenience.`,
             image: event.banner || undefined,
             webRedirectUrl: `/event/${event.id}`,
-            mobileRedirectUrl: `event/${event.id}`,
+            mobileRedirectUrl: {
+              pathname: "/event/[id]",
+              params: { id: event.id },
+            },
             recipients: studentRecipients,
           });
           if (notification && io) {
             sendNotificationToUsers(io, studentRecipients, notification);
+            pushNotificationService.sendToRecipients(studentRecipients, {
+              title: notification.title,
+              body: notification.description,
+            });
           }
         }
       })();

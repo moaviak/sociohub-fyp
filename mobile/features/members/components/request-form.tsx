@@ -12,7 +12,6 @@ import { HStack } from "@/components/ui/hstack";
 import { Textarea, TextareaInput } from "@/components/ui/textarea";
 import { JoinRequest } from "@/types";
 import { useHandleSocietyRequestMutation } from "../api";
-import { Toast, ToastDescription, useToast } from "@/components/ui/toast";
 import ApiError from "@/store/api-error";
 import { JoinRequestStatus, RequestAction } from "@/types";
 import {
@@ -31,6 +30,7 @@ import { Box } from "@/components/ui/box";
 import { REJECT_REASONS } from "@/data";
 import * as Linking from "expo-linking";
 import * as WebBrowser from "expo-web-browser";
+import { useToastUtility } from "@/hooks/useToastUtility";
 
 type SheetStep = "request-details" | "reject-confirmation";
 
@@ -50,7 +50,7 @@ export const RequestForm = ({
   const [formError, setFormError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const toast = useToast();
+  const toast = useToastUtility();
   const [handleSocietyRequest, { isLoading }] =
     useHandleSocietyRequestMutation();
 
@@ -102,20 +102,7 @@ export const RequestForm = ({
           ? "Student request has been accepted."
           : "Student request has been rejected.";
 
-      toast.show({
-        duration: 5000,
-        placement: "top",
-        containerStyle: {
-          marginTop: 18,
-        },
-        render: () => {
-          return (
-            <Toast action="success">
-              <ToastDescription>{successMessage}</ToastDescription>
-            </Toast>
-          );
-        },
-      });
+      toast.showSuccessToast(successMessage);
       handleClose();
     } catch (error) {
       const message =
@@ -123,20 +110,7 @@ export const RequestForm = ({
         (error as Error).message ||
         "Unexpected error occurred. Please try again!";
 
-      toast.show({
-        duration: 10000,
-        placement: "top",
-        containerStyle: {
-          marginTop: 18,
-        },
-        render: () => {
-          return (
-            <Toast action="error">
-              <ToastDescription>{message}</ToastDescription>
-            </Toast>
-          );
-        },
-      });
+      toast.showErrorToast(message);
     }
   };
 

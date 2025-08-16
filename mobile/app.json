@@ -4,7 +4,7 @@
     "slug": "sociohub",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/symbol-sociohub.png",
+    "icon": "./assets/images/icon.png",
     "scheme": "sociohub",
     "linking": {
       "prefixes": ["sociohub://", "https://sociohub.site"]
@@ -19,10 +19,15 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "foregroundImage": "./assets/images/adaptive-foreground.png",
         "backgroundColor": "#ffffff"
       },
-      "permissions": ["android.permission.CAMERA"]
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
+      ],
+      "package": "com.anonymous.sociohub",
+      "googleServicesFile": "./google-services.json"
     },
     "web": {
       "bundler": "metro",
@@ -35,8 +40,9 @@
         "expo-splash-screen",
         {
           "image": "./assets/images/splash-screen.png",
-          "resizeMode": "cover",
-          "backgroundColor": "#ffffff"
+          "backgroundColor": "#218bff",
+          "resizeMode": "contain",
+          "imageWidth": 180
         }
       ],
       [
@@ -50,12 +56,27 @@
       [
         "expo-camera",
         {
-          "cameraPermission": "Allow $(PRODUCT_NAME) to access your camera to scan QR codes."
+          "cameraPermission": "Allow SocioHub to access your camera to scan QR codes."
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/symbol-sociohub.png",
+          "color": "#ffffff",
+          "defaultChannel": "default",
+          "enableBackgroundRemoteNotifications": false
         }
       ]
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "e5824474-04c3-4e0d-9a9f-b9cb7b57a110"
+      }
     }
   }
 }

@@ -1,5 +1,7 @@
 import prisma from "../db";
 import { ApiError } from "../utils/ApiError";
+import { NotificationRecipient } from "./notification.service";
+import pushNotificationService from "./push-notification.service";
 import {
   sendRoleAssignmentEmails,
   sendRoleAssignmentNotifications,
@@ -363,12 +365,15 @@ export const processRoleChangeNotifications = async (
       const { sendNotificationToUsers } = require("../socket");
       const { io } = require("../app");
 
-      const recipients = [
+      const recipients: NotificationRecipient[] = [
         {
           recipientId: student.id,
           recipientType: "student" as const,
           webRedirectUrl: `/society/${society.id}`,
-          mobileRedirectUrl: `/(student-tabs)/society/${society.id}`,
+          mobileRedirectUrl: {
+            pathname: `/(student-tabs)/society/[id]`,
+            params: { societyId: society.id },
+          },
         },
       ];
 
@@ -379,6 +384,11 @@ export const processRoleChangeNotifications = async (
         description: notificationContent.notificationDescription,
         image: society.logo,
         createdAt: notification.createdAt,
+      });
+
+      pushNotificationService.sendToRecipients(recipients, {
+        title: notification.title,
+        body: notification.description,
       });
     } catch (error) {
       console.error("Failed to send real-time notification:", error);

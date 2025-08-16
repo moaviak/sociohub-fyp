@@ -50,7 +50,6 @@ export const useDeepLinkHandler = (options: UseDeepLinkHandlerOptions = {}) => {
 
       return params;
     } catch (error) {
-      console.warn("Failed to parse URL params:", error);
       return {};
     }
   };
@@ -72,14 +71,11 @@ export const useDeepLinkHandler = (options: UseDeepLinkHandlerOptions = {}) => {
 
       return "";
     } catch (error) {
-      console.warn("Failed to extract route from URL:", error);
       return "";
     }
   };
 
   const handleDeepLink = (url: string) => {
-    console.log("Deep link received:", url);
-
     const route = getRouteFromUrl(url);
     const params = parseUrlParams(url);
 
@@ -104,7 +100,6 @@ export const useDeepLinkHandler = (options: UseDeepLinkHandlerOptions = {}) => {
         break;
 
       default:
-        console.log("Unhandled deep link route:", route);
         break;
     }
   };
@@ -128,7 +123,6 @@ export const useDeepLinkHandler = (options: UseDeepLinkHandlerOptions = {}) => {
           handleDeepLink(url);
         });
       } catch (error) {
-        console.error("Error setting up deep linking:", error);
       } finally {
         isInitialMount.current = false;
       }

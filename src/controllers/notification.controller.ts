@@ -8,22 +8,18 @@ import {
   markAllNotificationsAsRead,
   deleteNotification,
 } from "../services/notification.service";
+import { ApiError } from "../utils/ApiError";
+import Expo from "expo-server-sdk";
+import { PushTokenService } from "../services/push-token.service";
 
 export const getNotifications = asyncHandler(
   async (req: Request, res: Response) => {
     const user = req.user as IUser;
-    const {
-      page = "1",
-      limit = "10",
-      includeRead = "false",
-      includeDeleted = "false",
-    } = req.query;
+    const { includeRead = "false", includeDeleted = "false" } = req.query;
 
     const result = await getUserNotifications({
       userId: user.id,
       userType: user.userType.toLowerCase() as "student" | "advisor",
-      page: parseInt(page as string),
-      limit: parseInt(limit as string),
       includeRead: (includeRead as string) === "true",
       includeDeleted: (includeDeleted as string) === "true",
     });
@@ -76,5 +72,69 @@ export const removeNotification = asyncHandler(
       .json(
         new ApiResponse(200, notification, "Notification deleted successfully")
       );
+  }
+);
+
+export const storePushToken = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { token, deviceId, platform, meta } = req.body;
+    const user = req.user as IUser;
+
+    if (!token) {
+      throw new ApiError(400, "Push token is required");
+    }
+
+    if (!Expo.isExpoPushToken(token)) {
+      throw new ApiError(400, "Invalid Expo push token format");
+    }
+
+    const pushToken = await PushTokenService.storePushToken({
+      token,
+      deviceId,
+      platform: platform || "EXPO",
+      userId: user.id,
+      userType: user.userType,
+      meta,
+    });
+
+    return res
+      .status(200)
+      .json(new ApiResponse(200, pushToken, "Push token stored successfully"));
+  }
+);
+
+export const getUserPushTokens = asyncHandler(
+  async (req: Request, res: Response) => {
+    const user = req.user as IUser;
+
+    const tokens = await PushTokenService.getUserPushTokens(
+      user.id,
+      user.userType
+    );
+
+    return res
+      .status(200)
+      .json(new ApiResponse(200, tokens, "Push tokens retrieved successfully"));
+  }
+);
+
+export const deletePushToken = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { tokenId, deviceId, token } = req.body;
+
+    let result;
+    if (tokenId) {
+      result = await PushTokenService.deactivatePushToken(tokenId);
+    } else if (deviceId) {
+      result = await PushTokenService.deletePushTokenByDeviceId(deviceId);
+    } else if (token) {
+      result = await PushTokenService.deletePushToken(token);
+    } else {
+      throw new ApiError(400, "Either tokenId, deviceId, or token is required");
+    }
+
+    return res
+      .status(200)
+      .json(new ApiResponse(200, result, "Push token deleted successfully"));
   }
 );

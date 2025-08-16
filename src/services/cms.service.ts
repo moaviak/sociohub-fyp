@@ -8,6 +8,7 @@ import {
 } from "./notification.service";
 import { sendNotificationToUsers } from "../socket";
 import { io } from "../app";
+import pushNotificationService from "./push-notification.service";
 
 export const createPost = async (
   data: any,
@@ -286,7 +287,7 @@ export const sendNotification = async (
   description: string,
   recipients: NotificationRecipient[],
   webRedirectUrl?: string,
-  mobileRedirectUrl?: string
+  mobileRedirectUrl?: { pathname: string; params: any }
 ) => {
   const notification = await createNotification({
     title,
@@ -296,5 +297,11 @@ export const sendNotification = async (
     recipients: recipients,
   });
 
-  if (notification) sendNotificationToUsers(io, recipients, notification);
+  if (notification) {
+    sendNotificationToUsers(io, recipients, notification);
+    pushNotificationService.sendToRecipients(recipients, {
+      title: notification.title,
+      body: notification.description,
+    });
+  }
 };

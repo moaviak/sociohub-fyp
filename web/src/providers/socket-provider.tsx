@@ -165,13 +165,15 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
           socket.off("user-offline");
           socket.off("typing");
           socket.off("stop-typing");
+          socket.off("tool_status");
+          socket.off("agent_thought");
         }
       };
     } catch (error) {
       console.error("Error initializing socket:", error);
       setConnectionError("Failed to connect to notification service");
     }
-  }, [token, dispatch, socketInitialized]);
+  }, [token, socketInitialized, dispatch, activeChat?.id, navigate]);
 
   // Effect for initial connection and token changes
   useEffect(() => {

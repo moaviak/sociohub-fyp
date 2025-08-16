@@ -22,12 +22,12 @@ import Animated, {
 import { RoleForm } from "../role-form";
 import { useDeleteRoleMutation } from "../api";
 import useGetSocietyId from "@/hooks/useGetSocietyId";
-import { Toast, ToastDescription, useToast } from "@/components/ui/toast";
 import ApiError from "@/store/api-error";
+import { useToastUtility } from "@/hooks/useToastUtility";
 
 export const RoleCard = ({ role }: { role: Role }) => {
   const [showEdit, setShowEdit] = useState(false);
-  const toast = useToast();
+  const toast = useToastUtility();
 
   const societyId = useGetSocietyId();
   const [deleteRole, { isLoading }] = useDeleteRoleMutation();
@@ -56,37 +56,12 @@ export const RoleCard = ({ role }: { role: Role }) => {
     try {
       await deleteRole({ societyId, roleId: role.id }).unwrap();
 
-      toast.show({
-        duration: 5000,
-        placement: "top",
-        containerStyle: {
-          marginTop: 18,
-        },
-        render: () => {
-          return (
-            <Toast action="success">
-              <ToastDescription>Role successfully deleted</ToastDescription>
-            </Toast>
-          );
-        },
-      });
+      toast.showSuccessToast("Role successfully deleted");
     } catch (error) {
       const message =
         (error as ApiError).errorMessage || "Unexpected error occurred";
-      toast.show({
-        duration: 10000,
-        placement: "top",
-        containerStyle: {
-          marginTop: 18,
-        },
-        render: () => {
-          return (
-            <Toast action="error">
-              <ToastDescription>{message}</ToastDescription>
-            </Toast>
-          );
-        },
-      });
+
+      toast.showErrorToast(message);
     }
   };
 

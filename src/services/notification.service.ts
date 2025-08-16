@@ -22,20 +22,26 @@ export interface NotificationRecipient {
   recipientType: "student" | "advisor";
   recipientId: string;
   webRedirectUrl?: string;
-  mobileRedirectUrl?: string;
+  mobileRedirectUrl?: { pathname: string; params: any };
 }
 
 /**
  * Format notification data to match the Notification interface
  */
-const formatNotification = (recipient: any): Notification => {
+const formatNotification = (recipient: any) => {
+  let mobileRedirectUrl;
+  try {
+    mobileRedirectUrl = JSON.parse(recipient.mobileRedirectUrl);
+  } catch (e) {
+    mobileRedirectUrl = undefined;
+  }
   return {
     id: recipient.id,
     title: recipient.notification.title,
     description: recipient.notification.description,
     image: recipient.notification.image,
     webRedirectUrl: recipient.webRedirectUrl,
-    mobileRedirectUrl: recipient.mobileRedirectUrl,
+    mobileRedirectUrl,
     isRead: recipient.isRead,
     isDeleted: recipient.isDeleted,
     readAt: recipient.readAt ? recipient.readAt.toISOString() : undefined,
@@ -59,12 +65,18 @@ export const createNotification = async ({
   description: string;
   image?: string | null;
   webRedirectUrl?: string | null;
-  mobileRedirectUrl?: string | null;
+  mobileRedirectUrl?: {
+    pathname: string;
+    params: any;
+  } | null;
   recipients: Array<{
     recipientType: "student" | "advisor";
     recipientId: string;
     webRedirectUrl?: string | null;
-    mobileRedirectUrl?: string | null;
+    mobileRedirectUrl?: {
+      pathname: string;
+      params: any;
+    } | null;
   }>;
 }) => {
   try {
@@ -92,7 +104,8 @@ export const createNotification = async ({
               student: { connect: { id: recipient.recipientId } },
               webRedirectUrl: recipient.webRedirectUrl || webRedirectUrl,
               mobileRedirectUrl:
-                recipient.mobileRedirectUrl || mobileRedirectUrl,
+                JSON.stringify(recipient.mobileRedirectUrl) ||
+                JSON.stringify(mobileRedirectUrl),
               isRead: false,
               isDeleted: false,
             },
@@ -108,7 +121,8 @@ export const createNotification = async ({
               advisor: { connect: { id: recipient.recipientId } },
               webRedirectUrl: recipient.webRedirectUrl || webRedirectUrl,
               mobileRedirectUrl:
-                recipient.mobileRedirectUrl || mobileRedirectUrl,
+                JSON.stringify(recipient.mobileRedirectUrl) ||
+                JSON.stringify(mobileRedirectUrl),
               isRead: false,
               isDeleted: false,
             },
@@ -142,20 +156,14 @@ export const createNotification = async ({
 export const getUserNotifications = async ({
   userId,
   userType,
-  page = 1,
-  limit = 10,
   includeRead = false,
   includeDeleted = false,
 }: {
   userId: string;
   userType: "student" | "advisor";
-  page?: number;
-  limit?: number;
   includeRead?: boolean;
   includeDeleted?: boolean;
 }) => {
-  const skip = (page - 1) * limit;
-
   const whereClause: any = {
     recipientType: userType,
   };
@@ -175,30 +183,30 @@ export const getUserNotifications = async ({
     whereClause.isDeleted = false;
   }
 
-  const [notificationRecipients, totalCount] = await Promise.all([
-    prisma.notificationRecipient.findMany({
-      where: whereClause,
-      skip,
-      take: limit,
-      orderBy: { createdAt: "desc" },
-      include: {
-        notification: true,
-      },
-    }),
-    prisma.notificationRecipient.count({
-      where: whereClause,
-    }),
-  ]);
+  try {
+    const [notificationRecipients, totalCount] = await Promise.all([
+      prisma.notificationRecipient.findMany({
+        where: whereClause,
+        orderBy: { createdAt: "desc" },
+        include: {
+          notification: true,
+        },
+      }),
+      prisma.notificationRecipient.count({
+        where: whereClause,
+      }),
+    ]);
 
-  // Format notifications according to the interface
-  const notifications = notificationRecipients.map(formatNotification);
+    // Format notifications according to the interface
+    const notifications = notificationRecipients.map(formatNotification);
 
-  return {
-    notifications,
-    totalPages: Math.ceil(totalCount / limit),
-    currentPage: page,
-    totalCount,
-  };
+    return {
+      notifications,
+      totalCount,
+    };
+  } catch (error) {
+    throw error;
+  }
 };
 
 /**

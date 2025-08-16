@@ -6,9 +6,9 @@ import { BaseQueryFn } from "@reduxjs/toolkit/query";
 import { MutationActionCreatorResult } from "@reduxjs/toolkit/query";
 import { useEffect, useState } from "react";
 import { View, Text } from "react-native";
-import { Toast, ToastDescription, useToast } from "../ui/toast";
 import { Button, ButtonText } from "../ui/button";
 import { formatTime } from "@/lib/utils";
+import { useToastUtility } from "@/hooks/useToastUtility";
 
 interface ResendEmailProps {
   setOtp: React.Dispatch<React.SetStateAction<string>>;
@@ -32,7 +32,7 @@ export const ResendEmail = ({
   disabled,
 }: ResendEmailProps) => {
   const [resendTimer, setResendTimer] = useState(0);
-  const toast = useToast();
+  const { showSuccessToast } = useToastUtility();
 
   const onResend = async () => {
     if (resendTimer > 0) return;
@@ -40,17 +40,7 @@ export const ResendEmail = ({
     try {
       const response = await resendEmail(null);
       if (response.data) {
-        toast.show({
-          render: () => {
-            return (
-              <Toast action="success">
-                <ToastDescription>
-                  "Mail has been sent to your email.
-                </ToastDescription>
-              </Toast>
-            );
-          },
-        });
+        showSuccessToast("Mail has been sent to your email.");
         setOtp("");
         setResendTimer(120);
       }

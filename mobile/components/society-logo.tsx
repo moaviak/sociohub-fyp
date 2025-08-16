@@ -5,14 +5,23 @@ import { Icon } from "./ui/icon";
 import { Building } from "lucide-react-native";
 import { Link } from "expo-router";
 
-export const SocietyLogo = ({ society }: { society: Society }) => {
+export const SocietyLogo = ({
+  society,
+  avatarOnly,
+  className,
+}: {
+  society: Society;
+  avatarOnly?: boolean;
+  className?: string;
+}) => {
   return (
     <Link
       href={{ pathname: "/society/[id]", params: { id: society.id } }}
-      style={{ flex: 1, flexShrink: 1 }}
+      style={{ flexShrink: 1 }}
+      className={className}
     >
       <View
-        className="flex-row items-center gap-2 p-2"
+        className="flex-row items-center gap-3 p-2"
         style={{ flexShrink: 1 }}
       >
         {/* Placeholder for society logo */}
@@ -24,13 +33,15 @@ export const SocietyLogo = ({ society }: { society: Society }) => {
             }}
           />
         </Avatar>
-        <Text
-          className="font-medium text-neutral-600"
-          numberOfLines={1}
-          style={{ flexShrink: 1 }}
-        >
-          {society.name}
-        </Text>
+        {!avatarOnly && (
+          <Text
+            className="font-medium text-neutral-600"
+            numberOfLines={1}
+            style={{ flexShrink: 1 }}
+          >
+            {society.name}
+          </Text>
+        )}
       </View>
     </Link>
   );

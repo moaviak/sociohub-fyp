@@ -5,15 +5,19 @@ import { asyncHandler } from "../utils/asyncHandler";
 import { ApiResponse } from "../utils/ApiResponse";
 import db from "../db";
 import { emitSocketEvent } from "../socket";
+import { NotificationRecipient } from "../services/notification.service";
+import pushNotificationService from "../services/push-notification.service";
 
 export const sendMessage = asyncHandler(async (req: Request, res: Response) => {
+  const user = req.user as IUser;
+
   const { chatId } = req.params;
   const { content } = req.body;
   const files = req.files as Express.Multer.File[];
 
   const message = await messageService.createMessage(
     chatId,
-    (req.user as IUser).id,
+    user.id,
     content,
     files
   );
@@ -26,7 +30,7 @@ export const sendMessage = asyncHandler(async (req: Request, res: Response) => {
     },
   });
 
-  if (chat) {
+  if (chat && message) {
     emitSocketEvent(
       req,
       chat.id,
@@ -35,6 +39,44 @@ export const sendMessage = asyncHandler(async (req: Request, res: Response) => {
       chat.participants,
       (req.user as IUser).id
     );
+
+    // Send Push Notifications to participants
+    (async () => {
+      const recipients: NotificationRecipient[] = chat.participants.map(
+        (participant) => {
+          if (participant.advisorId) {
+            return {
+              recipientType: "advisor",
+              recipientId: participant.advisorId,
+            };
+          } else {
+            return {
+              recipientType: "student",
+              recipientId: participant.studentId!,
+            };
+          }
+        }
+      );
+
+      const body =
+        message.content ||
+        (message.attachments &&
+          `Sent ${message.attachments.length} ${
+            message.attachments[0].type[0] +
+            message.attachments[0].type.substring(1).toLowerCase()
+          }${message.attachments.length > 1 ? "s" : ""}`);
+      if (chat.type === "ONE_ON_ONE") {
+        await pushNotificationService.sendToRecipients(recipients, {
+          title: `New message from ${user.firstName} ${user.lastName}`,
+          body,
+        });
+      } else {
+        await pushNotificationService.sendToRecipients(recipients, {
+          title: `New message in ${chat.name}`,
+          body: `${user.firstName} ${user.lastName}: ${body}`,
+        });
+      }
+    })();
   }
 
   return res.status(201).json(new ApiResponse(201, message));

@@ -1,20 +1,16 @@
 import { useAppSelector } from "@/store/hooks";
 import { UserType } from "@/types";
 import { Redirect } from "expo-router";
-import { ActivityIndicator, View } from "react-native";
 
 const HomePage = () => {
   const { userType, isAuthChecked, isTokenLoading } = useAppSelector(
     (state) => state.auth
   );
 
-  // Show loading indicator while auth is being checked or tokens are being loaded
+  // While auth is being checked, splash screen is still showing
+  // So we just return null here instead of a loading indicator
   if (!isAuthChecked || isTokenLoading) {
-    return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-        <ActivityIndicator size="large" />
-      </View>
-    );
+    return null;
   }
 
   // If no userType is set, default to auth screen

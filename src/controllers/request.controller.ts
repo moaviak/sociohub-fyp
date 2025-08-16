@@ -18,6 +18,7 @@ import {
 import { io } from "../app";
 import { sendNotificationToUsers } from "../socket";
 import activityService from "../services/activity.service";
+import pushNotificationService from "../services/push-notification.service";
 
 export const sendJoinRequest = asyncHandler(
   async (req: Request, res: Response) => {
@@ -133,12 +134,18 @@ export const sendJoinRequest = asyncHandler(
           ...advisors.map((advisor) => ({
             ...advisor,
             webRedirectUrl: "/members/requests", // Advisor specific redirectUrl
-            mobileRedirectUrl: "/(advisor-tabs)/members/requests", // Advisor specific redirectUrl
+            mobileRedirectUrl: {
+              pathname: "/(advisor-tabs)/members?tab=requests",
+              params: {},
+            }, // Advisor specific redirectUrl
           })),
           ...membersWithPrivilege.map((member) => ({
             ...member,
             webRedirectUrl: `/members/${society.id}/requests`, // Member specific redirectUrl
-            mobileRedirectUrl: `/(student-tabs)/members/${society.id}/requests`, // Member specific redirectUrl
+            mobileRedirectUrl: {
+              pathname: "/(student-tabs)/home/[societyId]/members?tab=requests",
+              params: { societyId: society.id },
+            }, // Member specific redirectUrl
           })),
         ];
 
@@ -154,6 +161,10 @@ export const sendJoinRequest = asyncHandler(
           // Send real-time notifications to connected users
           if (notification) {
             sendNotificationToUsers(io, recipients, notification);
+            pushNotificationService.sendToRecipients(recipients, {
+              title: notification.title,
+              body: notification.description,
+            });
           }
         }
       } catch (error) {

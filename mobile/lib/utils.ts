@@ -1,7 +1,7 @@
 import { Society } from "@/types";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
-import { format } from "date-fns";
+import { format, formatDistanceToNowStrict } from "date-fns";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -123,4 +123,28 @@ export function getRegistrationStatus(
   }
 
   return "Registration Open";
+}
+
+export function formatTimeShort(date: Date | string) {
+  const formatted = formatDistanceToNowStrict(date, {
+    addSuffix: false,
+    roundingMethod: "floor",
+  });
+
+  // Converts full words to short versions
+  return formatted
+    .replace(" seconds", "s")
+    .replace(" second", "s")
+    .replace(" minutes", "m")
+    .replace(" minute", "m")
+    .replace(" hours", "h")
+    .replace(" hour", "h")
+    .replace(" days", "d")
+    .replace(" day", "d")
+    .replace(" weeks", "w")
+    .replace(" week", "w")
+    .replace(" months", "mo")
+    .replace(" month", "mo")
+    .replace(" years", "y")
+    .replace(" year", "y");
 }

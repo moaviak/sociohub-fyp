@@ -35,6 +35,8 @@ import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import ApiError from "@/store/api-error";
 import { AuthResponse } from "@/types";
+import { setupPushNotifications } from "@/features/notifications/push-notifications";
+import { useToastUtility } from "@/hooks/useToastUtility";
 
 export const SignInForm = () => {
   const [selectedTab, setSelectedTab] = useState<"Advisor" | "Student">(
@@ -43,7 +45,7 @@ export const SignInForm = () => {
   const [showPassword, setShowPassword] = useState(false);
   const yearOptions = getYearOptions();
 
-  const toast = useToast();
+  const { showErrorToast } = useToastUtility();
   const router = useRouter();
 
   const [login, { isLoading, error, isError }] = useLoginMutation();
@@ -83,25 +85,16 @@ export const SignInForm = () => {
         AsyncStorage.setItem("societyName", data.user.societyName || "");
       } else {
         router.replace("/");
+        await setupPushNotifications();
       }
     }
   };
 
   useEffect(() => {
     if (isError) {
-      toast.show({
-        duration: 10000,
-        render: () => {
-          return (
-            <Toast action="error">
-              <ToastDescription>
-                {(error as ApiError)?.errorMessage ||
-                  "An unexpected error occurred"}
-              </ToastDescription>
-            </Toast>
-          );
-        },
-      });
+      showErrorToast(
+        (error as ApiError)?.errorMessage || "An unexpected error occurred"
+      );
     }
   }, [isError, error]);
 
