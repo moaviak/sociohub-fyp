@@ -154,3 +154,5 @@ NOTES.md
 /playwright/.cache/
 
 temp*
+
+*.lnk

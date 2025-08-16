@@ -10,7 +10,7 @@ export const createAnnouncementValidator = () => [
     .withMessage("Content must be a string"),
   body("publishDateTime")
     .optional()
-    .isDate()
+    .isISO8601()
     .withMessage("Invalid publish date and time"),
   body("audience")
     .notEmpty()

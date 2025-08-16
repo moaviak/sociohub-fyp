@@ -46,6 +46,32 @@ export class PushTokenService {
       });
     }
 
+    // Check if this token exists for this user but with a different deviceId
+    const tokenWithDifferentDevice = await prisma.pushToken.findFirst({
+      where: {
+        token,
+        deviceId: { not: deviceId },
+        ...(userType === "student"
+          ? { studentId: userId }
+          : { advisorId: userId }),
+      },
+    });
+
+    if (tokenWithDifferentDevice) {
+      // Update the deviceId and other fields
+      return await prisma.pushToken.update({
+        where: { id: tokenWithDifferentDevice.id },
+        data: {
+          deviceId,
+          platform,
+          isActive: true,
+          lastUsedAt: new Date(),
+          meta,
+          updatedAt: new Date(),
+        },
+      });
+    }
+
     // Check if same deviceId exists with a different token → deactivate it
     if (deviceId) {
       await prisma.pushToken.updateMany({
