@@ -96,3 +96,5 @@ export class EventNotificationService {
     }
   }
 }
+
+export default new EventNotificationService();

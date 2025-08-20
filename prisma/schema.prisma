@@ -97,13 +97,13 @@ enum DevicePlatform {
 
 model PushToken {
   id         String         @id @default(cuid())
-  token      String         @unique // the push token (Expo token / FCM / Web push key)
-  deviceId   String?        @unique // optional device identifier (UUID/device serial)
+  token      String         @unique
+  deviceId   String?
   platform   DevicePlatform @default(EXPO)
   // Polymorphic-style relations — exactly one of studentId / advisorId should be set (enforced at app or DB level)
-  student    Student?       @relation(fields: [studentId], references: [id])
+  student    Student?       @relation(fields: [studentId], references: [id], onDelete: Cascade)
   studentId  String?
-  advisor    Advisor?       @relation(fields: [advisorId], references: [id])
+  advisor    Advisor?       @relation(fields: [advisorId], references: [id], onDelete: Cascade)
   advisorId  String?
   isActive   Boolean        @default(true) // mark inactive on logout/uninstall if desired
   lastUsedAt DateTime?

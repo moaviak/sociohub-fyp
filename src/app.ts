@@ -132,8 +132,14 @@ app.use("/api/chatbot", chatbotRoutes);
 // common error handling middleware
 app.use(errorHandler);
 
-// Initialize the cleanup services
-initializeBackgroundJobs();
+// Initialize the background jobs
+initializeBackgroundJobs({
+  batchSize: 500,
+  maxRetries: 2,
+  retentionDays: 45,
+  enableDryRun: false,
+  maxConcurrentOperations: 3,
+});
 
 // Configure Daily webhooks on startup
 import { DailyService } from "./services/daily.service.js";
