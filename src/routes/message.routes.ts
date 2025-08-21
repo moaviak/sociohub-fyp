@@ -1,5 +1,9 @@
 import { Router } from "express";
-import { sendMessage, getMessages, deleteMessage } from "../controllers/message.controller";
+import {
+  sendMessage,
+  getMessages,
+  deleteMessage,
+} from "../controllers/message.controller";
 import { verifyJWT } from "../middlewares/auth.middlewares";
 import { upload } from "../middlewares/multer.middlewares";
 

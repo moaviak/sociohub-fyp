@@ -42,21 +42,25 @@ export const sendMessage = asyncHandler(async (req: Request, res: Response) => {
 
     // Send Push Notifications to participants
     (async () => {
-      const recipients: NotificationRecipient[] = chat.participants.map(
-        (participant) => {
+      const recipients: NotificationRecipient[] = [];
+      chat.participants.forEach((participant) => {
+        if (
+          participant.advisorId !== user.id &&
+          participant.studentId !== user.id
+        ) {
           if (participant.advisorId) {
-            return {
+            recipients.push({
               recipientType: "advisor",
               recipientId: participant.advisorId,
-            };
+            });
           } else {
-            return {
+            recipients.push({
               recipientType: "student",
               recipientId: participant.studentId!,
-            };
+            });
           }
         }
-      );
+      });
 
       const body =
         message.content ||
