@@ -80,7 +80,9 @@ export const AddMembersDialog = ({ chat, children }: AddMembersDialogProps) => {
     );
   };
 
-  const existingParticipantIds = chat.participants.map((p) => p.id);
+  const existingParticipantIds = chat.participants.map(
+    (p) => p.studentId || p.advisorId!
+  );
 
   const renderUserList = (userList: User[]) => {
     const filteredList = userList.filter(
