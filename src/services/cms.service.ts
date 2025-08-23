@@ -278,6 +278,15 @@ export const addComment = async (
   return comment;
 };
 
+export const getComments = async (postId: string) => {
+  const comments = await prisma.postComment.findMany({
+    where: { postId },
+    include: { author: { include: { advisor: true, student: true } } },
+  });
+
+  return comments;
+};
+
 export const deleteComment = async (commentId: string) => {
   await prisma.postComment.delete({ where: { id: commentId } });
 };

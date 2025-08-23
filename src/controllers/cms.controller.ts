@@ -115,6 +115,11 @@ export const addComment = asyncHandler(async (req: Request, res: Response) => {
     .json(new ApiResponse(201, comment, "Comment added successfully"));
 });
 
+export const getComments = asyncHandler(async (req: Request, res: Response) => {
+  const comments = await cmsService.getComments(req.params.postId);
+  res.status(201).json(new ApiResponse(200, comments));
+});
+
 export const deleteComment = asyncHandler(
   async (req: Request, res: Response) => {
     await cmsService.deleteComment(req.params.commentId);

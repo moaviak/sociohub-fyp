@@ -35,7 +35,8 @@ router
 
 router
   .route("/:postId/comments")
-  .post(addCommentValidator(), validate, cmsController.addComment);
+  .post(addCommentValidator(), validate, cmsController.addComment)
+  .get(cmsController.getComments);
 
 router.route("/comments/:commentId").delete(cmsController.deleteComment);
 
