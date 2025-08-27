@@ -32,7 +32,7 @@ export class EventAnnouncementService {
     // Initialize the Together AI model with your API key
     this.model = new ChatGroq({
       apiKey: process.env.GROQ_API_KEY || apiKey,
-      model: "llama-3.1-8b-instant",
+      model: "llama-3.3-70b-versatile",
       temperature: 0.7,
     });
   }

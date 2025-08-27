@@ -1,5 +1,5 @@
 import { ApiError } from "../../utils/ApiError";
-import { OptimizedChatbotAgent } from "./chatbot-agent.service"; // Fixed import
+import { ChatbotAgent } from "./chatbot-agent.service";
 import { LLMService } from "./llm.service";
 import { SessionManager } from "./session-manager";
 import { DocumentRetrievalTool } from "./tools/document.tool";
@@ -23,7 +23,7 @@ interface IntermediateStep {
 }
 
 export class ChatbotService {
-  private optimizedAgent: OptimizedChatbotAgent; // Updated property name
+  private agent: ChatbotAgent; // Updated property name
   private sessionManager: SessionManager;
   private documentTool!: DocumentRetrievalTool;
   private llmService: LLMService;
@@ -32,7 +32,7 @@ export class ChatbotService {
   private readonly CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
   constructor() {
-    this.optimizedAgent = new OptimizedChatbotAgent(); // Updated initialization
+    this.agent = new ChatbotAgent(); // Updated initialization
     this.sessionManager = new SessionManager();
     this.llmService = new LLMService();
   }
@@ -111,7 +111,7 @@ export class ChatbotService {
       const responseStart = Date.now();
 
       // Process with optimized agent
-      const result = await this.optimizedAgent.processQuery(
+      const result = await this.agent.processQuery(
         query,
         userContext,
         session.messages,
@@ -119,13 +119,6 @@ export class ChatbotService {
       );
 
       responseTime = Date.now() - responseStart;
-
-      // Extract tools used from intermediate steps
-      if (result.intermediateSteps) {
-        toolsUsed = result.intermediateSteps.map(
-          (step: IntermediateStep) => step.action.tool
-        );
-      }
 
       // Cache response based on strategy
       if (
@@ -144,7 +137,6 @@ export class ChatbotService {
 
       return {
         response: result.response,
-        intermediateSteps: result.intermediateSteps,
         strategy: result.strategy,
         metrics: {
           totalTime: Date.now() - startTime,
@@ -362,7 +354,7 @@ export class ChatbotService {
     const globalMetrics = this.sessionManager.getGlobalMetrics();
 
     // Get optimized agent stats
-    const agentStats = this.optimizedAgent.getStats();
+    const agentStats = this.agent.getStats();
 
     return {
       averageResponseTime: globalMetrics.avgResponseTime,
@@ -386,7 +378,6 @@ export class ChatbotService {
   // Enhanced cleanup method
   cleanup(): void {
     this.responseCache.clear();
-    this.optimizedAgent.resetTools(); // Updated method call
 
     // Clear any intervals or timeouts
     if (this.sessionManager) {
@@ -427,18 +418,15 @@ export class ChatbotService {
 
   // New method to get agent performance insights
   getAgentPerformance(): {
-    isHealthy: boolean;
     stats: any;
   } {
     return {
-      isHealthy: this.optimizedAgent.isHealthy(),
-      stats: this.optimizedAgent.getStats(),
+      stats: this.agent.getStats(),
     };
   }
 
   // Method to force cache clear if needed
   clearCache(): void {
     this.responseCache.clear();
-    this.optimizedAgent.resetTools(); // This also clears the agent's internal cache
   }
 }

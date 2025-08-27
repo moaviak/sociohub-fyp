@@ -256,6 +256,29 @@ export interface MonitoringConfig {
   metricsRetentionDays: number;
 }
 
+export interface RouteDecision {
+  strategy: "direct" | "single_tool" | "sequential" | "parallel";
+  tools: string[];
+  confidence: number;
+  reasoning: string;
+  matchedPatterns?: string[];
+  queryAnalysis?: {
+    keywords: string[];
+    entities: string[];
+    intent: string;
+    complexity: "simple" | "moderate" | "complex";
+    urgency: "low" | "medium" | "high";
+  };
+  classificationMethod: "llm" | "pattern" | "hybrid";
+}
+
+export interface ClassificationContext {
+  query: string;
+  userContext?: any;
+  chatHistory?: any[];
+  timeConstraint?: number; // ms for fast responses
+}
+
 // Utility types
 export type QueryType = "simple" | "complex";
 export type UserType = "student" | "advisor";

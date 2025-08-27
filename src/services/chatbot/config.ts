@@ -1,6 +1,6 @@
 export const chatbotConfig = {
   llm: {
-    model: "llama-3.1-8b-instant",
+    model: "llama-3.3-70b-versatile",
     fastModel: "llama-3.1-8b-instant", // For quick classifications
     maxTokens: 2000,
     temperature: 0.3,
