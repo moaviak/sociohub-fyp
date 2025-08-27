@@ -176,14 +176,7 @@ export const seedTasks = async () => {
         ? faker.date.between({ from: createdAt, to: new Date() })
         : createdAt;
 
-      // Decide if task is assigned by society (40% chance) or personal task
-      let assignedBySocietyId: string | null = null;
       let description = faker.helpers.arrayElement(ADVISOR_TASK_DESCRIPTIONS);
-
-      if (faker.datatype.boolean({ probability: 0.4 })) {
-        assignedBySocietyId = faker.helpers.arrayElement(societies).id;
-        description = faker.helpers.arrayElement(SOCIETY_ASSIGNED_TASKS);
-      }
 
       await prisma.task.create({
         data: {
@@ -194,7 +187,6 @@ export const seedTasks = async () => {
           updatedAt,
           createdByStudentId: null,
           createdByAdvisorId: advisor.id,
-          assignedBySocietyId,
         },
       });
     }
@@ -236,3 +228,13 @@ export const seedTasks = async () => {
     }
   }
 };
+
+seedTasks()
+  .then(async () => {
+    await prisma.$disconnect();
+  })
+  .catch(async (e) => {
+    console.error(e);
+    await prisma.$disconnect();
+    process.exit(1);
+  });

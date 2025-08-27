@@ -314,3 +314,40 @@ export const sendNotification = async (
     });
   }
 };
+
+export const getRecentPosts = async ({
+  page = 1,
+  limit = 10,
+}: {
+  page?: number;
+  limit?: number;
+}) => {
+  const skip = (page - 1) * limit;
+
+  const [posts, total] = await Promise.all([
+    prisma.post.findMany({
+      include: {
+        media: true,
+        likes: {
+          include: { user: { select: { studentId: true, advisorId: true } } },
+        },
+        comments: true,
+        author: { include: { student: true, advisor: true } },
+        society: true,
+        event: true,
+      },
+      orderBy: { createdAt: "desc" },
+      skip,
+      take: limit,
+    }),
+    prisma.post.count(),
+  ]);
+
+  return {
+    posts,
+    total,
+    page,
+    totalPages: Math.ceil(total / limit),
+    limit,
+  };
+};

@@ -23,7 +23,8 @@ router
     createPostValidator(),
     validate,
     cmsController.createPost
-  );
+  )
+  .get(cmsController.getRecentPosts);
 
 router.route("/society/:societyId").get(cmsController.getPostsBySociety);
 

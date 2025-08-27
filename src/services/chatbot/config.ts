@@ -1,7 +1,7 @@
 export const chatbotConfig = {
   llm: {
-    model: "meta-llama/Llama-3.3-70B-Instruct-Turbo-Free",
-    fastModel: "arcee-ai/AFM-4.5B", // For quick classifications
+    model: "llama-3.1-8b-instant",
+    fastModel: "llama-3.1-8b-instant", // For quick classifications
     maxTokens: 2000,
     temperature: 0.3,
     timeout: 30000, // 30 seconds

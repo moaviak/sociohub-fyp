@@ -5,10 +5,13 @@ import { EventCard } from "./event-card";
 import { useGetSocietyEventsQuery } from "../../events/api";
 
 export const UpcomingEvents = ({ societyId }: { societyId?: string }) => {
-  const { data: studentEvents, isLoading } = useGetEventsQuery({
-    limit: 3,
-    status: "Upcoming",
-  });
+  const { data: studentEvents, isLoading } = useGetEventsQuery(
+    {
+      limit: 3,
+      status: "Upcoming",
+    },
+    { skip: !!societyId }
+  );
 
   const { data: societyEvents } = useGetSocietyEventsQuery({
     societyId: societyId || "",

@@ -180,8 +180,34 @@ export const removeAllStudentsFromChatsEfficient = async () => {
   }
 };
 
+async function deleteAllPostRelatedData() {
+  try {
+    // Delete all post comments
+    await prisma.postComment.deleteMany({});
+    console.log("Deleted all post comments.");
+
+    // Delete all post likes
+    await prisma.postLike.deleteMany({});
+    console.log("Deleted all post likes.");
+
+    // Delete all post media
+    await prisma.postMedia.deleteMany({});
+    console.log("Deleted all post media.");
+
+    // Delete all posts
+    await prisma.post.deleteMany({});
+    console.log("Deleted all posts.");
+
+    console.log("All post-related records deleted successfully.");
+  } catch (error) {
+    console.error("Error deleting post-related records:", error);
+  } finally {
+    await prisma.$disconnect();
+  }
+}
+
 async function main() {
-  await removeAllStudentsFromChatsEfficient();
+  await deleteAllPostRelatedData();
 }
 
 main()

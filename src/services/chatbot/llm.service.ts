@@ -1,4 +1,4 @@
-import { ChatTogetherAI } from "@langchain/community/chat_models/togetherai";
+import { ChatGroq } from "@langchain/groq";
 import { HuggingFaceInferenceEmbeddings } from "@langchain/community/embeddings/hf";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { chatbotConfig } from "./config";
@@ -17,22 +17,22 @@ interface SimpleResponse {
 }
 
 export class LLMService {
-  public llm: ChatTogetherAI;
+  public llm: ChatGroq;
   public embeddings: HuggingFaceInferenceEmbeddings;
-  private fastLLM: ChatTogetherAI; // Faster model for classification
+  private fastLLM: ChatGroq; // Faster model for classification
 
   constructor() {
-    this.llm = new ChatTogetherAI({
+    this.llm = new ChatGroq({
       model: chatbotConfig.llm.model,
-      apiKey: process.env.TOGETHER_AI_API_KEY!,
+      apiKey: process.env.GROQ_API_KEY!,
       maxTokens: chatbotConfig.llm.maxTokens,
       temperature: chatbotConfig.llm.temperature,
     });
 
     // Faster model for quick classification tasks
-    this.fastLLM = new ChatTogetherAI({
-      model: "meta-llama/Llama-3.2-3B-Instruct-Turbo", // Smaller, faster model
-      apiKey: process.env.TOGETHER_AI_API_KEY!,
+    this.fastLLM = new ChatGroq({
+      model: chatbotConfig.llm.fastModel, // Smaller, faster model
+      apiKey: process.env.GROQ_API_KEY!,
       maxTokens: 150,
       temperature: 0.1,
     });

@@ -1,5 +1,5 @@
 import { Tool } from "@langchain/core/tools";
-import { ChatTogetherAI } from "@langchain/community/chat_models/togetherai";
+import { ChatGroq } from "@langchain/groq";
 import { z } from "zod";
 import { UserContext } from "../types";
 import prisma from "../../../db";
@@ -209,14 +209,14 @@ export class DatabaseQueryTool extends Tool {
     })
     .transform((obj) => obj.input);
 
-  private queryLLM: ChatTogetherAI;
+  private queryLLM: ChatGroq;
 
   constructor(private userContext: UserContext) {
     super();
 
-    this.queryLLM = new ChatTogetherAI({
+    this.queryLLM = new ChatGroq({
       model: chatbotConfig.llm.fastModel,
-      apiKey: process.env.TOGETHER_AI_API_KEY!,
+      apiKey: process.env.GROQ_API_KEY!,
       maxTokens: 500,
       temperature: 0.1,
     });

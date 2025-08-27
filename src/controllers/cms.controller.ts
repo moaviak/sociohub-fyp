@@ -128,3 +128,16 @@ export const deleteComment = asyncHandler(
       .json(new ApiResponse(200, null, "Comment deleted successfully"));
   }
 );
+
+export const getRecentPosts = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { page = 1, limit = 10 } = req.query;
+
+    const posts = await cmsService.getRecentPosts({
+      page: parseInt(page as string),
+      limit: parseInt(limit as string),
+    });
+
+    return res.status(200).json(new ApiResponse(200, posts));
+  }
+);

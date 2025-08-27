@@ -1,5 +1,5 @@
 import { ApiError } from "../../utils/ApiError";
-import { ChatbotAgent } from "./chatbot-agent.service";
+import { OptimizedChatbotAgent } from "./chatbot-agent.service"; // Fixed import
 import { LLMService } from "./llm.service";
 import { SessionManager } from "./session-manager";
 import { DocumentRetrievalTool } from "./tools/document.tool";
@@ -14,8 +14,16 @@ interface ProcessingMetrics {
   cacheHit: boolean;
 }
 
+interface IntermediateStep {
+  action: {
+    tool: string;
+    toolInput: any;
+  };
+  observation: any;
+}
+
 export class ChatbotService {
-  private reactAgent: ChatbotAgent;
+  private optimizedAgent: OptimizedChatbotAgent; // Updated property name
   private sessionManager: SessionManager;
   private documentTool!: DocumentRetrievalTool;
   private llmService: LLMService;
@@ -24,7 +32,7 @@ export class ChatbotService {
   private readonly CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
   constructor() {
-    this.reactAgent = new ChatbotAgent();
+    this.optimizedAgent = new OptimizedChatbotAgent(); // Updated initialization
     this.sessionManager = new SessionManager();
     this.llmService = new LLMService();
   }
@@ -49,9 +57,10 @@ export class ChatbotService {
     userContext: UserContext
   ): Promise<{
     response: string;
-    intermediateSteps?: any[];
+    intermediateSteps?: IntermediateStep[];
     metrics?: ProcessingMetrics;
     classification?: any;
+    strategy?: string; // Added strategy field from optimized agent
   }> {
     const startTime = Date.now();
     let classificationTime = 0;
@@ -86,6 +95,7 @@ export class ChatbotService {
 
         return {
           response: cachedResponse.response,
+          strategy: "cached",
           metrics: {
             totalTime: Date.now() - startTime,
             classificationTime: 0,
@@ -96,18 +106,12 @@ export class ChatbotService {
         };
       }
 
-      // Fast preprocessing
-      const classificationStart = Date.now();
-      const preprocessing = await this.llmService.preprocessQuery(
-        query,
-        userContext
-      );
-      classificationTime = Date.now() - classificationStart;
-
+      // The optimized agent handles its own classification internally
+      // No need for separate preprocessing step
       const responseStart = Date.now();
 
-      // Process with agent
-      const result = await this.reactAgent.processQuery(
+      // Process with optimized agent
+      const result = await this.optimizedAgent.processQuery(
         query,
         userContext,
         session.messages,
@@ -116,14 +120,17 @@ export class ChatbotService {
 
       responseTime = Date.now() - responseStart;
 
-      // Extract tools used
+      // Extract tools used from intermediate steps
       if (result.intermediateSteps) {
-        toolsUsed = result.intermediateSteps.map((step) => step.action.tool);
+        toolsUsed = result.intermediateSteps.map(
+          (step: IntermediateStep) => step.action.tool
+        );
       }
 
-      // Cache response for simple and frequently asked queries
+      // Cache response based on strategy
       if (
-        preprocessing.classification.type === "simple" ||
+        result.strategy === "direct" ||
+        result.strategy === "single_tool" ||
         this.shouldCacheResponse(query, result.response)
       ) {
         this.setCachedResponse(cacheKey, result.response);
@@ -138,10 +145,10 @@ export class ChatbotService {
       return {
         response: result.response,
         intermediateSteps: result.intermediateSteps,
-        classification: preprocessing.classification,
+        strategy: result.strategy,
         metrics: {
           totalTime: Date.now() - startTime,
-          classificationTime,
+          classificationTime: 0, // Classification is now instant
           responseTime,
           toolsUsed: [...new Set(toolsUsed)], // Remove duplicates
           cacheHit,
@@ -160,6 +167,7 @@ export class ChatbotService {
 
       return {
         response: errorResponse,
+        strategy: "error",
         metrics: {
           totalTime: Date.now() - startTime,
           classificationTime,
@@ -197,12 +205,11 @@ export class ChatbotService {
     };
 
     try {
-      // Test LLM - Fixed: Removed timeout option that's not supported
+      // Test LLM with timeout wrapper
       const testPromise = this.llmService.llm.invoke([
         { role: "user", content: "test" },
       ]);
 
-      // Add manual timeout wrapper
       const timeoutPromise = new Promise((_, reject) =>
         setTimeout(() => reject(new Error("LLM timeout")), 5000)
       );
@@ -214,7 +221,7 @@ export class ChatbotService {
     }
 
     try {
-      // Test database - Fixed: Use proper Prisma import and query
+      // Test database
       await prisma.$queryRaw`SELECT 1 as test`;
     } catch (error) {
       console.error("Database health check failed:", error);
@@ -224,7 +231,6 @@ export class ChatbotService {
     try {
       // Test vector store if document tool is initialized
       if (this.documentTool) {
-        // Simple test query to check if vector store is accessible
         await Promise.race([
           this.documentTool._call("test health check"),
           new Promise((_, reject) =>
@@ -350,18 +356,23 @@ export class ChatbotService {
     totalQueries: number;
     cacheHitRate: number;
     mostUsedTools: { tool: string; count: number }[];
+    agentStats?: any; // Added optimized agent stats
   }> {
     // Get metrics from session manager
     const globalMetrics = this.sessionManager.getGlobalMetrics();
+
+    // Get optimized agent stats
+    const agentStats = this.optimizedAgent.getStats();
 
     return {
       averageResponseTime: globalMetrics.avgResponseTime,
       totalQueries: globalMetrics.totalQueries,
       cacheHitRate: this.calculateCacheHitRate(),
-      mostUsedTools: globalMetrics.mostUsedTools.map((tool) => ({
+      mostUsedTools: globalMetrics.mostUsedTools.map((tool: string) => ({
         tool,
         count: 1, // You would track actual counts in a production system
       })),
+      agentStats, // Include optimized agent performance data
     };
   }
 
@@ -375,7 +386,7 @@ export class ChatbotService {
   // Enhanced cleanup method
   cleanup(): void {
     this.responseCache.clear();
-    this.reactAgent.resetTools();
+    this.optimizedAgent.resetTools(); // Updated method call
 
     // Clear any intervals or timeouts
     if (this.sessionManager) {
@@ -412,5 +423,22 @@ export class ChatbotService {
       console.error("Service warmup failed:", error);
       throw error;
     }
+  }
+
+  // New method to get agent performance insights
+  getAgentPerformance(): {
+    isHealthy: boolean;
+    stats: any;
+  } {
+    return {
+      isHealthy: this.optimizedAgent.isHealthy(),
+      stats: this.optimizedAgent.getStats(),
+    };
+  }
+
+  // Method to force cache clear if needed
+  clearCache(): void {
+    this.responseCache.clear();
+    this.optimizedAgent.resetTools(); // This also clears the agent's internal cache
   }
 }

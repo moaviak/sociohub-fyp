@@ -39,7 +39,8 @@
   "dependencies": {
     "@huggingface/inference": "^2.8.1",
     "@langchain/community": "^0.3.43",
-    "@langchain/core": "^0.3.56",
+    "@langchain/core": "^0.3.72",
+    "@langchain/groq": "^0.2.3",
     "@langchain/langgraph": "^0.3.12",
     "@langchain/pinecone": "^0.2.0",
     "@langchain/tavily": "^0.1.4",

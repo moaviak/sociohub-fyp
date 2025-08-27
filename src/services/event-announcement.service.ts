@@ -1,6 +1,6 @@
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { StringOutputParser } from "@langchain/core/output_parsers";
-import { ChatTogetherAI } from "@langchain/community/chat_models/togetherai";
+import { ChatGroq } from "@langchain/groq";
 import { EventAudience, EventCategories, EventType } from "@prisma/client";
 
 // Interface for only the required fields needed for announcement generation
@@ -26,13 +26,13 @@ export interface EventAnnouncementInput {
 }
 
 export class EventAnnouncementService {
-  private model: ChatTogetherAI;
+  private model: ChatGroq;
 
   constructor(apiKey?: string) {
     // Initialize the Together AI model with your API key
-    this.model = new ChatTogetherAI({
-      apiKey: process.env.TOGETHER_AI_API_KEY || apiKey,
-      modelName: "meta-llama/Llama-3.3-70B-Instruct-Turbo-Free",
+    this.model = new ChatGroq({
+      apiKey: process.env.GROQ_API_KEY || apiKey,
+      model: "llama-3.1-8b-instant",
       temperature: 0.7,
     });
   }
