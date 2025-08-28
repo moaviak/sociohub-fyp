@@ -1,5 +1,7 @@
 // Enhanced types for improved chatbot system
 
+import { BaseMessage } from "@langchain/core/messages";
+
 export interface ChatMessage {
   role: "user" | "assistant" | "system";
   content: string;
@@ -275,7 +277,7 @@ export interface RouteDecision {
 export interface ClassificationContext {
   query: string;
   userContext?: any;
-  chatHistory?: any[];
+  chatHistory: BaseMessage[];
   timeConstraint?: number; // ms for fast responses
 }
 

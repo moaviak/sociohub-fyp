@@ -1,12 +1,16 @@
 import { LLMService } from "./llm.service";
-import { SystemMessage, HumanMessage } from "@langchain/core/messages";
+import {
+  SystemMessage,
+  HumanMessage,
+  BaseMessage,
+} from "@langchain/core/messages";
 import { RouteDecision, ClassificationContext } from "./types";
 
 export class QueryClassifier {
   constructor(private llmService: LLMService) {}
 
   async classify(context: ClassificationContext): Promise<RouteDecision> {
-    const { query, timeConstraint = 3000 } = context;
+    const { query, timeConstraint = 3000, chatHistory } = context;
 
     // Fast pattern-based classification first
     const patternResult = this.patternClassify(query);
@@ -19,7 +23,7 @@ export class QueryClassifier {
     // For uncertain cases, use LLM with timeout
     try {
       const llmResult = await Promise.race([
-        this.llmClassify(query),
+        this.llmClassify(query, chatHistory),
         new Promise<never>((_, reject) =>
           setTimeout(() => reject(new Error("LLM timeout")), timeConstraint)
         ),
@@ -50,24 +54,24 @@ export class QueryClassifier {
       };
     }
 
-    // Database queries (most common)
+    // Documentation queries (prioritize over database for explanations)
+    if (this.isDocumentQuery(lowerQuery)) {
+      return {
+        strategy: "single_tool",
+        tools: ["document"],
+        confidence: 0.9,
+        reasoning: "Query for feature explanation or help documentation",
+        classificationMethod: "pattern",
+      };
+    }
+
+    // Database queries (platform data)
     if (this.isDatabaseQuery(lowerQuery)) {
       return {
         strategy: "single_tool",
         tools: ["database"],
         confidence: 0.85,
         reasoning: "Query for platform data",
-        classificationMethod: "pattern",
-      };
-    }
-
-    // Documentation queries
-    if (this.isDocumentQuery(lowerQuery)) {
-      return {
-        strategy: "single_tool",
-        tools: ["document"],
-        confidence: 0.85,
-        reasoning: "Query for help/guidance",
         classificationMethod: "pattern",
       };
     }
@@ -93,7 +97,10 @@ export class QueryClassifier {
     };
   }
 
-  private async llmClassify(query: string): Promise<RouteDecision | null> {
+  private async llmClassify(
+    query: string,
+    historyMessages: BaseMessage[]
+  ): Promise<RouteDecision | null> {
     const systemPrompt = `You are a query classifier for SocioHub student platform.
 
 CRITICAL RULES:
@@ -104,28 +111,32 @@ CRITICAL RULES:
 
 AVAILABLE TOOLS AND THEIR CAPABILITIES:
 
-🗄️ DATABASE TOOL:
-- Purpose: Access internal platform data and user-specific information
-- Contains: Events, societies, user profiles, tasks, registrations, meetings, deadlines
-- Use for queries about:
-  • Personal data: "my events", "my tasks", "my societies"
-  • Platform statistics: "how many members", "upcoming events", "total registrations"
-  • Scheduling: "when is my next meeting", "events this week"
-  • User relationships: "members of society X", "who registered for event Y"
-  • Activity history: "past events", "completed tasks", "attendance records"
-  • Platform operations: "create event", "register for society", "mark task complete"
-- Examples: "Show my upcoming events", "How many people registered for the tech meetup?", "What tasks are due this week?"
-
 📚 DOCUMENT TOOL:
-- Purpose: Access help documentation, tutorials, and guidance materials
-- Contains: User manuals, FAQ, how-to guides, feature explanations, troubleshooting
+- Purpose: Explain platform features, provide help, and answer "what is" or "what does this mean" questions
+- Contains: User manuals, feature explanations, FAQ, how-to guides, troubleshooting, definitions
 - Use for queries about:
-  • Instructions: "how to create an event", "steps to join a society"
-  • Feature explanations: "what is the task management system", "explain event categories"
+  • Feature definitions: "what is pending payouts", "what does this button do", "explain the point system"
+  • UI element explanations: "what's this icon", "what does this status mean", "explain this dashboard section"  
+  • Instructions: "how to create an event", "steps to join a society", "how to use this feature"
+  • Feature explanations: "how does the task management work", "explain event categories"
   • Troubleshooting: "why can't I register", "error messages", "login problems"
   • Platform navigation: "where to find settings", "how to access my profile"
   • Policy information: "community guidelines", "privacy policy", "terms of service"
-- Examples: "How do I create a new society?", "What are the event approval guidelines?", "Explain the point system"
+  • Process explanations: "how does approval work", "what happens after I submit"
+- Examples: "What do you mean by 'Pending Payouts'?", "How do I create a new society?", "What are the event approval guidelines?", "Explain the notification settings"
+
+🗄️ DATABASE TOOL:
+- Purpose: Retrieve actual data, records, and user-specific information from the platform
+- Contains: Events, societies, user profiles, tasks, registrations, meetings, deadlines, actual data records
+- Use for queries about:
+  • Personal data retrieval: "show my events", "list my tasks", "my societies"
+  • Platform statistics: "how many members in society X", "total event registrations", "attendance numbers"
+  • Scheduling data: "when is my next meeting", "events this week", "upcoming deadlines"
+  • User relationships: "who are the members of society X", "who registered for event Y"
+  • Activity history: "past events I attended", "completed tasks", "my registration history"
+  • Data operations: "register me for this event", "mark task as complete", "update my profile"
+  • Search and filters: "find events by category", "societies with most members", "tasks due tomorrow"
+- Examples: "Show my upcoming events", "How many people registered for the tech meetup?", "List all societies I'm a member of", "When is the next computer science society meeting?"
 
 🌐 WEB TOOL:
 - Purpose: Fetch external, real-time, or current information from the internet
@@ -139,7 +150,11 @@ AVAILABLE TOOLS AND THEIR CAPABILITIES:
   • Industry insights: "career advice", "professional development", "skill recommendations"
   • Creative inspiration: "event themes", "activity suggestions", "innovative approaches"
   • External resources: "relevant articles", "research findings", "expert opinions"
-- Examples: "What are effective ways to promote events?", "Best practices for virtual meetings", "How to improve team collaboration?", "Creative fundraising ideas", "Latest productivity techniques"
+- Examples: "What are effective ways to promote events?", "Best practices for virtual meetings", "Latest productivity techniques"
+
+KEY DISTINCTION:
+- DOCUMENT: "What does X mean?" / "How does X work?" / "Explain X feature" → Explanations and definitions
+- DATABASE: "Show me X" / "List my X" / "How many X" / "When is X" → Actual data retrieval
 
 STRATEGY SELECTION GUIDE:
 
@@ -165,9 +180,9 @@ STRATEGY SELECTION GUIDE:
 
 CLASSIFICATION DECISION TREE:
 1. Is it a greeting/simple response? → direct
-2. Does it need only platform data? → single_tool: database
-3. Does it need only help/instructions? → single_tool: document  
-4. Does it need only external info? → single_tool: web
+2. Is it asking "what is/does/means" or "explain" or "how does X work"? → single_tool: document
+3. Is it asking to "show/list/find/get" actual data? → single_tool: database  
+4. Does it need only external/real-time info? → single_tool: web
 5. Does it need data from one tool to search another? → sequential
 6. Does it need to compare internal vs external data? → parallel
 7. When uncertain → default to single_tool: database (most platform queries are database-related)
@@ -187,11 +202,20 @@ ENHANCED EXAMPLES:
 Query: "Hello there"
 → {"strategy": "direct", "tools": [], "confidence": 0.95, "reasoning": "Simple greeting, no data needed"}
 
+Query: "What do you mean by 'Pending Payouts' on dashboard"
+→ {"strategy": "single_tool", "tools": ["document"], "confidence": 0.95, "reasoning": "Asking for feature explanation/definition"}
+
 Query: "Show me all events I'm registered for"
-→ {"strategy": "single_tool", "tools": ["database"], "confidence": 0.95, "reasoning": "Personal platform data query"}
+→ {"strategy": "single_tool", "tools": ["database"], "confidence": 0.95, "reasoning": "Requesting personal data retrieval"}
 
 Query: "How do I create a recurring event?"
 → {"strategy": "single_tool", "tools": ["document"], "confidence": 0.9, "reasoning": "Instructional query requiring help documentation"}
+
+Query: "Explain what the notification settings do"
+→ {"strategy": "single_tool", "tools": ["document"], "confidence": 0.9, "reasoning": "Feature explanation query"}
+
+Query: "List all members of the computer science society"
+→ {"strategy": "single_tool", "tools": ["database"], "confidence": 0.9, "reasoning": "Data retrieval query"}
 
 Query: "What's the weather like today?"
 → {"strategy": "single_tool", "tools": ["web"], "confidence": 0.9, "reasoning": "External real-time information"}
@@ -205,12 +229,13 @@ Query: "How does our event attendance compare to other universities?"
 Remember: Respond with ONLY valid JSON, no additional text or explanations.`;
 
     try {
-      console.log(`🤖 [Classifier] Calling LLM for query: "${query}"`);
-
-      const response = await this.llmService.fastLLM.invoke([
+      const messages: BaseMessage[] = [
         new SystemMessage(systemPrompt),
-        new HumanMessage(`Classify: "${query}"`),
-      ]);
+        ...historyMessages,
+        new HumanMessage(query),
+      ];
+
+      const response = await this.llmService.fastLLM.invoke(messages);
 
       const content = response.content?.toString() || "";
       console.log(`🤖 [Classifier] LLM raw response: "${content}"`);
@@ -323,7 +348,7 @@ Remember: Respond with ONLY valid JSON, no additional text or explanations.`;
     }
   }
 
-  // Simplified pattern matching methods
+  // Improved pattern matching methods
   private isDirectQuery(query: string): boolean {
     const directPatterns = [
       /^(hi|hello|hey|good\s+(morning|afternoon|evening))/,
@@ -334,25 +359,63 @@ Remember: Respond with ONLY valid JSON, no additional text or explanations.`;
     return directPatterns.some((pattern) => pattern.test(query));
   }
 
-  private isDatabaseQuery(query: string): boolean {
-    const dbPatterns = [
-      /\b(my|show|list|find|get|count)\b.*\b(events?|tasks?|societies?|registrations?|meetings?)/,
-      /\b(when|where|who|what\s+time)\b.*\b(event|meeting|task|deadline)/,
-      /\b(upcoming|past|today|tomorrow|this\s+week)/,
-      /\b(members?|participants?|users?)\b.*\b(of|in)/,
-      /\b(statistics|stats|total|number|how\s+many)/,
-    ];
-    return dbPatterns.some((pattern) => pattern.test(query));
-  }
-
   private isDocumentQuery(query: string): boolean {
     const docPatterns = [
-      /\b(how\s+to|how\s+do\s+i|how\s+can|tutorial|guide|help)/,
-      /\b(what\s+is|explain|define|meaning|steps?)/,
-      /\b(setup|configure|create|problem|issue|error)/,
-      /\b(feature|functionality|navigate|where\s+to\s+find)/,
+      // Feature explanation patterns
+      /\b(what\s+(do|does|is|are|mean|means)|explain|define|definition)\b.*\b(mean|feature|button|icon|status|section|setting)/,
+      /\b(what\s+(do\s+you\s+mean\s+by|does.*mean|is.*for))/,
+      /\b(explain|tell\s+me\s+about|describe)\s+(the\s+)?\b(feature|function|option|setting)/,
+
+      // How-to and instructional patterns
+      /\b(how\s+to|how\s+do\s+i|how\s+can|tutorial|guide|help)\b/,
+      /\b(steps?|instructions?|procedure|process)\s+(to|for)/,
+      /\b(walk\s+me\s+through|show\s+me\s+how)/,
+
+      // Feature functionality patterns
+      /\b(how\s+does|how\s+do)\s+.*\b(work|function|operate)/,
+      /\b(what\s+happens\s+(when|if|after))/,
+      /\b(purpose\s+of|used\s+for|point\s+of)/,
+
+      // Problem/troubleshooting patterns
+      /\b(problem|issue|error|trouble|can't|cannot|unable|won't|doesn't\s+work)/,
+      /\b(why\s+(can't|cannot|won't|doesn't))/,
+      /\b(setup|configure|settings?|preferences?)/,
+
+      // Navigation and location patterns
+      /\b(where\s+(to\s+find|is\s+the|can\s+i\s+find))/,
+      /\b(navigate|find\s+the|locate|access)/,
+
+      // UI element explanation patterns
+      /\b(dashboard|interface|menu|toolbar|sidebar|panel)/,
+      /\b(pending|approved|rejected|active|inactive)\s+(status|state)/,
+      /\b(notification|alert|message|popup)/,
     ];
     return docPatterns.some((pattern) => pattern.test(query));
+  }
+
+  private isDatabaseQuery(query: string): boolean {
+    const dbPatterns = [
+      // Data retrieval patterns - must be specific about getting actual data
+      /\b(show\s+me|list|display|get\s+me|find\s+me|give\s+me)\s+.*\b(events?|tasks?|societies?|registrations?|meetings?|members?)/,
+      /\b(my|mine)\s+.*\b(events?|tasks?|societies?|registrations?|meetings?|deadlines?)/,
+
+      // Quantity and statistics patterns
+      /\b(how\s+many|count|number\s+of|total|statistics|stats)\b/,
+      /\b(attendance|participants?|registered|members?)\b.*\b(for|in|of)/,
+
+      // Time-based data queries
+      /\b(when\s+is|what\s+time|schedule|upcoming|next)\s+.*\b(event|meeting|task|deadline)/,
+      /\b(today|tomorrow|this\s+week|next\s+week|past|previous)/,
+
+      // Relationship and membership queries
+      /\b(who\s+(are|is)|members?\s+of|in\s+the)\b/,
+      /\b(registered\s+for|signed\s+up|enrolled\s+in)/,
+
+      // Status and state queries (actual data, not explanations)
+      /\b(status\s+of|state\s+of)\s+(my|the)\s+.*\b(task|event|registration)/,
+      /\b(completed|pending|approved|rejected)\s+.*\b(tasks?|events?|requests?)/,
+    ];
+    return dbPatterns.some((pattern) => pattern.test(query));
   }
 
   private isWebQuery(query: string): boolean {

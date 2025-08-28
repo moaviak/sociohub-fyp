@@ -471,10 +471,7 @@ Return ONLY valid JSON — no explanations, notes, or extra formatting.`;
       ]);
 
       const content = response.content.toString().trim();
-      console.log(
-        `Filter parsing response for ${queryType}:`,
-        content.substring(0, 300) + "..."
-      );
+      console.log(`Filter parsing response for ${queryType}:`, content);
 
       const jsonMatch =
         content.match(/\{[\s\S]*\}/) ||

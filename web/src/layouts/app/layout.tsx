@@ -53,10 +53,10 @@ function AppLayout() {
   }, [createSession]);
 
   useEffect(() => {
-    if (!sessionId && !isLoading) {
+    if (!sessionId && !isLoading && isAuthenticated) {
       initializeSession();
     }
-  }, [sessionId, initializeSession, isLoading]);
+  }, [sessionId, initializeSession, isLoading, isAuthenticated]);
 
   if (!isAuthChecked) {
     return (

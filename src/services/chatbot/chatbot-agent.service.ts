@@ -1,5 +1,10 @@
 import { LLMService } from "./llm.service";
-import { SystemMessage, HumanMessage } from "@langchain/core/messages";
+import {
+  SystemMessage,
+  HumanMessage,
+  AIMessage,
+  BaseMessage,
+} from "@langchain/core/messages";
 import {
   RouteDecision,
   ClassificationContext,
@@ -28,6 +33,15 @@ interface QueryEnhancement {
   enhancedQuery: string;
   toolSpecificQueries: Map<string, string>;
   reasoning: string;
+}
+
+export interface AgentThought {
+  type: "reasoning" | "tool_call" | "tool_result" | "final_answer";
+  title: string;
+  description: string;
+  timestamp: number;
+  toolName?: string;
+  status: "thinking" | "executing" | "completed" | "error";
 }
 
 export class ChatbotAgent {
@@ -77,7 +91,6 @@ export class ChatbotAgent {
 
 Original query: "{query}"
 User context: {userContext}
-Chat history: {chatHistory}
 
 Rewrite this query to be more specific and database-friendly by:
 - Using specific entity names (events, societies, users, tasks)
@@ -91,7 +104,6 @@ Enhanced query:`,
 
 Original query: "{query}"
 User context: {userContext}
-Chat history: {chatHistory}
 
 Rewrite this query to be better for document/semantic search by:
 - Using keywords that would appear in documentation
@@ -105,7 +117,6 @@ Enhanced query:`,
 
 Original query: "{query}"
 User context: {userContext}
-Chat history: {chatHistory}
 
 Rewrite this query to be better for web search by:
 - Adding context keywords like "SocioHub platform"
@@ -159,11 +170,16 @@ Enhanced query:`,
       // Initialize tools once
       await this.initializeTools(userContext);
 
+      // Prepare the chat history
+      const historyMessages = this.convertChatHistoryToLangChainMessages(
+        chatHistory.slice(-5) // Use last 5 messages for context
+      );
+
       // Classify query
       const route = await this.classifier.classify({
         query,
         userContext,
-        chatHistory,
+        chatHistory: historyMessages,
         timeConstraint: 3000,
       });
 
@@ -171,12 +187,15 @@ Enhanced query:`,
         route.strategy as keyof typeof this.metrics.strategyCount
       ]++;
 
-      // Emit status
+      // Emit classification status
       this.emitStatus(userContext, sessionId, {
-        type: "classification",
-        strategy: route.strategy,
-        tools: route.tools,
-        reasoning: route.reasoning,
+        type: "reasoning",
+        title: "Query Classification",
+        description: `Classified as ${
+          route.strategy
+        } strategy with tools: ${route.tools.join(", ")}. ${route.reasoning}`,
+        timestamp: Date.now(),
+        status: "completed",
       });
 
       let result: AgentResponse;
@@ -191,7 +210,7 @@ Enhanced query:`,
             route.tools[0],
             query,
             userContext,
-            chatHistory,
+            historyMessages,
             sessionId,
             startTime
           );
@@ -202,7 +221,7 @@ Enhanced query:`,
             route.tools,
             query,
             userContext,
-            chatHistory,
+            historyMessages,
             sessionId,
             startTime
           );
@@ -213,7 +232,7 @@ Enhanced query:`,
             route.tools,
             query,
             userContext,
-            chatHistory,
+            historyMessages,
             sessionId,
             startTime
           );
@@ -247,11 +266,45 @@ Enhanced query:`,
     }
   }
 
+  /**
+   * Convert custom ChatMessage array to LangChain message format
+   */
+  private convertChatHistoryToLangChainMessages(
+    chatHistory: ChatMessage[]
+  ): BaseMessage[] {
+    return chatHistory.map((message) => {
+      switch (message.role) {
+        case "user":
+          return new HumanMessage(message.content);
+        case "assistant":
+          return new AIMessage(message.content);
+        case "system":
+          return new SystemMessage(message.content);
+        default:
+          // Default to HumanMessage if role is unknown
+          return new HumanMessage(message.content);
+      }
+    });
+  }
+
+  /**
+   * Format chat history for string templates (fallback method)
+   */
+  private formatChatHistoryAsString(
+    chatHistory: ChatMessage[],
+    limit: number = 3
+  ): string {
+    return chatHistory
+      .slice(-limit)
+      .map((m) => `${m.role}: ${m.content}`)
+      .join("\n");
+  }
+
   private async enhanceQuery(
     originalQuery: string,
     tools: string[],
     userContext: UserContext,
-    chatHistory: ChatMessage[] = []
+    chatHistory: BaseMessage[] = []
   ): Promise<QueryEnhancement> {
     const enhancementStart = Date.now();
 
@@ -278,19 +331,17 @@ Enhanced query:`,
               role: userContext.type,
               preferences: userContext.preferences,
             })
-          )
-          .replace(
-            "{chatHistory}",
-            chatHistory
-              .slice(-3)
-              .map((m) => `${m.role}: ${m.content}`)
-              .join("\n")
           );
 
         try {
-          const response = await this.llmService.llm.invoke([
+          // Create messages array: system prompt + chat history + current query
+          const messages: BaseMessage[] = [
             new SystemMessage(enhancementPrompt),
-          ]);
+            ...chatHistory,
+            new HumanMessage(`Please enhance this query: "${originalQuery}"`),
+          ];
+
+          const response = await this.llmService.llm.invoke(messages);
 
           const enhancedQuery =
             response.content?.toString()?.trim() || originalQuery;
@@ -385,7 +436,7 @@ Enhanced query:`,
     toolName: string,
     query: string,
     userContext: UserContext,
-    chatHistory: ChatMessage[],
+    chatHistory: BaseMessage[],
     sessionId: string,
     startTime: number
   ): Promise<AgentResponse> {
@@ -398,16 +449,21 @@ Enhanced query:`,
     );
 
     this.emitStatus(userContext, sessionId, {
-      type: "query_enhancement",
-      originalQuery: query,
-      enhancedQuery: enhancement.enhancedQuery,
+      type: "reasoning",
+      title: "Query Enhancement",
+      description: `Enhanced query for ${toolName}: "${enhancement.enhancedQuery}"`,
+      timestamp: Date.now(),
       toolName,
+      status: "completed",
     });
 
     this.emitStatus(userContext, sessionId, {
-      type: "tool_execution",
+      type: "tool_call",
+      title: `Executing ${toolName} Tool`,
+      description: `Running ${toolName} with enhanced query`,
+      timestamp: Date.now(),
       toolName,
-      status: "running",
+      status: "executing",
     });
 
     this.metrics.toolCount[toolName as keyof typeof this.metrics.toolCount]++;
@@ -421,16 +477,29 @@ Enhanced query:`,
       // Use the tool-specific enhanced query
       const queryToUse = enhancement.toolSpecificQueries.get(toolName) || query;
       const toolOutput = await tool.invoke(queryToUse);
+
+      this.emitStatus(userContext, sessionId, {
+        type: "tool_result",
+        title: `${toolName} Results`,
+        description: `Successfully retrieved data from ${toolName}`,
+        timestamp: Date.now(),
+        toolName,
+        status: "completed",
+      });
+
       const response = await this.generateResponse(
         query,
         toolOutput,
         toolName,
+        chatHistory,
         enhancement.enhancedQuery
       );
 
       this.emitStatus(userContext, sessionId, {
-        type: "tool_execution",
-        toolName,
+        type: "final_answer",
+        title: "Response Generated",
+        description: "Formatted final response using tool results",
+        timestamp: Date.now(),
         status: "completed",
       });
 
@@ -446,10 +515,12 @@ Enhanced query:`,
       console.error(`Tool ${toolName} failed:`, error);
 
       this.emitStatus(userContext, sessionId, {
-        type: "tool_execution",
+        type: "tool_result",
+        title: `${toolName} Error`,
+        description: `Tool execution failed: ${(error as Error).message}`,
+        timestamp: Date.now(),
         toolName,
         status: "error",
-        error: (error as Error).message,
       });
 
       return this.handleFallback(query, startTime);
@@ -460,7 +531,7 @@ Enhanced query:`,
     tools: string[],
     query: string,
     userContext: UserContext,
-    chatHistory: ChatMessage[],
+    chatHistory: BaseMessage[],
     sessionId: string,
     startTime: number
   ): Promise<AgentResponse> {
@@ -472,10 +543,13 @@ Enhanced query:`,
     );
 
     this.emitStatus(userContext, sessionId, {
-      type: "query_enhancement",
-      originalQuery: query,
-      enhancedQuery: enhancement.enhancedQuery,
-      tools,
+      type: "reasoning",
+      title: "Sequential Query Enhancement",
+      description: `Enhanced query for sequential execution with tools: ${tools.join(
+        ", "
+      )}`,
+      timestamp: Date.now(),
+      status: "completed",
     });
 
     let accumulatedContext = enhancement.enhancedQuery;
@@ -484,9 +558,12 @@ Enhanced query:`,
     for (const toolName of tools) {
       try {
         this.emitStatus(userContext, sessionId, {
-          type: "sequential_step",
+          type: "tool_call",
+          title: `Sequential Step: ${toolName}`,
+          description: `Executing ${toolName} in sequential order`,
+          timestamp: Date.now(),
           toolName,
-          status: "running",
+          status: "executing",
         });
 
         const tool = this.tools.get(toolName);
@@ -503,19 +580,45 @@ Enhanced query:`,
         results.push(toolOutput);
         accumulatedContext = `${enhancement.enhancedQuery}\n\nContext: ${toolOutput}`;
 
+        this.emitStatus(userContext, sessionId, {
+          type: "tool_result",
+          title: `${toolName} Completed`,
+          description: `Successfully executed ${toolName} in sequence`,
+          timestamp: Date.now(),
+          toolName,
+          status: "completed",
+        });
+
         this.metrics.toolCount[
           toolName as keyof typeof this.metrics.toolCount
         ]++;
       } catch (error) {
         console.error(`Sequential step ${toolName} failed:`, error);
+        this.emitStatus(userContext, sessionId, {
+          type: "tool_result",
+          title: `${toolName} Failed`,
+          description: `Sequential step failed: ${(error as Error).message}`,
+          timestamp: Date.now(),
+          toolName,
+          status: "error",
+        });
       }
     }
 
     const finalResponse = await this.generateCombinedResponse(
       query,
       results,
+      chatHistory,
       enhancement.enhancedQuery
     );
+
+    this.emitStatus(userContext, sessionId, {
+      type: "final_answer",
+      title: "Sequential Response Complete",
+      description: "Combined results from sequential tool execution",
+      timestamp: Date.now(),
+      status: "completed",
+    });
 
     return {
       response: finalResponse,
@@ -530,7 +633,7 @@ Enhanced query:`,
     tools: string[],
     query: string,
     userContext: UserContext,
-    chatHistory: ChatMessage[],
+    chatHistory: BaseMessage[],
     sessionId: string,
     startTime: number
   ): Promise<AgentResponse> {
@@ -542,16 +645,21 @@ Enhanced query:`,
     );
 
     this.emitStatus(userContext, sessionId, {
-      type: "query_enhancement",
-      originalQuery: query,
-      enhancedQuery: enhancement.enhancedQuery,
-      tools,
+      type: "reasoning",
+      title: "Parallel Query Enhancement",
+      description: `Enhanced query for parallel execution with tools: ${tools.join(
+        ", "
+      )}`,
+      timestamp: Date.now(),
+      status: "completed",
     });
 
     this.emitStatus(userContext, sessionId, {
-      type: "parallel_execution",
-      tools,
-      status: "running",
+      type: "tool_call",
+      title: "Parallel Execution",
+      description: `Running ${tools.length} tools in parallel`,
+      timestamp: Date.now(),
+      status: "executing",
     });
 
     const toolPromises = tools.map(async (toolName) => {
@@ -564,12 +672,29 @@ Enhanced query:`,
           enhancement.toolSpecificQueries.get(toolName) || query;
         const result = await tool.invoke(queryToUse);
 
+        this.emitStatus(userContext, sessionId, {
+          type: "tool_result",
+          title: `${toolName} Completed`,
+          description: `Parallel execution of ${toolName} successful`,
+          timestamp: Date.now(),
+          toolName,
+          status: "completed",
+        });
+
         this.metrics.toolCount[
           toolName as keyof typeof this.metrics.toolCount
         ]++;
         return result;
       } catch (error) {
         console.error(`Parallel tool ${toolName} failed:`, error);
+        this.emitStatus(userContext, sessionId, {
+          type: "tool_result",
+          title: `${toolName} Failed`,
+          description: `Parallel execution failed: ${(error as Error).message}`,
+          timestamp: Date.now(),
+          toolName,
+          status: "error",
+        });
         return null;
       }
     });
@@ -580,8 +705,17 @@ Enhanced query:`,
     const finalResponse = await this.generateCombinedResponse(
       query,
       validResults,
+      chatHistory,
       enhancement.enhancedQuery
     );
+
+    this.emitStatus(userContext, sessionId, {
+      type: "final_answer",
+      title: "Parallel Response Complete",
+      description: "Combined results from parallel tool execution",
+      timestamp: Date.now(),
+      status: "completed",
+    });
 
     return {
       response: finalResponse,
@@ -596,32 +730,40 @@ Enhanced query:`,
     query: string,
     toolOutput: string,
     toolName: string,
+    historyMessages: BaseMessage[],
     enhancedQuery?: string
   ): Promise<string> {
-    const systemPrompt = `You are SocioBot for SocioHub. 
-    
-User's original question: "${query}"
-${enhancedQuery ? `Enhanced query used: "${enhancedQuery}"` : ""}
-${toolName} returned: ${toolOutput}
+    const systemPrompt = `You are SocioBot, a friendly assistant for SocioHub. 
 
-Generate a helpful, concise response using proper markdown formatting for better readability:
-- Use **bold** for important information
-- Use bullet points with - for lists
-- Use \`code formatting\` for technical terms or specific names
-- Use proper line breaks for readability
-- Keep response under 150 words but well-structured
+User asked: "${query}"
+Data retrieved: ${toolOutput}
 
-Format your response in clean, readable markdown.`;
+IMPORTANT GUIDELINES:
+- NEVER mention "enhanced queries", "database queries", or technical implementation details
+- NEVER expose internal processing information to the user
+- Focus ONLY on the actual data/results for the user
+- If no results found, provide helpful suggestions without mentioning technical details
+- Be conversational and user-friendly
+- Use proper markdown formatting for readability
+- Keep responses concise but informative
+
+Generate a natural, helpful response that directly addresses what the user asked for.`;
 
     try {
-      const response = await this.llmService.llm.invoke([
+      // Create messages array: system prompt + chat history + current query
+      const messages: BaseMessage[] = [
         new SystemMessage(systemPrompt),
-      ]);
+        ...historyMessages,
+        new HumanMessage(query),
+      ];
+
+      const response = await this.llmService.llm.invoke(messages);
       return (
         response.content?.toString() ||
         "I found some information but couldn't format a proper response."
       );
     } catch (error) {
+      console.error("Response generation error:", error);
       return "I retrieved some information but encountered an issue formatting the response.";
     }
   }
@@ -629,6 +771,7 @@ Format your response in clean, readable markdown.`;
   private async generateCombinedResponse(
     query: string,
     results: string[],
+    chatHistory: BaseMessage[],
     enhancedQuery?: string
   ): Promise<string> {
     if (results.length === 0) {
@@ -654,14 +797,20 @@ Combine this information into a comprehensive response using proper markdown for
 Format your response in clean, readable markdown.`;
 
     try {
-      const response = await this.llmService.llm.invoke([
+      // Create messages array: system prompt + chat history + current query
+      const messages: BaseMessage[] = [
         new SystemMessage(systemPrompt),
-      ]);
+        ...chatHistory,
+        new HumanMessage(query),
+      ];
+
+      const response = await this.llmService.llm.invoke(messages);
       return (
         response.content?.toString() ||
         "I found information from multiple sources but couldn't combine them properly."
       );
     } catch (error) {
+      console.error("Combined response generation error:", error);
       return "I gathered information from multiple sources but encountered an issue combining the results.";
     }
   }
@@ -678,13 +827,13 @@ Format your response in clean, readable markdown.`;
   private emitStatus(
     userContext: UserContext,
     sessionId: string,
-    status: any
+    thought: AgentThought
   ): void {
     try {
       if (userContext?.id) {
-        emitEventToUser(io, userContext.id, "agent_status", {
+        emitEventToUser(io, userContext.id, "agent_thought", {
           sessionId,
-          status,
+          thought,
           timestamp: Date.now(),
         });
       }
