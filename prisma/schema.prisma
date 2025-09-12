@@ -49,9 +49,10 @@ model Student {
   teamInvitations   TeamInvitation[]  @relation("TeamInvitations")
   assignedTeamTasks TeamTask[]        @relation("AssignedTeamTasks")
 
-  user         User?
-  activityLogs ActivityLog[]
-  pushTokens   PushToken[]
+  user             User?
+  activityLogs     ActivityLog[]
+  pushTokens       PushToken[]
+  eventInvitations EventInvitation[]
 }
 
 model Advisor {
@@ -383,6 +384,7 @@ model Event {
   eventAnnouncement   Announcement?        @relation("EventAnnouncement")
   paymentTransactions PaymentTransaction[]
   galleryPosts        Post[]
+  eventInvitations    EventInvitation[]
 
   @@index([societyId])
 }
@@ -425,6 +427,25 @@ model EventTicket {
   scannedByStudent Student?          @relation("ScannedByStudent", fields: [scannedBy], references: [id])
 
   @@index([isScanned])
+}
+
+model EventInvitation {
+  id        String           @id @default(uuid())
+  eventId   String           @unique
+  studentId String           @unique
+  sentAt    DateTime         @default(now())
+  status    InvitationStatus @default(PENDING)
+
+  // Relations
+  event   Event   @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([eventId, studentId])
+  @@index([eventId])
+  @@index([studentId])
 }
 
 // Payment related enums
