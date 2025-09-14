@@ -198,4 +198,22 @@ export class EventRepository {
       where: { eventId },
     });
   }
+
+  static async inviteStudents(eventId: string, studentIds: string[]) {
+    const invitations = studentIds.map((studentId) =>
+      prisma.eventInvitation.create({
+        data: { eventId, studentId },
+      })
+    );
+
+    return await Promise.all(invitations);
+  }
+
+  static async getUserInvitations(userId: string) {
+    return prisma.eventInvitation.findMany({
+      where: { studentId: userId },
+      include: { event: { include: { society: true } } },
+      orderBy: { sentAt: "desc" },
+    });
+  }
 }

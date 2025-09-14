@@ -246,6 +246,31 @@ export class EventService {
     return this.ticketService.scanTicket(ticketData);
   }
 
+  static async inviteStudents(eventId: string, studentIds: string[]) {
+    const event = await EventRepository.findEventById(eventId);
+
+    if (!event) {
+      throw new ApiError(404, "Event not found");
+    }
+
+    if (event.visibility === "Draft") {
+      throw new ApiError(400, "Cannot invite students to a draft event");
+    }
+
+    if (event.status === "Cancelled" || event.status === "Completed") {
+      throw new ApiError(
+        400,
+        "Cannot invite students to a cancelled or completed event"
+      );
+    }
+
+    return EventRepository.inviteStudents(eventId, studentIds);
+  }
+
+  static async getUserInvitedEvents(userId: string) {
+    return EventRepository.getUserInvitations(userId);
+  }
+
   // Draft-related methods
   static async saveDraft(
     input: any,

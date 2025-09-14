@@ -733,3 +733,31 @@ export const scanTicket = asyncHandler(async (req: Request, res: Response) => {
     .status(200)
     .json(new ApiResponse(200, ticket, "Ticket scanned successfully"));
 });
+
+/**
+ * Invite students to an event
+ */
+export const inviteStudents = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { eventId, studentIds } = req.body;
+
+    const invitations = await EventService.inviteStudents(eventId, studentIds);
+
+    return res
+      .status(200)
+      .json(new ApiResponse(200, invitations, "Invitations sent successfully"));
+  }
+);
+
+/**
+ * Get events the user is invited to
+ */
+export const getUserInvitedEvents = asyncHandler(
+  async (req: Request, res: Response) => {
+    const user = req.user as IUser;
+
+    return res
+      .status(200)
+      .json(new ApiResponse(200, null, "Events successfully fetched"));
+  }
+);

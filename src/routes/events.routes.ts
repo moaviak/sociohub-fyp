@@ -1,4 +1,4 @@
-import { Router } from "express";
+import { NextFunction, Request, Response, Router } from "express";
 import { verifyJWT } from "../middlewares/auth.middlewares";
 import { upload } from "../middlewares/multer.middlewares";
 import {
@@ -25,6 +25,8 @@ import {
   scanTicket,
   completeRegistration,
   cancelRegistration,
+  inviteStudents,
+  getUserInvitedEvents,
 } from "../controllers/event.controller";
 import { verifyEventsPrivilege } from "../middlewares/privilege.middlewares";
 import { body } from "express-validator";
@@ -86,6 +88,8 @@ router
 // Add user registered events endpoint
 router.get("/my-registrations", verifyJWT, getUserRegisteredEvents);
 
+router.get("/my-invitations", verifyJWT, getUserInvitedEvents);
+
 // Ticket scan endpoint (admin only)
 router.post(
   "/scan-ticket",
@@ -114,6 +118,31 @@ router
 
 // Cancel event by ID
 router.patch("/:eventId/cancel", verifyJWT, verifyEventsPrivilege, cancelEvent);
+
+router.post(
+  "/:eventId/invite",
+  [
+    verifyJWT,
+    body("studentIds")
+      .isArray()
+      .withMessage("studentIds must be an array")
+      .notEmpty()
+      .withMessage("studentIds cannot be empty"),
+    body("studentIds.*")
+      .isString()
+      .withMessage("each studentId must be a string")
+      .notEmpty()
+      .withMessage("studentId cannot be empty"),
+    validate,
+  ],
+  (req: Request, res: Response, next: NextFunction) => {
+    req.body.societyId = req.query.societyId as string;
+    req.body.eventId = req.params.eventId;
+    next();
+  },
+  verifyEventsPrivilege,
+  inviteStudents
+);
 
 // Add registration endpoint
 router.post(

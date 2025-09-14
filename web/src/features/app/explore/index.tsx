@@ -1,4 +1,4 @@
-import { CalendarCheck, User, Users } from "lucide-react";
+import { CalendarCheck, Megaphone, User, Users } from "lucide-react";
 import { useLocation, useNavigate } from "react-router";
 import { useEffect, useState, useMemo } from "react";
 
@@ -58,7 +58,7 @@ const Explore = () => {
           Events
         </TabsTrigger>
         <TabsTrigger className="b2-semibold gap-x-3" value="announcements">
-          <CalendarCheck className="w-6 h-6 text-primary-600" />
+          <Megaphone className="w-6 h-6 text-primary-600" />
           Announcements
         </TabsTrigger>
       </TabsList>
