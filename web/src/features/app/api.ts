@@ -1,4 +1,4 @@
-import { ActivityLog, CalendarReminder, Society } from "@/types";
+import { ActivityLog, CalendarReminder, Society, Student } from "@/types";
 import { api } from "../api";
 import ApiError, { ApiErrorResponse, createApiError } from "../api-error";
 import { ApiResponse } from "../api-response";
@@ -139,6 +139,16 @@ export const appApi = api.injectEndpoints({
         return createApiError(errorResponse.message);
       },
     }),
+    getStudents: builder.query<Student[], { search: string }>({
+      query: ({ search }) => `/users/students?search=${search}`,
+      transformResponse: (response: ApiResponse<Student[]>) => {
+        return response.data;
+      },
+      transformErrorResponse: (response) => {
+        const errorResponse = response.data as ApiErrorResponse;
+        return createApiError(errorResponse.message);
+      },
+    }),
   }),
 });
 
@@ -149,4 +159,5 @@ export const {
   useGetActivityLogsQuery,
   useGetSocietyKPIsQuery,
   useGetCalendarRemindersQuery,
+  useGetStudentsQuery,
 } = appApi;

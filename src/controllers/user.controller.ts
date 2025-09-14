@@ -4,6 +4,7 @@ import { ApiResponse } from "../utils/ApiResponse";
 import {
   getAllUsersService,
   getCalendarReminders,
+  getStudents,
   getUserByIdService,
   searchUsersService,
   updateUserProfileService,
@@ -119,5 +120,17 @@ export const fetchCalendarReminders = asyncHandler(
           "Calendar reminders successfully fetched."
         )
       );
+  }
+);
+
+export const fetchStudents = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { search = "" } = req.query;
+
+    const students = await getStudents(search as string);
+
+    return res
+      .status(200)
+      .json(new ApiResponse(200, students, "Students fetched successfully."));
   }
 );

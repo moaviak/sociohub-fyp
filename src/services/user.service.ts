@@ -463,6 +463,25 @@ export const getCalendarReminders = async (
   });
 };
 
+export const getStudents = async (search: string) => {
+  const searchTerm = `${search.trim().toLowerCase()}`;
+
+  const students = await prisma.student.findMany({
+    where: {
+      OR: [
+        { firstName: { contains: searchTerm, mode: "insensitive" } },
+        { lastName: { contains: searchTerm, mode: "insensitive" } },
+        { email: { contains: searchTerm, mode: "insensitive" } },
+        { registrationNumber: { contains: searchTerm, mode: "insensitive" } },
+      ],
+    },
+    take: 10,
+    orderBy: { firstName: "asc", lastName: "asc" },
+  });
+
+  return students;
+};
+
 function createISOString(startDate: Date, startTime: string) {
   // Ensure the date part is correct and reset the time to midnight UTC
   const baseDate = new Date(startDate);

@@ -23,10 +23,7 @@ export const AvatarGroup = ({
       className={cn("flex gap-x-3 items-center", className)}
     >
       <Avatar className="h-10 w-10 cursor-pointer">
-        <AvatarImage
-          src={user.avatar ?? "/assets/images/avatar-placeholder.png"}
-          className="object-cover"
-        />
+        <AvatarImage src={user.avatar} className="object-cover" />
         <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white font-semibold">
           {user.firstName![0]}
           {user.lastName![0]}

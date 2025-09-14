@@ -21,6 +21,7 @@ export class EventRepository {
       where: { id: eventId },
       include: {
         society: true,
+        eventInvitations: true,
         _count: { select: { eventRegistrations: true } },
       },
     });
@@ -200,13 +201,55 @@ export class EventRepository {
   }
 
   static async inviteStudents(eventId: string, studentIds: string[]) {
-    const invitations = studentIds.map((studentId) =>
-      prisma.eventInvitation.create({
-        data: { eventId, studentId },
-      })
-    );
+    return await prisma.$transaction(async (tx) => {
+      // Get currently invited students for this event
+      const existingInvitations = await tx.eventInvitation.findMany({
+        where: { eventId },
+        select: { studentId: true },
+      });
 
-    return await Promise.all(invitations);
+      const existingStudentIds = existingInvitations.map(
+        (inv) => inv.studentId
+      );
+
+      // Find students to invite (new ones not already invited)
+      const studentsToInvite = studentIds.filter(
+        (studentId) => !existingStudentIds.includes(studentId)
+      );
+
+      // Find students to remove (previously invited but not in new list)
+      const studentsToRemove = existingStudentIds.filter(
+        (studentId) => !studentIds.includes(studentId)
+      );
+
+      // Delete invitations for students no longer in the list
+      if (studentsToRemove.length > 0) {
+        await tx.eventInvitation.deleteMany({
+          where: {
+            eventId,
+            studentId: { in: studentsToRemove },
+          },
+        });
+      }
+
+      // Create invitations for new students
+      const newInvitations =
+        studentsToInvite.length > 0
+          ? await Promise.all(
+              studentsToInvite.map((studentId) =>
+                tx.eventInvitation.create({
+                  data: { eventId, studentId },
+                })
+              )
+            )
+          : [];
+
+      // Return both the new invitations and the array of newly invited student IDs
+      return {
+        newInvitations,
+        newStudentIds: studentsToInvite,
+      };
+    });
   }
 
   static async getUserInvitations(userId: string) {

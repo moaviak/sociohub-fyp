@@ -1,6 +1,7 @@
 import { Router } from "express";
 import {
   fetchCalendarReminders,
+  fetchStudents,
   getAllUsers,
   getUserById,
   searchUsers,
@@ -26,6 +27,9 @@ router
     updateUserProfile
   );
 router.get("/reminders", fetchCalendarReminders);
+
+router.get("/students", fetchStudents);
+
 router.route("/:id").get(getUserById);
 
 export default router;

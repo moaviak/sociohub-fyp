@@ -4,7 +4,7 @@ import ApiError, {
   createApiError,
 } from "@/features/api-error";
 import { ApiResponse } from "@/features/api-response";
-import { Event, Registration, Ticket } from "@/types";
+import { Event, EventInvitation, Registration, Ticket } from "@/types";
 import { EventAnnouncementInput } from "./types";
 
 export interface EventRegistrationResponse {
@@ -278,6 +278,24 @@ export const eventApi = api.injectEndpoints({
         }
       },
     }),
+    inviteStudents: builder.mutation<
+      EventInvitation[],
+      { societyId: string; eventId: string; studentIds: string[] }
+    >({
+      query: ({ eventId, societyId, studentIds }) => ({
+        url: `/events/${eventId}/invite?societyId=${societyId}`,
+        method: "POST",
+        body: { studentIds },
+      }),
+      transformResponse: (response: ApiResponse<EventInvitation[]>) => {
+        return response.data;
+      },
+      transformErrorResponse: (response) => {
+        const errorResponse = response.data as ApiErrorResponse;
+        return createApiError(errorResponse.message);
+      },
+      invalidatesTags: (_, __, arg) => [{ type: "Events", id: arg.eventId }],
+    }),
   }),
 });
 
@@ -292,4 +310,5 @@ export const {
   useDeleteEventMutation,
   useCancelEventMutation,
   useGetMyRegistrationsQuery,
+  useInviteStudentsMutation,
 } = eventApi;

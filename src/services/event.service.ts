@@ -264,7 +264,12 @@ export class EventService {
       );
     }
 
-    return EventRepository.inviteStudents(eventId, studentIds);
+    const { newInvitations, newStudentIds } =
+      await EventRepository.inviteStudents(eventId, studentIds);
+
+    this.notificationService.sendEventInviteNotifications(newStudentIds, event);
+
+    return newInvitations;
   }
 
   static async getUserInvitedEvents(userId: string) {

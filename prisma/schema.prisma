@@ -431,8 +431,8 @@ model EventTicket {
 
 model EventInvitation {
   id        String           @id @default(uuid())
-  eventId   String           @unique
-  studentId String           @unique
+  eventId   String
+  studentId String
   sentAt    DateTime         @default(now())
   status    InvitationStatus @default(PENDING)
 

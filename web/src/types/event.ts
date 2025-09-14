@@ -71,6 +71,7 @@ export interface Event {
     eventRegistrations: number;
   };
   registration?: Registration;
+  eventInvitations?: EventInvitation[];
   formStep?: number;
   isDraft?: boolean;
   createdAt?: string;
@@ -94,4 +95,12 @@ export interface Ticket {
   isScanned?: boolean;
   scannedAt?: string;
   scannedBy?: Student;
+}
+
+export interface EventInvitation {
+  id: string;
+  eventId: string;
+  studentId: string;
+  sentAt: string;
+  status: "PENDING" | "ACCEPTED" | "DECLINED";
 }

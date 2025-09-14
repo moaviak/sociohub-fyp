@@ -95,6 +95,34 @@ export class EventNotificationService {
       return null;
     }
   }
+
+  async sendEventInviteNotifications(studentIds: string[], event: Event) {
+    const recipients = studentIds.map((studentId) => ({
+      recipientType: "student" as "student" | "advisor",
+      recipientId: studentId,
+      webRedirectUrl: `/event/${event.id}`,
+      mobileRedirectUrl: { pathname: "/event/[id]", params: { id: event.id } },
+    }));
+
+    const notification = await createNotification({
+      title: "Invited to an Event",
+      description: `You have been invited to the Event: ${event.title}.`,
+      recipients,
+      image: event.banner,
+      mobileRedirectUrl: { pathname: "/event/[id]", params: { id: event.id } },
+      webRedirectUrl: `/event/${event.id}`,
+    });
+
+    if (notification) {
+      sendNotificationToUsers(io, recipients, notification);
+      pushNotificationService.sendToRecipients(recipients, {
+        title: notification.title,
+        body: notification.description,
+      });
+    }
+
+    return notification;
+  }
 }
 
 export default new EventNotificationService();
