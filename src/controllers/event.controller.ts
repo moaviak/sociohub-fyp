@@ -390,16 +390,26 @@ export const getEventById = asyncHandler(
         throw new ApiError(404, "Event not found");
       }
       let isRegistered = false;
+      let isInvited = false;
       let registration = undefined;
       if (user && user.id) {
         // Find registration for this user and event, including ticket and student info
-        const reg = await prisma.eventRegistration.findFirst({
-          where: { studentId: user.id, eventId },
-          include: {
-            ticket: true,
-            student: true,
-          },
-        });
+        const [reg, invitation] = await Promise.all([
+          prisma.eventRegistration.findFirst({
+            where: { studentId: user.id, eventId },
+            include: {
+              ticket: true,
+              student: true,
+            },
+          }),
+          prisma.eventInvitation.findUnique({
+            where: {
+              eventId_studentId: { eventId, studentId: user.id },
+              status: "PENDING",
+            },
+          }),
+        ]);
+
         if (reg) {
           isRegistered = true;
           registration = {
@@ -411,6 +421,8 @@ export const getEventById = asyncHandler(
             student: reg.student,
           };
         }
+
+        isInvited = !!invitation;
       }
       return res.status(200).json(
         new ApiResponse(
@@ -418,6 +430,7 @@ export const getEventById = asyncHandler(
           {
             ...event,
             isRegistered,
+            isInvited,
             ...(registration ? { registration } : {}),
           },
           "Event retrieved successfully"

@@ -22,7 +22,7 @@ export const EventsInvites = () => {
     return (
       <EmptyState
         title="No events found."
-        label="Try registering in an event."
+        label="You haven't been invited to any event yet."
       />
     );
   }

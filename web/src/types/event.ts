@@ -67,6 +67,7 @@ export interface Event {
   society?: Society;
 
   isRegistered?: boolean;
+  isInvited?: boolean;
   _count?: {
     eventRegistrations: number;
   };

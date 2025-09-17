@@ -1,6 +1,7 @@
 import {
   Advisor,
   Event,
+  EventAudience,
   EventStatus,
   EventVisibility,
   UserType,
@@ -288,27 +289,29 @@ export const EventCard = ({
         >
           {type === "default" ? (
             <>
-              {canRegister && !event.isRegistered && (
-                <Button
-                  onClick={handleRegistration}
-                  className="w-full"
-                  variant="default"
-                  disabled={isLoading}
-                >
-                  {isLoading ? (
-                    <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                      {isRegistering
-                        ? "Registering..."
-                        : isCreatingCheckout
-                        ? "Creating Checkout..."
-                        : "Processing..."}
-                    </>
-                  ) : (
-                    <>Register Now</>
-                  )}
-                </Button>
-              )}
+              {canRegister &&
+                !event.isRegistered &&
+                event.audience !== EventAudience.Invite && (
+                  <Button
+                    onClick={handleRegistration}
+                    className="w-full"
+                    variant="default"
+                    disabled={isLoading}
+                  >
+                    {isLoading ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                        {isRegistering
+                          ? "Registering..."
+                          : isCreatingCheckout
+                          ? "Creating Checkout..."
+                          : "Processing..."}
+                      </>
+                    ) : (
+                      <>Register Now</>
+                    )}
+                  </Button>
+                )}
 
               {event.isRegistered && (
                 <Button variant="outline" className="w-full" disabled>

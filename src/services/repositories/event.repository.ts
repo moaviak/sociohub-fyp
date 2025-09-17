@@ -270,14 +270,14 @@ export class EventRepository {
 
   static async acceptInvitation(eventId: string, studentId: string) {
     await prisma.eventInvitation.update({
-      where: { eventId_studentId: { eventId, studentId } },
+      where: { eventId_studentId: { eventId, studentId }, status: "PENDING" },
       data: { status: "ACCEPTED" },
     });
   }
 
   static async rejectInvitation(eventId: string, studentId: string) {
     await prisma.eventInvitation.update({
-      where: { eventId_studentId: { eventId, studentId } },
+      where: { eventId_studentId: { eventId, studentId }, status: "PENDING" },
       data: { status: "DECLINED" },
     });
   }

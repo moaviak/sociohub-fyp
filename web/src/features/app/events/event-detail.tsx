@@ -8,6 +8,7 @@ import {
   useDeleteEventMutation,
   useGetEventByIdQuery,
   useRegisterForEventMutation,
+  useRejectInviteMutation,
 } from "./api";
 import {
   cn,
@@ -18,7 +19,13 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
 import { useAppSelector } from "@/app/hooks";
-import { Advisor, EventStatus, EventVisibility, UserType } from "@/types";
+import {
+  Advisor,
+  EventAudience,
+  EventStatus,
+  EventVisibility,
+  UserType,
+} from "@/types";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { EventOptions } from "@/components/events/event-options";
@@ -32,6 +39,7 @@ import {
   redirectToCheckout,
   validateCheckoutResponse,
 } from "@/lib/checkout-utils";
+import ApiError from "@/features/api-error";
 
 interface EventDetailProps {
   eventId: string;
@@ -49,6 +57,7 @@ export const EventDetail = ({ eventId }: EventDetailProps) => {
     useCreateCheckoutSessionMutation();
   const [deleteEvent, { isLoading: isDeleting, isError: isDeleteError }] =
     useDeleteEventMutation();
+  const [rejectInvite, { isLoading: isRejecting }] = useRejectInviteMutation();
 
   const { userType, user } = useAppSelector((state) => state.auth);
 
@@ -176,6 +185,17 @@ export const EventDetail = ({ eventId }: EventDetailProps) => {
     }
   };
 
+  const handleRejection = async () => {
+    try {
+      await rejectInvite({ eventId }).unwrap();
+      toast.success("Invitation rejected.");
+    } catch (error) {
+      const message =
+        (error as ApiError).errorMessage || "An unexpected error occurred.";
+      toast.error(message);
+    }
+  };
+
   const isLoading = isRegistering || isCreatingCheckout || isProcessingPayment;
 
   return (
@@ -186,31 +206,64 @@ export const EventDetail = ({ eventId }: EventDetailProps) => {
           <p className="b3-regular">{event?.tagline}</p>
         </div>
         <div className="flex items-center gap-x-2">
-          {canRegister && !event.isRegistered && (
-            <Button
-              onClick={onRegister}
-              className="w-full"
-              variant="default"
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  {isRegistering
-                    ? "Registering..."
-                    : isCreatingCheckout
-                    ? "Creating Checkout..."
-                    : "Processing..."}
-                </>
-              ) : (
-                <>Register Now</>
-              )}
-            </Button>
+          {canRegister &&
+            !event.isRegistered &&
+            event.audience !== EventAudience.Invite && (
+              <Button
+                onClick={onRegister}
+                className="w-full"
+                variant="default"
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    {isRegistering
+                      ? "Registering..."
+                      : isCreatingCheckout
+                      ? "Creating Checkout..."
+                      : "Processing..."}
+                  </>
+                ) : (
+                  <>Register Now</>
+                )}
+              </Button>
+            )}
+
+          {!event.isRegistered && event.isInvited && (
+            <div className="flex w-full gap-x-2">
+              <Button
+                variant={"success"}
+                className="w-full"
+                onClick={onRegister}
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <>
+                    {isRegistering
+                      ? "Registering..."
+                      : isCreatingCheckout
+                      ? "Creating Checkout..."
+                      : "Processing..."}
+                  </>
+                ) : (
+                  <>Accept Invitation</>
+                )}
+              </Button>
+              <Button
+                variant={"destructive"}
+                className="w-full"
+                onClick={handleRejection}
+                disabled={isRejecting}
+              >
+                Reject Invitation
+              </Button>
+            </div>
           )}
 
           {event.isRegistered && (
             <Button variant="outline" className="w-full" disabled>
-              Already Registered
+              Registered
             </Button>
           )}
           {(havePrivilege ||

@@ -145,7 +145,7 @@ router.post(
   inviteStudents
 );
 
-router.post("/:eventId/reject-invite", rejectInvitation);
+router.post("/:eventId/reject-invite", verifyJWT, rejectInvitation);
 
 // Add registration endpoint
 router.post(

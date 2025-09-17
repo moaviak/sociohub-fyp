@@ -305,7 +305,19 @@ export const eventApi = api.injectEndpoints({
         const errorResponse = response.data as ApiErrorResponse;
         return createApiError(errorResponse.message);
       },
-      providesTags: [{ type: "Events", id: "LIST" }],
+      providesTags: (result) => {
+        if (result) {
+          return [
+            { type: "Events", id: "LIST" },
+            ...result.map((event) => ({
+              type: "Events" as const,
+              id: event.id,
+            })),
+          ];
+        } else {
+          return [];
+        }
+      },
     }),
     rejectInvite: builder.mutation<void, { eventId: string }>({
       query: ({ eventId }) => ({
@@ -319,6 +331,7 @@ export const eventApi = api.injectEndpoints({
         const errorResponse = response.data as ApiErrorResponse;
         return createApiError(errorResponse.message);
       },
+      invalidatesTags: (_, __, arg) => [{ type: "Events", id: arg.eventId }],
     }),
   }),
 });
