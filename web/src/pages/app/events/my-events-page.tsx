@@ -4,6 +4,7 @@ import { useLocation, useNavigate } from "react-router";
 import { MyEvents } from "@/features/app/events/my-events";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CalendarCheck2, CalendarClock } from "lucide-react";
+import { EventsInvites } from "@/features/app/events/events-invites";
 
 const MyEventsPage = () => {
   const location = useLocation();
@@ -58,7 +59,7 @@ const MyEventsPage = () => {
           <MyEvents />
         </TabsContent>
         <TabsContent value="invited" className="flex-1">
-          <MyEvents />
+          <EventsInvites />
         </TabsContent>
       </Tabs>
     </div>

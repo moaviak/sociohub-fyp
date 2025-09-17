@@ -273,7 +273,13 @@ export class EventService {
   }
 
   static async getUserInvitedEvents(userId: string) {
-    return EventRepository.getUserInvitations(userId);
+    return (await EventRepository.getUserInvitations(userId)).map(
+      ({ event }) => event
+    );
+  }
+
+  static async rejectInvitation(userId: string, eventId: string) {
+    await EventRepository.rejectInvitation(eventId, userId);
   }
 
   // Draft-related methods

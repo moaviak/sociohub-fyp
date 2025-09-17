@@ -27,6 +27,7 @@ import {
   cancelRegistration,
   inviteStudents,
   getUserInvitedEvents,
+  rejectInvitation,
 } from "../controllers/event.controller";
 import { verifyEventsPrivilege } from "../middlewares/privilege.middlewares";
 import { body } from "express-validator";
@@ -143,6 +144,8 @@ router.post(
   verifyEventsPrivilege,
   inviteStudents
 );
+
+router.post("/:eventId/reject-invite", rejectInvitation);
 
 // Add registration endpoint
 router.post(

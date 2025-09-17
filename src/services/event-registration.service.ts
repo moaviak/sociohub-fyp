@@ -39,6 +39,11 @@ export class EventRegistrationService {
     // Check participant limit
     await this.checkParticipantLimit(event);
 
+    // Accept event invitation if event is invite-only
+    if (event.audience === "Invite") {
+      await EventRepository.acceptInvitation(eventId, studentId);
+    }
+
     // Create registration based on event type
     if (event.paidEvent) {
       return this.handlePaidEventRegistration(event, studentId);
@@ -86,7 +91,14 @@ export class EventRegistrationService {
     }
 
     if (event.audience === "Invite") {
-      throw new ApiError(403, "This event is invite-only");
+      const isInvited = await EventRepository.checkInvitation(
+        studentId,
+        event.id
+      );
+
+      if (!isInvited) {
+        throw new ApiError(403, "This event is invite-only");
+      }
     }
   }
 

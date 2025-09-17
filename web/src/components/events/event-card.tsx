@@ -35,17 +35,23 @@ import {
 interface EventCardProps {
   event: Event;
   variant?: "default" | "compact";
+  type?: "default" | "invited";
   onViewDetails?: () => void;
   onDelete?: (eventId: string, societyId: string) => Promise<void>;
+  onReject?: (eventId: string) => Promise<void>;
   isDeleting?: boolean;
+  isRejecting?: boolean;
 }
 
 export const EventCard = ({
   event,
   variant = "default",
+  type = "default",
   onViewDetails,
   onDelete,
+  onReject,
   isDeleting = false,
+  isRejecting = false,
 }: EventCardProps) => {
   const { userType, user } = useAppSelector((state) => state.auth);
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
@@ -280,32 +286,65 @@ export const EventCard = ({
             variant === "compact" ? "p-2 pt-0" : "px-2 py-4 pt-0"
           )}
         >
-          {canRegister && !event.isRegistered && (
-            <Button
-              onClick={handleRegistration}
-              className="w-full"
-              variant="default"
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  {isRegistering
-                    ? "Registering..."
-                    : isCreatingCheckout
-                    ? "Creating Checkout..."
-                    : "Processing..."}
-                </>
-              ) : (
-                <>Register Now</>
+          {type === "default" ? (
+            <>
+              {canRegister && !event.isRegistered && (
+                <Button
+                  onClick={handleRegistration}
+                  className="w-full"
+                  variant="default"
+                  disabled={isLoading}
+                >
+                  {isLoading ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      {isRegistering
+                        ? "Registering..."
+                        : isCreatingCheckout
+                        ? "Creating Checkout..."
+                        : "Processing..."}
+                    </>
+                  ) : (
+                    <>Register Now</>
+                  )}
+                </Button>
               )}
-            </Button>
-          )}
 
-          {event.isRegistered && (
-            <Button variant="outline" className="w-full" disabled>
-              Already Registered
-            </Button>
+              {event.isRegistered && (
+                <Button variant="outline" className="w-full" disabled>
+                  Already Registered
+                </Button>
+              )}
+            </>
+          ) : (
+            <div className="flex w-full gap-x-2">
+              <Button
+                variant={"destructive"}
+                className="w-full"
+                onClick={() => onReject?.(event.id)}
+                disabled={isRejecting}
+              >
+                Reject
+              </Button>
+              <Button
+                variant={"success"}
+                className="w-full"
+                onClick={handleRegistration}
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <>
+                    {isRegistering
+                      ? "Registering..."
+                      : isCreatingCheckout
+                      ? "Creating Checkout..."
+                      : "Processing..."}
+                  </>
+                ) : (
+                  <>Accept</>
+                )}
+              </Button>
+            </div>
           )}
           <Button
             onClick={onViewDetails}

@@ -254,9 +254,31 @@ export class EventRepository {
 
   static async getUserInvitations(userId: string) {
     return prisma.eventInvitation.findMany({
-      where: { studentId: userId },
+      where: { studentId: userId, status: "PENDING" },
       include: { event: { include: { society: true } } },
       orderBy: { sentAt: "desc" },
+    });
+  }
+
+  static async checkInvitation(userId: string, eventId: string) {
+    const invitation = await prisma.eventInvitation.findUnique({
+      where: { eventId_studentId: { eventId, studentId: userId } },
+    });
+
+    return !!invitation;
+  }
+
+  static async acceptInvitation(eventId: string, studentId: string) {
+    await prisma.eventInvitation.update({
+      where: { eventId_studentId: { eventId, studentId } },
+      data: { status: "ACCEPTED" },
+    });
+  }
+
+  static async rejectInvitation(eventId: string, studentId: string) {
+    await prisma.eventInvitation.update({
+      where: { eventId_studentId: { eventId, studentId } },
+      data: { status: "DECLINED" },
     });
   }
 }

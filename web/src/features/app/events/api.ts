@@ -296,6 +296,30 @@ export const eventApi = api.injectEndpoints({
       },
       invalidatesTags: (_, __, arg) => [{ type: "Events", id: arg.eventId }],
     }),
+    getMyInvites: builder.query<Event[], void>({
+      query: () => "/events/my-invitations",
+      transformResponse: (response: ApiResponse<Event[]>) => {
+        return response.data;
+      },
+      transformErrorResponse: (response) => {
+        const errorResponse = response.data as ApiErrorResponse;
+        return createApiError(errorResponse.message);
+      },
+      providesTags: [{ type: "Events", id: "LIST" }],
+    }),
+    rejectInvite: builder.mutation<void, { eventId: string }>({
+      query: ({ eventId }) => ({
+        url: `/events/${eventId}/reject-invite`,
+        method: "POST",
+      }),
+      transformResponse: (response: ApiResponse<void>) => {
+        return response.data;
+      },
+      transformErrorResponse: (response) => {
+        const errorResponse = response.data as ApiErrorResponse;
+        return createApiError(errorResponse.message);
+      },
+    }),
   }),
 });
 
@@ -311,4 +335,6 @@ export const {
   useCancelEventMutation,
   useGetMyRegistrationsQuery,
   useInviteStudentsMutation,
+  useGetMyInvitesQuery,
+  useRejectInviteMutation,
 } = eventApi;

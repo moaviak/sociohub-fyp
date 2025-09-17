@@ -756,8 +756,23 @@ export const getUserInvitedEvents = asyncHandler(
   async (req: Request, res: Response) => {
     const user = req.user as IUser;
 
+    const result = await EventService.getUserInvitedEvents(user.id);
+
     return res
       .status(200)
-      .json(new ApiResponse(200, null, "Events successfully fetched"));
+      .json(new ApiResponse(200, result, "Events successfully fetched"));
+  }
+);
+
+export const rejectInvitation = asyncHandler(
+  async (req: Request, res: Response) => {
+    const user = req.user as IUser;
+    const { eventId } = req.params;
+
+    await EventService.rejectInvitation(user.id, eventId);
+
+    return res
+      .status(200)
+      .json(new ApiResponse(200, null, "Event invite successfully rejected."));
   }
 );
