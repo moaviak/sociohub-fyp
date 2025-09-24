@@ -282,6 +282,45 @@ export class EventService {
     await EventRepository.rejectInvitation(eventId, userId);
   }
 
+  static async getRegistrations(
+    eventId: string,
+    page: number = 1,
+    limit: number = 20,
+    search?: string
+  ) {
+    const skip = (page - 1) * limit;
+    const where: any = {
+      eventId,
+    };
+
+    if (search && search.trim()) {
+      where.OR = [
+        { student: { firstName: { contains: search, mode: "insensitive" } } },
+        { student: { lastName: { contains: search, mode: "insensitive" } } },
+        { student: { email: { contains: search, mode: "insensitive" } } },
+        {
+          student: {
+            registrationNumber: { contains: search, mode: "insensitive" },
+          },
+        },
+      ];
+    }
+
+    const { registrations, total } = await EventRepository.fetchRegistrations(
+      where,
+      skip,
+      limit
+    );
+
+    return {
+      registrations,
+      total,
+      page,
+      totalPages: Math.ceil(total / limit),
+      limit,
+    };
+  }
+
   // Draft-related methods
   static async saveDraft(
     input: any,

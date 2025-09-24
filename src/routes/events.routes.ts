@@ -28,6 +28,7 @@ import {
   inviteStudents,
   getUserInvitedEvents,
   rejectInvitation,
+  getEventRegistrations,
 } from "../controllers/event.controller";
 import { verifyEventsPrivilege } from "../middlewares/privilege.middlewares";
 import { body } from "express-validator";
@@ -156,6 +157,17 @@ router.post(
     next();
   },
   registerForEvent
+);
+
+router.get(
+  "/:eventId/registrations",
+  verifyJWT,
+  (req: Request, res: Response, next: NextFunction) => {
+    req.body.societyId = req.query.societyId as string;
+    next();
+  },
+  verifyEventsPrivilege,
+  getEventRegistrations
 );
 
 router.post("/:registrationId/complete", verifyJWT, completeRegistration);

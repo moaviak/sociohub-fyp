@@ -281,4 +281,23 @@ export class EventRepository {
       data: { status: "DECLINED" },
     });
   }
+
+  static async fetchRegistrations(
+    whereClause: any,
+    skip: number,
+    limit: number
+  ) {
+    const [registrations, total] = await Promise.all([
+      prisma.eventRegistration.findMany({
+        where: whereClause,
+        include: { student: true },
+        orderBy: { registeredAt: "desc" },
+        skip,
+        take: limit,
+      }),
+      prisma.eventRegistration.count({ where: whereClause }),
+    ]);
+
+    return { registrations, total };
+  }
 }

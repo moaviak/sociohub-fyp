@@ -40,6 +40,7 @@ import {
   validateCheckoutResponse,
 } from "@/lib/checkout-utils";
 import ApiError from "@/features/api-error";
+import { EventRegistrations } from "./components/event-registrations";
 
 interface EventDetailProps {
   eventId: string;
@@ -464,6 +465,12 @@ export const EventDetail = ({ eventId }: EventDetailProps) => {
           </div>
         </div>
       </div>
+      {event.registrationRequired && havePrivilege && (
+        <div className="space-y-4">
+          <h4 className="h6-semibold">Registrations</h4>
+          <EventRegistrations event={event} />
+        </div>
+      )}
     </div>
   );
 };

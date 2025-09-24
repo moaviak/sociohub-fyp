@@ -789,3 +789,27 @@ export const rejectInvitation = asyncHandler(
       .json(new ApiResponse(200, null, "Event invite successfully rejected."));
   }
 );
+
+export const getEventRegistrations = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { eventId } = req.params;
+    const { page = 1, limit = 20, search = "" } = req.query;
+
+    const registrations = await EventService.getRegistrations(
+      eventId,
+      parseInt(page as string),
+      parseInt(limit as string),
+      search as string
+    );
+
+    return res
+      .status(200)
+      .json(
+        new ApiResponse(
+          200,
+          registrations,
+          "Event registrations successfully fetched."
+        )
+      );
+  }
+);

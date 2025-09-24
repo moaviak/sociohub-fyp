@@ -84,6 +84,7 @@ export interface Registration {
   studentId: string;
   eventId: string;
   registeredAt?: string;
+  status: "PENDING" | "APPROVED" | "DECLINED";
   ticket?: Ticket;
   student?: Student;
 }

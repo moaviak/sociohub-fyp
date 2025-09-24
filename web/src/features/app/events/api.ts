@@ -15,6 +15,14 @@ export interface EventRegistrationResponse {
   paymentIntentId?: string;
 }
 
+export interface GetRegistrationsResponse {
+  registrations: Registration[];
+  total: number;
+  page: number;
+  totalPages: number;
+  limit: number;
+}
+
 export const eventApi = api.injectEndpoints({
   endpoints: (builder) => ({
     createEvent: builder.mutation<Event | ApiError, FormData>({
@@ -333,6 +341,23 @@ export const eventApi = api.injectEndpoints({
       },
       invalidatesTags: (_, __, arg) => [{ type: "Events", id: arg.eventId }],
     }),
+    getEventRegistrations: builder.query<
+      GetRegistrationsResponse,
+      { eventId: string; societyId: string; page?: number; limit?: number }
+    >({
+      query: ({ eventId, societyId, ...args }) => ({
+        url: `/events/${eventId}/registrations?societyId=${societyId}&page=${
+          args.page ? args.page : 1
+        }&limit=${args.limit ? args.limit : 20}`,
+      }),
+      transformResponse: (response: ApiResponse<GetRegistrationsResponse>) => {
+        return response.data;
+      },
+      transformErrorResponse: (response) => {
+        const errorResponse = response.data as ApiErrorResponse;
+        return createApiError(errorResponse.message);
+      },
+    }),
   }),
 });
 
@@ -350,4 +375,5 @@ export const {
   useInviteStudentsMutation,
   useGetMyInvitesQuery,
   useRejectInviteMutation,
+  useGetEventRegistrationsQuery,
 } = eventApi;
