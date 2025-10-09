@@ -5,7 +5,7 @@ import { CalendarView } from "./components/calendar-view";
 
 export const StudentDashboard = () => {
   return (
-    <div className="w-full flex gap-4 py-4">
+    <div className="w-full flex flex-col md:flex-row lg:gap-4 gap-2 py-4">
       <div className="flex-1 space-y-4">
         <UpcomingEvents />
         <TodoList />

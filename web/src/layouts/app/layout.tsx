@@ -8,6 +8,7 @@ import { Advisor, UserType } from "@/types";
 import { ChatBot } from "@/features/app/chat-bot";
 import { useCreateSessionMutation } from "@/features/app/chat-bot/api";
 import { SpinnerLoader } from "@/components/spinner-loader";
+import { SidebarProvider } from "@/providers/sidebar-provider";
 
 function AppLayout() {
   const { isAuthenticated, isAuthChecked, user, userType } = useAppSelector(
@@ -68,16 +69,18 @@ function AppLayout() {
 
   // Only render the outlet if user is authenticated
   return isAuthenticated ? (
-    <div className="grid grid-cols-12 w-full h-screen max-h-screen overflow-y-hidden">
-      <Sidebar />
-      <div className="col-span-10 flex flex-col overflow-hidden">
-        <TopBar />
-        <div className="flex-1 px-6 py-2 max-h-full overflow-y-auto">
-          <Outlet />
+    <SidebarProvider>
+      <div className="grid grid-cols-1 md:grid-cols-12 w-full h-screen max-h-screen overflow-y-hidden">
+        <Sidebar />
+        <div className="col-span-1 md:col-span-10 flex flex-col overflow-hidden">
+          <TopBar />
+          <div className="flex-1 lg:px-6 py-2 max-h-full overflow-y-auto">
+            <Outlet />
+          </div>
         </div>
+        <ChatBot />
       </div>
-      <ChatBot />
-    </div>
+    </SidebarProvider>
   ) : null;
 }
 export default AppLayout;

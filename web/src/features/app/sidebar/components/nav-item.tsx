@@ -8,9 +8,10 @@ interface NavItemProps {
     icon: React.ReactNode;
     label: string;
   };
+  onClick?: () => void;
 }
 
-export const NavItem = ({ item }: NavItemProps) => {
+export const NavItem = ({ item, onClick }: NavItemProps) => {
   const location = useLocation();
   const isActive = location.pathname.startsWith(item.href);
 
@@ -19,10 +20,11 @@ export const NavItem = ({ item }: NavItemProps) => {
       key={item.href}
       className={cn("flex gap-x-4 b3-regular justify-start items-center")}
       to={item.href}
+      onClick={() => onClick?.()}
     >
       <span
         className={cn(
-          "h-13 w-[8px] rounded-r-sm shrink-0",
+          "hidden lg:block h-13 w-[8px] rounded-r-sm shrink-0",
           isActive && "bg-primary-600"
         )}
       />

@@ -13,7 +13,7 @@ export const EventCard = ({ event }: EventCardProps) => {
   return (
     <Link to={`/event/${event.id}`}>
       <div className="flex gap-2 py-2 items-center">
-        <div className="w-[108px] rounded-md overflow-hidden aspect-[3/2]">
+        <div className="lg:w-[108px] w-[92px] rounded-md overflow-hidden aspect-[3/2]">
           <img
             src={event.banner || "/assets/images/image-placeholder.png"}
             alt="event-banner"

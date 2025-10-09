@@ -38,7 +38,11 @@ const navItems = [
   },
 ];
 
-export const StudentSidebar = () => {
+export const StudentSidebar = ({
+  onItemClick,
+}: {
+  onItemClick?: () => void;
+}) => {
   const { user } = useAppSelector((state) => state.auth);
 
   const societies = user && "registrationNumber" in user ? user.societies : [];
@@ -46,13 +50,17 @@ export const StudentSidebar = () => {
   return (
     <div className="flex flex-col py-4 w-full">
       {navItems.map((item) => (
-        <NavItem key={item.href} item={item} />
+        <NavItem key={item.href} item={item} onClick={onItemClick} />
       ))}
       <div className="space-y-2 my-4">
         {societies &&
           !("error" in societies) &&
           societies.map(({ society }) => (
-            <SocietyItems key={society.id} society={society} />
+            <SocietyItems
+              key={society.id}
+              society={society}
+              onClick={onItemClick}
+            />
           ))}
       </div>
     </div>

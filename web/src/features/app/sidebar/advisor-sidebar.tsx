@@ -90,11 +90,15 @@ const navItems = [
   },
 ];
 
-export const AdvisorSidebar = () => {
+export const AdvisorSidebar = ({
+  onItemClick,
+}: {
+  onItemClick?: () => void;
+}) => {
   return (
     <div className="flex flex-col py-4 w-full">
       {navItems.map((item) => (
-        <NavItem key={item.href} item={item} />
+        <NavItem key={item.href} item={item} onClick={onItemClick} />
       ))}
     </div>
   );

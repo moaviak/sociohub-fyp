@@ -203,7 +203,7 @@ export const Search = () => {
     <div className="relative" ref={searchRef}>
       <SearchInput
         placeholder="Search people, events, and societies"
-        className="lg:w-xl"
+        className="xl:w-xl w-full"
         value={input}
         onChange={handleInputChange}
         onFocus={handleFocus}

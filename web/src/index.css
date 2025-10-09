@@ -92,32 +92,32 @@ html {
 
   .h1-bold,
   .h1-semibold {
-    @apply text-[48px];
+    @apply lg:text-[48px] text-[40px];
   }
 
   .h2-bold,
   .h2-semibold {
-    @apply text-[40px];
+    @apply lg:text-[40px] text-4xl;
   }
 
   .h3-bold,
   .h3-semibold {
-    @apply text-[34px];
+    @apply lg:text-[34px] text-3xl;
   }
 
   .h4-bold,
   .h4-semibold {
-    @apply text-[28px];
+    @apply lg:text-[28px] text-2xl;
   }
 
   .h5-bold,
   .h5-semibold {
-    @apply text-[24px];
+    @apply lg:text-[24px] text-xl;
   }
 
   .h6-bold,
   .h6-semibold {
-    @apply text-[20px];
+    @apply lg:text-[20px] text-lg;
   }
 
   .b1-bold,
@@ -171,31 +171,31 @@ html {
   .b1-semibold,
   .b1-medium,
   .b1-regular {
-    @apply text-[18px];
+    @apply lg:text-[18px] text-base;
   }
 
   .b2-semibold,
   .b2-medium,
   .b2-regular {
-    @apply text-[16px];
+    @apply lg:text-[16px] text-sm;
   }
 
   .b3-semibold,
   .b3-medium,
   .b3-regular {
-    @apply text-[14px];
+    @apply lg:text-[14px] text-xs;
   }
 
   .b4-semibold,
   .b4-medium,
   .b4-regular {
-    @apply text-[12px];
+    @apply lg:text-[12px] text-[11px];
   }
 
   .b5-semibold,
   .b5-medium,
   .b5-regular {
-    @apply text-[10px];
+    @apply lg:text-[10px] text-[9px];
   }
 
   /* EFFECTS UTILITIES */

@@ -844,6 +844,298 @@ Event Detail Pages provide complete event information in structured, accessible 
 
 **Post-Payment Process**: Identical to free events (QR codes/meeting links)
 
+### Ticket Scanning System (Mobile App)
+
+#### Access Requirements
+
+- **Mobile App Exclusive**: Feature available only on mobile application
+- **Privilege Required**: `event_ticket_handling` privilege
+- **Access Location**: Menu tab in bottom navigation bar
+
+#### Ticket Validation Process
+
+**Scanner Activation**:
+
+1. **Navigate to Menu**: Access Menu tab from bottom tab-bar
+2. **Select Scanner**: Open ticket scanning interface
+3. **Camera Activation**: QR code scanner initialization
+
+**Validation Workflow**:
+
+1. **QR Code Scanning**: Scan participant's ticket QR code
+2. **Credential Extraction**: Parse ticket authentication data
+3. **Server Verification**: Submit credentials to validation endpoint
+4. **Registration Check**: Server validates ticket authenticity and usage status
+5. **Entry Decision**: Server determines entry authorization
+6. **Response Display**: Validation result shown to scanner operator
+
+**Validation Outcomes**:
+
+- **Valid Entry**: Registration confirmed, first-time usage verified
+- **Invalid Entry**: Failed validation due to:
+  - Unregistered participant
+  - Previously scanned ticket (duplicate usage)
+  - Expired or cancelled registration
+  - Invalid ticket credentials
+
+#### Single-Use Ticket System
+
+**Usage Restrictions**:
+
+- **One-Time Entry**: Each ticket valid for single venue entry
+- **Usage Tracking**: Server records scan timestamp and operator
+- **Reuse Prevention**: Previously scanned tickets automatically rejected
+- **Audit Trail**: Complete scanning history maintained for event analytics
+
+**Security Features**:
+
+- **Cryptographic Credentials**: Secure QR code data encoding
+- **Real-time Validation**: Immediate server-side verification
+- **Duplicate Detection**: Instant identification of reused tickets
+- **Access Control**: Privilege-based scanner authorization
+
+**Keywords**: ticket scanning, QR code validation, event check-in, attendance tracking, mobile app scanner, event entry validation
+
+---
+
+### Overview
+
+The Events Management System is a comprehensive platform feature that handles event discovery, creation, registration, and administration across the SocioHub platform.
+
+### Events Tab (Explore Page)
+
+#### Event Discovery Interface
+
+The Events tab provides a centralized location for students to discover campus activities and events.
+
+**Event Card Components**:
+
+- **Banner Image**: Visual event representation at card top
+- **Event Title**: Primary event identifier
+- **Event Categories**: Topical classification tags
+- **Date Range**: Start and end date display
+- **Location Information**: Physical venue or online platform details
+- **Pricing**: Ticket cost for paid events
+- **Registration Deadline**: Application cutoff date (when applicable)
+
+#### Event Search and Filtering
+
+**Search Functionality**:
+
+- **Keyword Search**: Title and description matching
+- **Real-time Results**: Dynamic result updates
+- **Search Scope**: All visible events
+
+**Filter Options**:
+| Filter Type | Options | Purpose |
+|-------------|---------|---------|
+| Status | Upcoming, Past | Event timeline filtering |
+| Category | Workshop, Seminar, Social, etc. | Topic-based filtering |
+
+#### Event Actions
+
+**Available Actions**:
+
+- **View Detail**: Navigate to comprehensive Event Detail Page
+- **Register Now**: Direct registration (conditional availability)
+  - **Visibility Conditions**: Registration required AND deadline not passed
+  - **Instant Access**: One-click registration process
+
+**Keywords**: event discovery, event search, event filtering, event registration, upcoming events, past events
+
+### Events Page (Society Management)
+
+#### Event Management Interface
+
+Society-specific event management with role-based access control and comprehensive event lifecycle management.
+
+#### Visibility Levels
+
+**All Users (Students and Advisors)**:
+
+- **Upcoming Events**: Future scheduled events
+- **Completed Events**: Historical event records
+
+**Privileged Users (Advisors + Event Management Privilege)**:
+
+- **Draft Events**: Unpublished event preparations
+- **Cancelled Events**: Terminated event records
+
+#### Event Management Actions
+
+**Context-Sensitive Actions**:
+| Action | Availability Conditions | Purpose |
+|--------|------------------------|---------|
+| Edit Event | Draft, Upcoming, Ongoing status | Event modification |
+| Delete | Draft or Completed status | Permanent removal |
+| Cancel | Upcoming or Ongoing status | Event termination |
+| View Ticket | User registered for event | Access registration proof |
+
+### Event Creation System
+
+#### Access Requirements
+
+- **Society Advisor**: Full access by default
+- **Privileged Students**: Requires `event_management` privilege
+
+#### Six-Step Creation Process
+
+##### Step 1: Basic Event Information
+
+**Required Fields**:
+
+- **Event Title**: Primary event identifier
+- **Event Tagline**: Subtitle or hook
+- **Rich-text Description**: Comprehensive event details
+- **Event Categories**: Multi-select classification
+  - Workshop, Seminar, Social Gathering, Competition
+  - Cultural Event, Sports Event, Meeting, Other
+- **Event Image**: Visual banner upload
+
+##### Step 2: Date & Time Configuration
+
+**Temporal Settings**:
+
+- **Start Date**: Event commencement date
+- **Start Time**: Event beginning time
+- **End Date**: Event conclusion date
+- **End Time**: Event ending time
+
+##### Step 3: Location Setup
+
+**Event Type Selection**:
+
+**Physical Events**:
+
+- **Venue Name**: Location identifier
+- **Venue Address**: Complete location details
+
+**Online Events**:
+
+- **Platform Selection**: Zoom, Google Meet, Microsoft Teams, Other
+- **Custom Platform**: Manual platform name (if "Other" selected)
+- **Meeting Link**: Access URL
+- **Access Instructions**: Connection guidance
+
+##### Step 4: Audience & Visibility
+
+**Audience Configuration**:
+
+- **Public**: Open platform access
+- **Invite Only**: Restricted participation
+
+**Publication Options**:
+
+- **Publish Now**: Immediate visibility
+- **Save as Draft**: Unpublished preparation
+- **Schedule Publish**: Future publication timing
+
+##### Step 5: Registration & Ticketing
+
+**Payment Account Verification**:
+
+- **Not Setup**: Warning display
+- **Under Review**: Information message
+- **Verified**: Full paid event capabilities
+
+**Registration Settings**:
+
+- **Enable/Disable**: Registration requirement toggle
+- **Registration Deadline**: Application cutoff
+- **Participant Limit**: Maximum capacity (optional)
+
+**Paid Event Configuration** (Verified accounts only):
+
+- **Payment Toggle**: Enable paid registration
+- **Ticket Price**: Minimum 200 PKR
+- **Stripe Integration**: Automated payment processing
+
+##### Step 6: Review & Announcement
+
+**Final Validation**:
+
+- **Complete Summary**: All event details review
+- **Edit Capability**: Last-minute modifications
+- **Announcement Options**:
+  - **Manual Creation**: Custom announcement text
+  - **AI-Powered Generator**: Automated professional messaging
+
+#### Draft Management
+
+- **Autosave Functionality**: Progress preservation
+- **Return Capability**: Resume incomplete events
+- **Version Control**: Draft update tracking
+
+**Keywords**: event creation, event management, event publishing, event registration, paid events, draft events
+
+### Event Detail Pages
+
+#### Comprehensive Event Information
+
+Event Detail Pages provide complete event information in structured, accessible format.
+
+#### Information Sections
+
+##### Section 1: About This Event
+
+- **Event Name**: Full title display
+- **Event Banner**: High-resolution visual
+- **Event Description**: Complete long-form details
+
+##### Section 2: Event Information Summary
+
+**Key Details Display**:
+
+- **Start and End DateTime**: Complete scheduling information
+- **Venue/Platform**: Location or online access details
+- **Category**: Event classification
+- **Hosting Society**: Organizing body identification
+- **Event Status**: Current state (Upcoming, Ongoing, Completed)
+
+##### Section 3: Registration Information
+
+**Registration Details**:
+
+- **Registration Requirement**: Yes/No indicator
+- **Registration Deadline**: Application cutoff
+- **Remaining Spots**: Available capacity
+- **Ticket Price**: Cost information (paid events)
+
+### Student Registration Process
+
+#### Free Event Registration
+
+**Registration Flow**:
+
+1. **Click Registration**: "Register for Event" button activation
+2. **Instant Processing**: Immediate registration (if spots available)
+3. **Confirmation Generation**: Automatic ticket creation
+
+**Physical Events**:
+
+- **QR Code Ticket**: Scannable entry proof
+- **Multiple Access**: My Events page and email delivery
+- **Entry Validation**: QR code scanning at venue
+
+**Online Events**:
+
+- **Meeting Link**: Direct access provision
+- **Access Instructions**: Connection guidance
+- **Platform Integration**: Seamless online participation
+
+#### Paid Event Registration
+
+**Payment Processing Flow**:
+
+1. **Registration Initiation**: "Register for Event" button click
+2. **Stripe Session**: Server-generated checkout session
+3. **Payment Redirect**: Stripe-hosted payment page
+4. **Payment Processing**: Secure card detail collection
+5. **Confirmation**: Successful payment verification
+6. **Registration Completion**: User registration finalization
+
+**Post-Payment Process**: Identical to free events (QR codes/meeting links)
+
 ### Administrative Event Data
 
 #### Access Requirements
@@ -1386,7 +1678,7 @@ Comprehensive financial management interface providing detailed insights, transa
 
 - **Chat System**: Direct and group messaging capabilities
 - **Video Meetings**: Integrated virtual meeting platform
-- **Notifications**: Real-time activity updates
+- **Push Notifications**: Real-time activity updates
 - **Socket.IO**: WebSocket-based real-time features
 
 ### Content Management

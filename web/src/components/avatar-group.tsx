@@ -9,6 +9,7 @@ interface AvatarGroupProps {
   userType: UserType;
   className?: string;
   redirect?: boolean;
+  variant?: "default" | "top-bar";
 }
 
 export const AvatarGroup = ({
@@ -16,20 +17,26 @@ export const AvatarGroup = ({
   userType,
   className,
   redirect = true,
+  variant = "default",
 }: AvatarGroupProps) => {
   return (
     <Link
       to={redirect ? `/profile/${user.id}` : ""}
       className={cn("flex gap-x-3 items-center", className)}
     >
-      <Avatar className="h-10 w-10 cursor-pointer">
+      <Avatar className="size-10 cursor-pointer">
         <AvatarImage src={user.avatar} className="object-cover" />
         <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white font-semibold">
           {user.firstName![0]}
           {user.lastName![0]}
         </AvatarFallback>
       </Avatar>
-      <div className="flex flex-col overflow-hidden text-ellipsis whitespace-nowrap">
+      <div
+        className={cn(
+          "flex flex-col overflow-hidden text-ellipsis whitespace-nowrap",
+          variant === "top-bar" ? "hidden md:flex" : ""
+        )}
+      >
         <p className="b3-medium truncate">{`${user.firstName} ${user.lastName}`}</p>
         <p className="b4-regular text-neutral-600 truncate">
           {userType === UserType.ADVISOR

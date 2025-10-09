@@ -44,11 +44,12 @@ export const UserAvatarMenu = ({ user, userType }: UserAvatarMenuProps) => {
   }, [isError, error]);
 
   return (
-    <div className="flex gap-x-3 items-center">
+    <div className="flex lg:gap-x-3 gap-x-1.5 items-center">
       <AvatarGroup
         user={user}
         userType={userType}
-        className="w-[180px] max-w-[180px] overflow-hidden"
+        className="lg:w-[180px] md:w-[120px] max-w-[180px] overflow-hidden"
+        variant="top-bar"
       />
       <DropdownMenu modal={false}>
         <DropdownMenuTrigger className="group">

@@ -27,37 +27,40 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export const SocietyItems = ({
   society,
+  onClick,
 }: {
   society: Society & { privileges: string[] };
+  onClick?: () => void;
 }) => {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
     <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-      <div className="flex items-center justify-between space-x-4 px-4 max-w-[220px]">
+      <div className="flex items-center justify-between space-x-4 lg:px-4 px-2 lg:max-w-[220px] max-w-full">
         <Link
           to={`/society/${society.id}`}
           className="flex items-center gap-x-2 max-w-full"
+          onClick={() => onClick?.()}
         >
           <img
             src={society.logo || "/assets/images/society-placeholder.png"}
             alt="society logo"
-            className="h-8 w-8 rounded-full"
+            className="lg:size-8 size-7 rounded-full"
           />
-          <p className="b2-medium max-w-[140px] truncate">
+          <p className="b2-medium lg:max-w-[100px] max-w-[70px] truncate">
             {formatSocietyName(society.name)}
           </p>
         </Link>
         <CollapsibleTrigger className="group" asChild>
           <Button variant="ghost" size="sm">
-            <ChevronDown className="h-4 w-4 transition-transform duration-200 ease-in-out group-data-[state=open]:rotate-180 group-data-[state=closed]:rotate-0" />
+            <ChevronDown className="size-4 transition-transform duration-200 ease-in-out group-data-[state=open]:rotate-180 group-data-[state=closed]:rotate-0" />
             <span className="sr-only">Toggle</span>
           </Button>
         </CollapsibleTrigger>
       </div>
       <CollapsibleContent className="my-2 h-full">
         {getSocietyItems(society).map((item) => (
-          <NavItem key={item.href} item={item} />
+          <NavItem key={item.href} item={item} onClick={onClick} />
         ))}
       </CollapsibleContent>
     </Collapsible>
