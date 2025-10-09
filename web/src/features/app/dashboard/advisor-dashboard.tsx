@@ -15,7 +15,7 @@ export const AdvisorDashboard = () => {
   return (
     <div className="flex flex-col gap-4 py-4 w-full">
       <SocietyKPIs societyId={user.societyId} />
-      <div className="flex gap-4">
+      <div className="flex flex-col md:flex-row gap-4">
         <div className="flex-1 space-y-4">
           <TodoList />
           <ActivityLogs societyId={user.societyId} />

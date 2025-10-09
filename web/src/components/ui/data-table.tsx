@@ -146,15 +146,16 @@ export function DataTable<TData, TValue>({
   const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
 
   return (
-    <div>
-      <div className="rounded-md border">
+    <div className="w-full">
+      {/* Responsive table wrapper with horizontal scroll on mobile */}
+      <div className="rounded-md border overflow-x-auto">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => {
                   return (
-                    <TableHead key={header.id}>
+                    <TableHead key={header.id} className="whitespace-nowrap">
                       {header.isPlaceholder
                         ? null
                         : flexRender(
@@ -174,7 +175,7 @@ export function DataTable<TData, TValue>({
                 <TableRow key={i}>
                   {columns.map((_col, index) => (
                     <TableCell key={index}>
-                      <Skeleton className="h-6 w-full" />
+                      <Skeleton className="h-6 w-full min-w-[80px]" />
                     </TableCell>
                   ))}
                 </TableRow>
@@ -186,7 +187,7 @@ export function DataTable<TData, TValue>({
                   data-state={row.getIsSelected() && "selected"}
                 >
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
+                    <TableCell key={cell.id} className="whitespace-nowrap">
                       {flexRender(
                         cell.column.columnDef.cell,
                         cell.getContext()
@@ -209,7 +210,7 @@ export function DataTable<TData, TValue>({
         </Table>
       </div>
       {isPaginated && (
-        <div className="flex items-center justify-between space-x-2 py-4">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-2 py-4 px-2 sm:px-0">
           <Button
             variant="ghost"
             size="sm"
@@ -221,14 +222,18 @@ export function DataTable<TData, TValue>({
               }
             }}
             disabled={isServerSide ? !table.getCanPreviousPage() : page <= 1}
+            className="w-full sm:w-auto"
           >
             <ArrowLeft className="w-4 h-4" />
-            Previous
+            <span className="hidden sm:inline">Previous</span>
+            <span className="sm:hidden">Prev</span>
           </Button>
-          <div className="b3-regular text-neutral-700">
+          <div className="b3-regular text-neutral-700 text-center whitespace-nowrap order-first sm:order-none">
             Page{" "}
-            {isServerSide ? table.getState().pagination.pageIndex + 1 : page} of{" "}
-            {totalPages}
+            <span className="font-semibold">
+              {isServerSide ? table.getState().pagination.pageIndex + 1 : page}
+            </span>{" "}
+            of <span className="font-semibold">{totalPages}</span>
           </div>
           <Button
             variant="ghost"
@@ -243,8 +248,10 @@ export function DataTable<TData, TValue>({
             disabled={
               isServerSide ? !table.getCanNextPage() : page >= totalPages
             }
+            className="w-full sm:w-auto"
           >
-            Next
+            <span className="hidden sm:inline">Next</span>
+            <span className="sm:hidden">Next</span>
             <ArrowRight className="w-4 h-4" />
           </Button>
         </div>
