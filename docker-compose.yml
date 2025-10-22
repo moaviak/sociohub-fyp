@@ -1,0 +1,105 @@
+version: "3.8"
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: sociohub-backend
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=${NODE_ENV}
+      - DATABASE_URL=${DATABASE_URL}
+      - CORS_ORIGIN=${CORS_ORIGIN}
+      - EXPRESS_SESSION_SECRET=${EXPRESS_SESSION_SECRET}
+      - ACCESS_TOKEN_EXPIRY=${ACCESS_TOKEN_EXPIRY}
+      - REFRESH_TOKEN_EXPIRY=${REFRESH_TOKEN_EXPIRY}
+      - ACCESS_TOKEN_SECRET=${ACCESS_TOKEN_SECRET}
+      - REFRESH_TOKEN_SECRET=${REFRESH_TOKEN_SECRET}
+      - MAILTRAP_SMTP_HOST=${MAILTRAP_SMTP_HOST}
+      - MAILTRAP_SMTP_PORT=${MAILTRAP_SMTP_PORT}
+      - MAILTRAP_SMTP_USER=${MAILTRAP_SMTP_USER}
+      - MAILTRAP_SMTP_PASS=${MAILTRAP_SMTP_PASS}
+      - MAILTRAP_API_TOKEN=${MAILTRAP_API_TOKEN}
+      - CLOUDINARY_CLOUD_NAME=${CLOUDINARY_CLOUD_NAME}
+      - CLOUDINARY_API_KEY=${CLOUDINARY_API_KEY}
+      - CLOUDINARY_API_SECRET=${CLOUDINARY_API_SECRET}
+      - WEBHOOK_URL=${WEBHOOK_URL}
+      - DAILY_API_KEY=${DAILY_API_KEY}
+      - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
+      - STRIPE_PUBLISHABLE_KEY=${STRIPE_PUBLISHABLE_KEY}
+      - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET}
+      - STRIPE_CONNECT_CLIENT_ID=${STRIPE_CONNECT_CLIENT_ID}
+      - APP_BASE_URL=${APP_BASE_URL}
+      - PLATFORM_FEE_PERCENTAGE=${PLATFORM_FEE_PERCENTAGE}
+      - UPLOAD_DIR=${UPLOAD_DIR}
+      - MAX_FILE_SIZE=${MAX_FILE_SIZE}
+      - PINECONE_API_KEY=${PINECONE_API_KEY}
+      - PINECONE_ENVIRONMENT=${PINECONE_ENVIRONMENT}
+      - PINECONE_INDEX_NAME=${PINECONE_INDEX_NAME}
+      - HUGGINGFACE_API_TOKEN=${HUGGINGFACE_API_TOKEN}
+      - TAVILY_API_KEY=${TAVILY_API_KEY}
+      - EXPO_ACCESS_TOKEN=${EXPO_ACCESS_TOKEN}
+      - GROQ_API_KEY=${GROQ_API_KEY}
+    volumes:
+      - uploads:/app/public/uploads
+    networks:
+      - app-network
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "wget",
+          "--quiet",
+          "--tries=1",
+          "--spider",
+          "http://localhost:3000/health",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  frontend:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+    container_name: sociohub-frontend
+    restart: unless-stopped
+    networks:
+      - app-network
+    depends_on:
+      - backend
+
+  nginx:
+    image: nginx:alpine
+    container_name: sociohub-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./certbot/conf:/etc/letsencrypt:ro
+      - ./certbot/www:/var/www/certbot:ro
+    networks:
+      - app-network
+    depends_on:
+      - frontend
+      - backend
+
+  certbot:
+    image: certbot/certbot
+    container_name: sociohub-certbot
+    volumes:
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
+
+volumes:
+  uploads:
+
+networks:
+  app-network:
+    driver: bridge

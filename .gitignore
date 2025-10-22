@@ -156,3 +156,5 @@ NOTES.md
 temp*
 
 *.lnk
+
+/public/uploads
