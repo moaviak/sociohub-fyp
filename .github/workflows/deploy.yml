@@ -67,7 +67,10 @@ jobs:
 
       - name: Run Prisma migrations
         run: |
-          docker-compose exec -T backend npx prisma migrate deploy
+          echo "Waiting for backend container to start..."
+          sleep 20
+          docker-compose ps
+          docker-compose run --rm backend npx prisma migrate deploy
 
       - name: Clean up old images
         run: |
