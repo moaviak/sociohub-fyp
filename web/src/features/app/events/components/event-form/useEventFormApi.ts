@@ -64,7 +64,12 @@ export function useEventFormApi(
       if (data.detailedDescription)
         formData.append("description", data.detailedDescription);
       if (data.eventCategories && data.eventCategories.length > 0)
-        formData.append("categories", JSON.stringify(data.eventCategories));
+        formData.append(
+          "categories",
+          JSON.stringify(
+            data.eventCategories.map((category) => category.replace(/\s/g, ""))
+          )
+        );
       if (data.eventImage) formData.append("banner", data.eventImage);
       if (data.startDate)
         formData.append("startDate", format(data.startDate, "yyyy-MM-dd"));

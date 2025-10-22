@@ -6,7 +6,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { EventCategories as categoriesArray } from "@/data";
+import { EventCategories as eventCategoriesArray } from "@/data";
 import { ChevronDown, ListFilterPlus } from "lucide-react";
 import { z } from "zod";
 
@@ -54,6 +54,18 @@ export const SearchFilter = ({ onFilterChange }: SearchFilterProps) => {
   const havePrivilege = isStudent
     ? haveEventsPrivilege(user.societies || [], societyId || "")
     : !societyId || societyId === (user as Advisor).societyId;
+
+  const categoriesArray = Object.values(eventCategoriesArray) as Array<
+    | "Workshop"
+    | "Seminar"
+    | "Competition"
+    | "Meeting"
+    | "Other"
+    | "Social Gathering"
+    | "Cultural Event"
+    | "Sports Event"
+  >;
+
   const onSubmit = (data: FilterData) => {
     onFilterChange(data);
     setIsOpen(false);

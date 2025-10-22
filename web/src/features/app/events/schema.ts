@@ -4,10 +4,10 @@ import { z } from "zod";
 export const EventCategories = z.enum([
   "Workshop",
   "Seminar",
-  "SocialGathering",
+  "Social Gathering",
   "Competition",
-  "CulturalEvent",
-  "SportsEvent",
+  "Cultural Event",
+  "Sports Event",
   "Meeting",
   "Other",
 ]);
