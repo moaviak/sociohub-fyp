@@ -17,6 +17,10 @@ public/uploads/*
 # But keep the directory structure
 !public/uploads/.gitkeep
 
+# Ignore logs folder - will be mounted as volume
+logs/*
+!logs/.gitkeep
+
 # Ignore other temporary files
 *.tmp
 *.temp

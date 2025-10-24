@@ -41,6 +41,7 @@ services:
       - GROQ_API_KEY=${GROQ_API_KEY}
     volumes:
       - uploads:/app/public/uploads
+      - logs:/app/logs
     networks:
       - app-network
     healthcheck:
@@ -93,10 +94,11 @@ services:
     volumes:
       - ./certbot/conf:/etc/letsencrypt
       - ./certbot/www:/var/www/certbot
-    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait ${!}; done;'"
 
 volumes:
   uploads:
+  logs:
 
 networks:
   app-network:

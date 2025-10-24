@@ -1,5 +1,3 @@
-# Backend Dockerfile (root/Dockerfile)
-
 # ============================================
 # STAGE 1: Builder (includes devDependencies)
 # ============================================
@@ -55,11 +53,12 @@ COPY --from=builder /app/public/assets ./public/assets
 # Prisma CLI is available because @prisma/client is a production dependency
 RUN npx prisma generate
 
-# Create uploads directory (empty - will be mounted as volume)
-RUN mkdir -p /app/public/uploads
+# Create necessary directories (will be mounted as volumes)
+RUN mkdir -p /app/public/uploads /app/logs
 
-# Set proper permissions for uploads directory
-RUN chown -R node:node /app/public/uploads
+# Set proper permissions for directories that need write access
+# This is important because we'll switch to non-root user
+RUN chown -R node:node /app/public/uploads /app/logs
 
 # Switch to non-root user for security
 USER node
