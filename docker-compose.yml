@@ -91,6 +91,7 @@ services:
   certbot:
     image: certbot/certbot
     container_name: sociohub-certbot
+    user: "${UID:-1000}:${GID:-1000}"
     volumes:
       - ./certbot/conf:/etc/letsencrypt
       - ./certbot/www:/var/www/certbot

@@ -10,67 +10,79 @@ jobs:
     runs-on: self-hosted
 
     steps:
+      - name: Fix permissions for checkout
+        run: |
+          sudo chown -R ubuntu:ubuntu $GITHUB_WORKSPACE || true
+          sudo chmod -R u+w $GITHUB_WORKSPACE || true
+
       - name: Checkout code
         uses: actions/checkout@v3
+        with:
+          clean: true
 
       - name: Create .env file for backend
         run: |
-          cat << EOF > .env
+          cat << 'EOF' > .env
           NODE_ENV=${{ secrets.NODE_ENV }}
-          DATABASE_URL=${{ secrets.DATABASE_URL }}
-          CORS_ORIGIN=${{ secrets.CORS_ORIGIN }}
-          EXPRESS_SESSION_SECRET=${{ secrets.EXPRESS_SESSION_SECRET }}
-          ACCESS_TOKEN_SECRET=${{ secrets.ACCESS_TOKEN_SECRET }}
-          REFRESH_TOKEN_SECRET=${{ secrets.REFRESH_TOKEN_SECRET }}
-          ACCESS_TOKEN_EXPIRY=${{ secrets.ACCESS_TOKEN_EXPIRY }}
-          REFRESH_TOKEN_EXPIRY=${{ secrets.REFRESH_TOKEN_EXPIRY }}
-          MAILTRAP_SMTP_HOST=${{ secrets.MAILTRAP_SMTP_HOST }}
-          MAILTRAP_SMTP_PORT=${{ secrets.MAILTRAP_SMTP_PORT }}
-          MAILTRAP_SMTP_USER=${{ secrets.MAILTRAP_SMTP_USER }}
-          MAILTRAP_SMTP_PASS=${{ secrets.MAILTRAP_SMTP_PASS }}
-          MAILTRAP_API_TOKEN=${{ secrets.MAILTRAP_API_TOKEN }}
-          CLOUDINARY_CLOUD_NAME=${{ secrets.CLOUDINARY_CLOUD_NAME }}
-          CLOUDINARY_API_KEY=${{ secrets.CLOUDINARY_API_KEY }}
-          CLOUDINARY_API_SECRET=${{ secrets.CLOUDINARY_API_SECRET }}
-          WEBHOOK_URL=${{ secrets.WEBHOOK_URL }}
-          DAILY_API_KEY=${{ secrets.DAILY_API_KEY }}
-          STRIPE_SECRET_KEY=${{ secrets.STRIPE_SECRET_KEY }}
-          STRIPE_PUBLISHABLE_KEY=${{ secrets.STRIPE_PUBLISHABLE_KEY }}
-          STRIPE_WEBHOOK_SECRET=${{ secrets.STRIPE_WEBHOOK_SECRET }}
-          STRIPE_CONNECT_CLIENT_ID=${{ secrets.STRIPE_CONNECT_CLIENT_ID }}
-          APP_BASE_URL=${{ secrets.APP_BASE_URL }}
-          PLATFORM_FEE_PERCENTAGE=${{ secrets.PLATFORM_FEE_PERCENTAGE }}
-          UPLOAD_DIR=${{ secrets.UPLOAD_DIR }}
-          MAX_FILE_SIZE=${{ secrets.MAX_FILE_SIZE }}
-          PINECONE_API_KEY=${{ secrets.PINECONE_API_KEY }}
-          PINECONE_ENVIRONMENT=${{ secrets.PINECONE_ENVIRONMENT }}
-          PINECONE_INDEX_NAME=${{ secrets.PINECONE_INDEX_NAME }}
-          HUGGINGFACE_API_TOKEN=${{ secrets.HUGGINGFACE_API_TOKEN }}
-          TAVILY_API_KEY=${{ secrets.TAVILY_API_KEY }}
-          EXPO_ACCESS_TOKEN=${{ secrets.EXPO_ACCESS_TOKEN }}
-          GROQ_API_KEY=${{ secrets.GROQ_API_KEY }}
+          DATABASE_URL="${{ secrets.DATABASE_URL }}"
+          CORS_ORIGIN="${{ secrets.CORS_ORIGIN }}"
+          EXPRESS_SESSION_SECRET="${{ secrets.EXPRESS_SESSION_SECRET }}"
+          ACCESS_TOKEN_SECRET="${{ secrets.ACCESS_TOKEN_SECRET }}"
+          REFRESH_TOKEN_SECRET="${{ secrets.REFRESH_TOKEN_SECRET }}"
+          ACCESS_TOKEN_EXPIRY="${{ secrets.ACCESS_TOKEN_EXPIRY }}"
+          REFRESH_TOKEN_EXPIRY="${{ secrets.REFRESH_TOKEN_EXPIRY }}"
+          MAILTRAP_SMTP_HOST="${{ secrets.MAILTRAP_SMTP_HOST }}"
+          MAILTRAP_SMTP_PORT="${{ secrets.MAILTRAP_SMTP_PORT }}"
+          MAILTRAP_SMTP_USER="${{ secrets.MAILTRAP_SMTP_USER }}"
+          MAILTRAP_SMTP_PASS="${{ secrets.MAILTRAP_SMTP_PASS }}"
+          MAILTRAP_API_TOKEN="${{ secrets.MAILTRAP_API_TOKEN }}"
+          CLOUDINARY_CLOUD_NAME="${{ secrets.CLOUDINARY_CLOUD_NAME }}"
+          CLOUDINARY_API_KEY="${{ secrets.CLOUDINARY_API_KEY }}"
+          CLOUDINARY_API_SECRET="${{ secrets.CLOUDINARY_API_SECRET }}"
+          WEBHOOK_URL="${{ secrets.WEBHOOK_URL }}"
+          DAILY_API_KEY="${{ secrets.DAILY_API_KEY }}"
+          STRIPE_SECRET_KEY="${{ secrets.STRIPE_SECRET_KEY }}"
+          STRIPE_PUBLISHABLE_KEY="${{ secrets.STRIPE_PUBLISHABLE_KEY }}"
+          STRIPE_WEBHOOK_SECRET="${{ secrets.STRIPE_WEBHOOK_SECRET }}"
+          STRIPE_CONNECT_CLIENT_ID="${{ secrets.STRIPE_CONNECT_CLIENT_ID }}"
+          APP_BASE_URL="${{ secrets.APP_BASE_URL }}"
+          PLATFORM_FEE_PERCENTAGE="${{ secrets.PLATFORM_FEE_PERCENTAGE }}"
+          UPLOAD_DIR="${{ secrets.UPLOAD_DIR }}"
+          MAX_FILE_SIZE="${{ secrets.MAX_FILE_SIZE }}"
+          PINECONE_API_KEY="${{ secrets.PINECONE_API_KEY }}"
+          PINECONE_ENVIRONMENT="${{ secrets.PINECONE_ENVIRONMENT }}"
+          PINECONE_INDEX_NAME="${{ secrets.PINECONE_INDEX_NAME }}"
+          HUGGINGFACE_API_TOKEN="${{ secrets.HUGGINGFACE_API_TOKEN }}"
+          TAVILY_API_KEY="${{ secrets.TAVILY_API_KEY }}"
+          EXPO_ACCESS_TOKEN="${{ secrets.EXPO_ACCESS_TOKEN }}"
+          GROQ_API_KEY="${{ secrets.GROQ_API_KEY }}"
           EOF
 
       - name: Create .env file for frontend
         run: |
-          cat << EOF > web/.env.production
-          VITE_REACT_APP_API_URL=${{ secrets.VITE_REACT_APP_API_URL }}
-          VITE_REACT_APP_SERVER_URL=${{ secrets.VITE_REACT_APP_SERVER_URL }}
-          VITE_REACT_APP_STRIPE_PUBLISHABLE_KEY=${{ secrets.VITE_REACT_APP_STRIPE_PUBLISHABLE_KEY }}
+          cat << 'EOF' > web/.env.production
+          VITE_REACT_APP_API_URL="${{ secrets.VITE_REACT_APP_API_URL }}"
+          VITE_REACT_APP_SERVER_URL="${{ secrets.VITE_REACT_APP_SERVER_URL }}"
+          VITE_REACT_APP_STRIPE_PUBLISHABLE_KEY="${{ secrets.VITE_REACT_APP_STRIPE_PUBLISHABLE_KEY }}"
           EOF
+
+      - name: Stop containers
+        run: |
+          docker-compose down || true
+
+      - name: Fix certbot directory permissions
+        run: |
+          sudo chown -R ubuntu:ubuntu certbot/ || true
+          sudo chmod -R 755 certbot/ || true
 
       - name: Build and deploy with Docker Compose
         run: |
-          docker-compose down
           docker-compose build --no-cache
           docker-compose up -d
 
       - name: Run Prisma migrations
         run: |
-          echo "Waiting for backend container to start..."
-          sleep 20
-          docker-compose ps
-          docker-compose run --rm backend npx prisma migrate deploy
+          docker-compose exec -T backend npx prisma migrate deploy
 
       - name: Clean up old images
         run: |
