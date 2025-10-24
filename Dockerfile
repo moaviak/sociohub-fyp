@@ -49,6 +49,9 @@ COPY --from=builder /app/dist ./dist
 # These are needed at runtime for serving static content
 COPY --from=builder /app/public/assets ./public/assets
 
+# Copy docs directory (ADDED - needed for document indexing)
+COPY --from=builder /app/docs ./docs
+
 # Generate Prisma Client in production image
 # Prisma CLI is available because @prisma/client is a production dependency
 RUN npx prisma generate
@@ -58,7 +61,7 @@ RUN mkdir -p /app/public/uploads /app/logs
 
 # Set proper permissions for directories that need write access
 # This is important because we'll switch to non-root user
-RUN chown -R node:node /app/public/uploads /app/logs
+RUN chown -R node:node /app/public/uploads /app/logs /app/docs
 
 # Switch to non-root user for security
 USER node
