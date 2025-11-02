@@ -78,7 +78,9 @@ export const sendEmail = async (options: EmailOptions) => {
   const transporter =
     process.env.NODE_ENV === "production"
       ? nodemailer.createTransport({
-          host: process.env.MAILTRAP_SMTP_HOST!,
+          host: Array.isArray(options.email)
+            ? "bulk.smtp.mailtrap.io"
+            : "live.smtp.mailtrap.io",
           port: parseInt(process.env.MAILTRAP_SMTP_PORT!),
           auth: {
             user: process.env.MAILTRAP_SMTP_USER!,
