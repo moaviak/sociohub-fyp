@@ -103,7 +103,7 @@ export const sendEmail = async (options: EmailOptions) => {
   const html = await ejs.renderFile(templatePath, options.data);
 
   const mail = {
-    from: '"SocioHub" <info@sociohub.app>',
+    from: '"SocioHub" <info@sociohub.site>',
     to: options.email,
     subject: options.subject,
     html,
