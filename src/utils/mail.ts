@@ -75,12 +75,22 @@ interface PaymentConfirmationEmailData {
  * @param options Email configuration options
  */
 export const sendEmail = async (options: EmailOptions) => {
-  const transporter = nodemailer.createTransport(
-    MailtrapTransport({
-      token: process.env.MAILTRAP_API_TOKEN!,
-      testInboxId: 3092980,
-    })
-  );
+  const transporter =
+    process.env.NODE_ENV === "production"
+      ? nodemailer.createTransport({
+          host: process.env.MAILTRAP_SMTP_HOST!,
+          port: parseInt(process.env.MAILTRAP_SMTP_PORT!),
+          auth: {
+            user: process.env.MAILTRAP_SMTP_USER!,
+            pass: process.env.MAILTRAP_SMTP_PASS!,
+          },
+        })
+      : nodemailer.createTransport(
+          MailtrapTransport({
+            token: process.env.MAILTRAP_API_TOKEN!,
+            testInboxId: 3092980,
+          })
+        );
 
   // Render email template
   const templatePath = path.join(
