@@ -58,15 +58,9 @@ jobs:
           GROQ_API_KEY="${{ secrets.GROQ_API_KEY }}"
           EOF
 
-      - name: Export frontend environment variables
-        run: |
-          echo "VITE_REACT_APP_API_URL=${{ secrets.VITE_REACT_APP_API_URL }}" >> $GITHUB_ENV
-          echo "VITE_REACT_APP_SERVER_URL=${{ secrets.VITE_REACT_APP_SERVER_URL }}" >> $GITHUB_ENV
-          echo "VITE_REACT_APP_STRIPE_PUBLISHABLE_KEY=${{ secrets.VITE_REACT_APP_STRIPE_PUBLISHABLE_KEY }}" >> $GITHUB_ENV
-
       - name: Create .env file for frontend
         run: |
-          cat << 'EOF' > web/.env
+          cat << 'EOF' > web/.env.production
           VITE_REACT_APP_API_URL="${{ secrets.VITE_REACT_APP_API_URL }}"
           VITE_REACT_APP_SERVER_URL="${{ secrets.VITE_REACT_APP_SERVER_URL }}"
           VITE_REACT_APP_STRIPE_PUBLISHABLE_KEY="${{ secrets.VITE_REACT_APP_STRIPE_PUBLISHABLE_KEY }}"
