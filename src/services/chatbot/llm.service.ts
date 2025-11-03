@@ -1,10 +1,11 @@
 import { ChatGroq } from "@langchain/groq";
-import { HuggingFaceInferenceEmbeddings } from "@langchain/community/embeddings/hf";
+// import { HuggingFaceInferenceEmbeddings } from "@langchain/community/embeddings/hf";
+import { HuggingFaceTransformersEmbeddings } from "@langchain/community/embeddings/huggingface_transformers";
 import { chatbotConfig } from "./config";
 
 export class LLMService {
   public llm: ChatGroq;
-  public embeddings: HuggingFaceInferenceEmbeddings;
+  public embeddings: HuggingFaceTransformersEmbeddings;
   public fastLLM: ChatGroq; // Faster model for classification
 
   constructor() {
@@ -23,9 +24,13 @@ export class LLMService {
       temperature: 0.1,
     });
 
-    this.embeddings = new HuggingFaceInferenceEmbeddings({
+    // this.embeddings = new HuggingFaceInferenceEmbeddings({
+    //   model: chatbotConfig.embedding.model,
+    //   apiKey: process.env.HUGGINGFACE_API_TOKEN!,
+    // });
+
+    this.embeddings = new HuggingFaceTransformersEmbeddings({
       model: chatbotConfig.embedding.model,
-      apiKey: process.env.HUGGINGFACE_API_TOKEN!,
     });
   }
 }

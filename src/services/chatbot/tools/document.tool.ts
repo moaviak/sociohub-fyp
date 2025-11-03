@@ -4,7 +4,7 @@ import { Pinecone } from "@pinecone-database/pinecone";
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 import { DirectoryLoader } from "langchain/document_loaders/fs/directory";
 import { TextLoader } from "langchain/document_loaders/fs/text";
-import { HuggingFaceInferenceEmbeddings } from "@langchain/community/embeddings/hf";
+import { HuggingFaceTransformersEmbeddings } from "@langchain/community/embeddings/huggingface_transformers";
 import { chatbotConfig } from "../config";
 import { UserContext } from "../types";
 import { emitEventToUser } from "../../../socket";
@@ -20,7 +20,7 @@ export class DocumentRetrievalTool extends Tool {
   private pinecone!: Pinecone;
 
   constructor(
-    private embeddings: HuggingFaceInferenceEmbeddings,
+    private embeddings: HuggingFaceTransformersEmbeddings,
     private userContext?: UserContext
   ) {
     super();

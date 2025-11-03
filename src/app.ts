@@ -1,3 +1,4 @@
+import path from "path";
 import cors from "cors";
 import express from "express";
 import passport from "passport";
@@ -72,7 +73,7 @@ app.use("/api/webhooks", webhooksRoutes);
 
 app.use(express.json({ limit: "16kb" }));
 app.use(express.urlencoded({ extended: true, limit: "16kb" }));
-app.use(express.static("public")); // configure static file to save images locally
+app.use(express.static(path.join(__dirname, "../public"))); // configure static file to save images locally
 app.use(cookieParser());
 
 /// required for passport
