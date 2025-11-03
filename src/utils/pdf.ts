@@ -47,7 +47,7 @@ export async function generateJoinRequestPDF(data: PDFData): Promise<string> {
 
     const templatePath = path.join(
       __dirname,
-      "../views/pdf",
+      "../../views/pdf",
       "join-request-template.ejs"
     );
 

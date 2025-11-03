@@ -97,7 +97,7 @@ export const sendEmail = async (options: EmailOptions) => {
   // Render email template
   const templatePath = path.join(
     __dirname,
-    "../views/emails",
+    "../../views/emails",
     options.template
   );
   const html = await ejs.renderFile(templatePath, options.data);

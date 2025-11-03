@@ -52,6 +52,8 @@ COPY --from=builder /app/public/assets ./public/assets
 # Copy docs directory (ADDED - needed for document indexing)
 COPY --from=builder /app/docs ./docs
 
+COPY --from=builder /app/views ./views
+
 # Generate Prisma Client in production image
 # Prisma CLI is available because @prisma/client is a production dependency
 RUN npx prisma generate
