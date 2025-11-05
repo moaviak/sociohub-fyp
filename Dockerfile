@@ -34,7 +34,7 @@ FROM node:18-slim
 WORKDIR /app
 
 # Optional: Install missing system libraries for ONNX Runtime
-RUN apt-get update && apt-get install -y libc6 libstdc++6 libgcc1 && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y openssl libc6 libstdc++6 libgcc1 && rm -rf /var/lib/apt/lists/*
 
 # Copy package files
 COPY package*.json ./
