@@ -44,6 +44,8 @@ COPY prisma ./prisma/
 # This keeps the final image smaller and more secure
 RUN npm ci --omit=dev
 
+RUN chown -R node:node /app/node_modules
+
 # Copy the compiled JavaScript from builder stage
 # This is the OUTPUT of TypeScript compilation, not the source .ts files
 COPY --from=builder /app/dist ./dist
