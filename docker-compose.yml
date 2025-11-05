@@ -1,5 +1,6 @@
 services:
   backend:
+    image: moaviak/sociohub-backend:latest
     build:
       context: .
       dockerfile: Dockerfile
@@ -60,6 +61,7 @@ services:
       start_period: 40s
 
   frontend:
+    image: moaviak/sociohub-frontend:latest
     build:
       context: ./web
       dockerfile: Dockerfile
