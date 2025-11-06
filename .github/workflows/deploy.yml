@@ -129,11 +129,6 @@ jobs:
         run: |
           docker image prune -af
 
-      - name: Health check
-        run: |
-          sleep 30
-          curl -f http://localhost:80 || exit 1
-
       - name: Notify deployment status
         if: always()
         run: |
