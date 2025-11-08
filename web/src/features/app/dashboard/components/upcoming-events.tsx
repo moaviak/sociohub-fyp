@@ -1,22 +1,26 @@
-import { useGetEventsQuery } from "@/features/app/explore/api";
+import { useGetEventsInfiniteQuery } from "@/features/app/explore/api";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router";
 import { EventCard } from "./event-card";
-import { useGetSocietyEventsQuery } from "../../events/api";
+import { useGetSocietyEventsInfiniteQuery } from "../../events/api";
 
 export const UpcomingEvents = ({ societyId }: { societyId?: string }) => {
-  const { data: studentEvents, isLoading } = useGetEventsQuery(
+  const { data, isLoading } = useGetEventsInfiniteQuery(
     {
       limit: 3,
       status: "Upcoming",
     },
     { skip: !!societyId }
   );
+  const studentEvents =
+    data?.pages.flat().flatMap((response) => response.events) ?? [];
 
-  const { data: societyEvents } = useGetSocietyEventsQuery({
+  const { data: societyResponse } = useGetSocietyEventsInfiniteQuery({
     societyId: societyId || "",
     status: "Upcoming",
   });
+  const societyEvents =
+    societyResponse?.pages.flat().flatMap((response) => response.events) ?? [];
 
   const events = (societyId ? societyEvents : studentEvents) || [];
 

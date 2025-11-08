@@ -7,7 +7,7 @@ import { useDebounceCallback } from "usehooks-ts";
 import { User, Calendar, Users, Search as SearchIcon } from "lucide-react";
 import {
   useFetchUsersQuery,
-  useGetEventsQuery,
+  useGetEventsInfiniteQuery,
   useGetSocietiesQuery,
 } from "../../explore/api";
 import { Link } from "react-router";
@@ -133,10 +133,12 @@ export const Search = () => {
     { search },
     { skip: !search }
   );
-  const { data: events = [] } = useGetEventsQuery(
+  const { data: infiniteEvents } = useGetEventsInfiniteQuery(
     { search },
     { skip: !search }
   );
+  const events =
+    infiniteEvents?.pages.flat().flatMap((response) => response.events) ?? [];
   const { data = [] } = useGetSocietiesQuery({ search }, { skip: !search });
   const societies = data && !("error" in data) ? data : [];
 

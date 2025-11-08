@@ -22,6 +22,14 @@ interface GetUsersQueryArg {
   status?: string;
 }
 
+interface GetEventsResponse {
+  events: Event[];
+  page: number;
+  pageSize: number;
+  total: number;
+  totalPages: number;
+}
+
 export const ExploreApi = api.injectEndpoints({
   endpoints: (builder) => ({
     getSocieties: builder.query<Societies | ApiError, { search?: string }>({
@@ -112,33 +120,63 @@ export const ExploreApi = api.injectEndpoints({
         }
       },
     }),
-    getEvents: builder.query<
-      Event[],
-      { status?: string; categories?: string; search?: string; limit?: number }
+    getEvents: builder.infiniteQuery<
+      GetEventsResponse,
+      {
+        status?: string;
+        categories?: string;
+        search?: string;
+        limit?: number;
+        page?: number;
+      },
+      number
     >({
-      query: ({ status = "", categories = "", search = "", limit = "" }) => ({
-        url: `/events?status=${status}&categories=${categories}&search=${search}&limit=${limit}`,
-      }),
-      transformResponse: (response: ApiResponse<Event[]>) => {
+      infiniteQueryOptions: {
+        initialPageParam: 1,
+        maxPages: 10,
+        getNextPageParam: (lastPage, _allPages, lastPageParam) => {
+          // Now we have access to full pagination info
+          if (lastPage && !("error" in lastPage)) {
+            return lastPageParam < lastPage.totalPages
+              ? lastPageParam + 1
+              : undefined;
+          }
+          return undefined;
+        },
+        getPreviousPageParam: (_firstPage, _allPages, firstPageParam) => {
+          return firstPageParam > 1 ? firstPageParam - 1 : undefined;
+        },
+      },
+      query: ({ queryArg, pageParam }) => {
+        const {
+          status = "",
+          categories = "",
+          search = "",
+          limit = 10,
+        } = queryArg;
+        const params = new URLSearchParams({
+          page: pageParam?.toString() || "1",
+          pageSize: limit?.toString() || "10",
+        });
+
+        if (status) params.append("status", status);
+        if (categories) params.append("categories", categories);
+        if (search) params.append("search", search);
+        return {
+          url: `/events?${params.toString()}`,
+        };
+      },
+      transformResponse: (response: ApiResponse<GetEventsResponse>) => {
         return response.data;
       },
       transformErrorResponse: (response) => {
         const errorResponse = response.data as ApiErrorResponse;
         return createApiError(errorResponse.message);
       },
-      providesTags: (result) => {
-        if (result && !("error" in result)) {
-          return [
-            ...result.map(({ id }) => ({ type: "Events" as const, id })),
-            { type: "Events", id: "LIST" },
-          ];
-        } else {
-          return [];
-        }
-      },
+      providesTags: ["Events"],
     }),
     getAllUsers: builder.infiniteQuery<
-      GetUsersResponse | ApiError, // Keep full response for pagination info
+      GetUsersResponse | ApiError,
       GetUsersQueryArg,
       number
     >({
@@ -204,7 +242,7 @@ export const {
   useGetSocietiesQuery,
   useSendJoinRequestMutation,
   useCancelJoinRequestMutation,
-  useGetEventsQuery,
+  useGetEventsInfiniteQuery,
   useGetAllUsersInfiniteQuery,
   useFetchUsersQuery,
 } = ExploreApi;

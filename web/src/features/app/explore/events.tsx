@@ -3,11 +3,13 @@ import { SearchFilter } from "@/components/search-filters";
 import { useEffect, useState } from "react";
 import { EmptyState } from "../explore/components/empty-state";
 import { Event } from "@/types";
-import { useGetEventsQuery } from "./api";
+import { useGetEventsInfiniteQuery } from "./api";
 import { EventCard } from "@/components/events/event-card";
 import { useDeleteEventMutation } from "../events/api";
 import { toast } from "sonner";
 import { useDebounceCallback } from "usehooks-ts";
+import { useInView } from "react-intersection-observer";
+import { Loader2 } from "lucide-react";
 
 const Events = () => {
   const [filters, setFilters] = useState({
@@ -19,16 +21,35 @@ const Events = () => {
   const debouncedSetSearch = useDebounceCallback(setSearch, 300);
 
   const {
-    data: events,
-    isFetching,
+    data,
     isLoading,
-  } = useGetEventsQuery({
+    isFetching,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+  } = useGetEventsInfiniteQuery({
     search: search || "",
     status: filters.status || "",
     categories: filters.categories.join(","),
+    limit: 10,
+    page: 1,
   });
   const [deleteEvent, { isLoading: isDeleting, isError: isDeleteError }] =
     useDeleteEventMutation();
+
+  const events =
+    data?.pages.flat().flatMap((response) => response.events) ?? [];
+
+  const { ref: loaderRef, inView } = useInView({
+    threshold: 0,
+    rootMargin: "100px",
+  });
+
+  useEffect(() => {
+    if (inView && hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
+    }
+  }, [inView, hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   useEffect(() => {
     if (isDeleteError) {
@@ -88,16 +109,24 @@ const Events = () => {
               <EventCard.Skeleton />
             </div>
           ) : (
-            <div className="grid grid-cols-3 gap-4">
-              {(events as Event[]).map((event) => (
-                <EventCard
-                  key={event.id}
-                  event={event}
-                  onDelete={onDelete}
-                  isDeleting={isDeleting}
-                />
-              ))}
-            </div>
+            <>
+              <div className="grid grid-cols-3 gap-4">
+                {(events as Event[]).map((event) => (
+                  <EventCard
+                    key={event.id}
+                    event={event}
+                    onDelete={onDelete}
+                    isDeleting={isDeleting}
+                  />
+                ))}
+              </div>
+              {/* Loader for infinite scroll */}
+              {hasNextPage && (
+                <div ref={loaderRef} className="w-full py-4">
+                  <Loader2 className="mx-auto animate-spin text-neutral-600 w-6 h-6" />
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>

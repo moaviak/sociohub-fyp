@@ -8,7 +8,8 @@ export class EventQueryService {
     societyId: string | undefined,
     filters: any,
     user: any,
-    limit?: number
+    page: number = 1,
+    pageSize: number = 10
   ) {
     try {
       const now = new Date();
@@ -95,15 +96,20 @@ export class EventQueryService {
         }
       }
 
-      const events = await prisma.event.findMany({
-        where: whereClause,
-        orderBy: [
-          { isDraft: "asc" },
-          { startDate: "asc" },
-          { startTime: "asc" },
-        ],
-        ...(limit ? { take: limit } : {}),
-      });
+      const skip = (page - 1) * pageSize;
+      const [events, total] = await Promise.all([
+        prisma.event.findMany({
+          where: whereClause,
+          orderBy: [
+            { isDraft: "asc" },
+            { startDate: "asc" },
+            { startTime: "asc" },
+          ],
+          skip,
+          take: pageSize,
+        }),
+        prisma.event.count({ where: whereClause }),
+      ]);
 
       // Custom sort: Upcoming first, then Ongoing, then Completed, then Cancelled
       const statusOrder: Record<EventStatus, number> = {
@@ -126,7 +132,7 @@ export class EventQueryService {
         return 0;
       });
 
-      return sortedEvents;
+      return [sortedEvents, total];
     } catch (error: any) {
       throw new ApiError(500, "Error fetching events: " + error.message);
     }
