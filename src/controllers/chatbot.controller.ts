@@ -7,14 +7,14 @@ import { ChatbotService } from "../services/chatbot/chatbot.service";
 const chatbotService = new ChatbotService();
 
 // Initialize chatbot documents on startup
-(async () => {
-  try {
-    await chatbotService.initializeDocuments();
-    console.log("Chatbot documents initialized successfully.");
-  } catch (err) {
-    console.error("Failed to initialize chatbot documents:", err);
-  }
-})();
+// (async () => {
+//   try {
+//     await chatbotService.initializeDocuments();
+//     console.log("Chatbot documents initialized successfully.");
+//   } catch (err) {
+//     console.error("Failed to initialize chatbot documents:", err);
+//   }
+// })();
 
 export const startChatSession = asyncHandler(
   async (req: Request, res: Response) => {
