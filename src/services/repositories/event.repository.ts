@@ -111,6 +111,8 @@ export class EventRepository {
         eventId: { in: eventIds },
       },
       select: { eventId: true },
+      take: 10,
+      orderBy: { registeredAt: "desc" },
     });
   }
 
