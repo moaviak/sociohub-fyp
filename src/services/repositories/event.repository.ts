@@ -111,8 +111,6 @@ export class EventRepository {
         eventId: { in: eventIds },
       },
       select: { eventId: true },
-      take: 10,
-      orderBy: { registeredAt: "desc" },
     });
   }
 
@@ -124,6 +122,7 @@ export class EventRepository {
         ticket: true,
         student: true,
       },
+      take: 10,
       orderBy: { registeredAt: "desc" },
     });
 
