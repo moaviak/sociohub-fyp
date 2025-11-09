@@ -36,11 +36,23 @@ app.set("io", io);
 // global middlewares
 app.use(
   cors({
-    origin:
-      process.env.CORS_ORIGIN === "*"
-        ? "*" // This might give CORS error for some origins due to credentials set to true
-        : process.env.CORS_ORIGIN?.split(","),
-    credentials: true,
+    origin: function (origin, callback) {
+      // Allow requests with no origin (mobile apps, Postman, curl, etc.)
+      if (!origin) return callback(null, true);
+
+      // Check if origin is in allowed list
+      const allowedOrigins =
+        process.env.CORS_ORIGIN === "*"
+          ? true
+          : process.env.CORS_ORIGIN?.split(",") || [];
+
+      if (allowedOrigins === true || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    credentials: true, // Keep this for web (cookies/sessions)
   })
 );
 

@@ -122,6 +122,7 @@ export class EventRepository {
         ticket: true,
         student: true,
       },
+      take: 10,
       orderBy: { registeredAt: "desc" },
     });
 

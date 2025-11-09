@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Mic, Send } from "lucide-react";
+import { Send } from "lucide-react";
 import { useSendMessageMutation } from "../api";
 import { useAppDispatch } from "@/app/hooks";
 import { addMessage, updateMessage } from "../slice";
@@ -118,7 +118,7 @@ export const MessageInput = ({ chatId, currentSender }: MessageInputProps) => {
         />
 
         <div className="shrink-0 self-end">
-          {showSendButton ? (
+          {showSendButton && (
             <Button
               onClick={handleSendMessage}
               size="icon"
@@ -126,14 +126,6 @@ export const MessageInput = ({ chatId, currentSender }: MessageInputProps) => {
               className="text-primary-600"
             >
               <Send className="size-5" />
-            </Button>
-          ) : (
-            <Button
-              variant={"ghost"}
-              size={"icon"}
-              className="shrink-0 text-primary-600 hover:bg-neutral-100"
-            >
-              <Mic className="size-5" />
             </Button>
           )}
         </div>

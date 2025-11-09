@@ -1,6 +1,6 @@
 import { SearchInput } from "@/components/search-input";
 import { Event } from "@/types";
-import { useGetSocietyEventsQuery } from "../../events/api";
+import { useGetSocietyEventsInfiniteQuery } from "../../events/api";
 import { useDebounceCallback } from "usehooks-ts";
 import { useState } from "react";
 import { formatEventDateTime } from "@/lib/utils";
@@ -16,7 +16,7 @@ export const EventFlyoutSearch = ({
   const [search, setSearch] = useState("");
   const debouncedSetSearch = useDebounceCallback(setSearch, 300);
 
-  const { data, isFetching } = useGetSocietyEventsQuery(
+  const { data, isFetching } = useGetSocietyEventsInfiniteQuery(
     {
       societyId: societyId || "",
       search,
@@ -25,7 +25,8 @@ export const EventFlyoutSearch = ({
     { skip: !search }
   );
 
-  const events = data && !("error" in data) ? data : [];
+  const events =
+    data?.pages.flat().flatMap((response) => response.events) ?? [];
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setInput(e.target.value);

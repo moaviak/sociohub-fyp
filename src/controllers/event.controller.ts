@@ -340,12 +340,21 @@ export const getEvents = asyncHandler(async (req: Request, res: Response) => {
       ? parseInt(req.query.limit as string, 10)
       : undefined;
 
-    const events = await EventService.getEvents(
+    // Pagination
+    const page = req.query.page ? parseInt(req.query.page as string, 10) : 1;
+    const pageSize = req.query.pageSize
+      ? parseInt(req.query.pageSize as string, 10)
+      : 10;
+
+    const result = await EventService.getEvents(
       societyId,
       filters,
       userContext,
-      limit
+      page,
+      pageSize
     );
+    const events = Array.isArray(result[0]) ? result[0] : [];
+    const total = typeof result[1] === "number" ? result[1] : 0;
 
     // For each event, check if the user is registered
     const eventIds = events.map((e: any) => e.id);
@@ -362,15 +371,19 @@ export const getEvents = asyncHandler(async (req: Request, res: Response) => {
       isRegistered: registeredSet.has(event.id),
     }));
 
-    return res
-      .status(200)
-      .json(
-        new ApiResponse(
-          200,
-          eventsWithRegistration,
-          "Events fetched successfully"
-        )
-      );
+    return res.status(200).json(
+      new ApiResponse(
+        200,
+        {
+          events: eventsWithRegistration,
+          page,
+          pageSize,
+          total,
+          totalPages: pageSize > 0 ? Math.ceil(total / pageSize) : 1,
+        },
+        "Events fetched successfully"
+      )
+    );
   } catch (error: any) {
     if (error instanceof ApiError) throw error;
     throw new ApiError(500, "Error fetching events: " + error.message);

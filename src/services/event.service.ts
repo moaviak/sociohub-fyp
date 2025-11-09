@@ -194,9 +194,16 @@ export class EventService {
       isMember?: boolean;
       hasEventsPrivilege?: boolean;
     },
-    limit?: number
+    page: number = 1,
+    pageSize: number = 10
   ) {
-    return this.queryService.getEvents(societyId, filters, user, limit);
+    return this.queryService.getEvents(
+      societyId,
+      filters,
+      user,
+      page,
+      pageSize
+    );
   }
 
   static async getEventById(eventId: string) {
