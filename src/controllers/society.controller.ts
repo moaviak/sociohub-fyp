@@ -103,7 +103,7 @@ export const createSociety = asyncHandler(
             type: "GROUP",
             societyId: newSociety.id,
             adminId: advisorUser.id,
-            chatImage: society.logo,
+            chatImage: newSociety.logo,
             participants: {
               connect: { id: advisorUser.id },
             },

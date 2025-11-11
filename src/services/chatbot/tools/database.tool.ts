@@ -1012,7 +1012,6 @@ Return ONLY valid JSON — no explanations, notes, or extra formatting.`;
               }
             : false,
       },
-      take: Math.min(filters.limit || 10, 20),
     });
 
     if (societies.length === 0) {
